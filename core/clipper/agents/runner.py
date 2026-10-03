@@ -206,7 +206,8 @@ class SdkAgentRunner:
                     if msg.terminal_reason in ("aborted_streaming", "aborted_tools"):
                         outcome.interrupted = True
                     if msg.is_error and not outcome.rate_limited:
-                        outcome.error = "; ".join(msg.errors or []) or msg.subtype
+                        # A failed login arrives as is_error with subtype "success" and the reason in `result`.
+                        outcome.error = "; ".join(msg.errors or []) or msg.result or msg.subtype
                     recorder.record(
                         "result",
                         data={

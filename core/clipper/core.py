@@ -85,7 +85,7 @@ class Adapters:
             transcriber=WhisperXTranscriber(settings, hf_token=get_secret("hf_token")),
             downloader=YtDlpDownloader(settings),
             faces=MediaPipeFaceDetector(settings),
-            ocr=TesseractOcr(),
+            ocr=TesseractOcr(ffmpeg=settings.paths.ffmpeg("ffmpeg")),
             trends=YtDlpTrends(settings),
             encoder=make_encoder(settings.media),
         )

@@ -6,6 +6,7 @@ Health panel (Settings -> Health) and the first-run wizard.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -13,7 +14,7 @@ import sys
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal, cast
 
 from clipper.agents.env import BILLING_ENV_KEYS
 from clipper.settings import Settings
@@ -81,6 +82,29 @@ def check_claude_login(settings: Settings) -> CheckResult:
     except (OSError, subprocess.TimeoutExpired) as exc:
         return CheckResult("claude-login", "fail", f"could not run {cli}: {exc}")
     out = (proc.stdout + proc.stderr).strip()
+    try:
+        status = json.loads(proc.stdout)
+    except ValueError:
+        status = None
+    if isinstance(status, dict):  # current CLIs answer `auth status` with JSON
+        info = cast(dict[str, Any], status)
+        method = str(info.get("authMethod") or "none")
+        if not info.get("loggedIn"):
+            return CheckResult(
+                "claude-login",
+                "fail",
+                "Claude Code CLI is not logged in",
+                f"Run `{cli}` and log in with /login.",
+            )
+        if "api" in method.lower():
+            return CheckResult(
+                "claude-login",
+                "fail",
+                f"logged in with {method}",
+                "Log in with your Claude plan, not an API key.",
+            )
+        who = info.get("email") or info.get("subscriptionType") or ""
+        return CheckResult("claude-login", "ok", f"logged in ({method}){f' · {who}' if who else ''}")
     lowered = out.lower()
     if proc.returncode != 0 or "not logged in" in lowered or "no auth" in lowered:
         return CheckResult(

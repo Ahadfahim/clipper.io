@@ -92,7 +92,7 @@ def test_tesseract_reads_the_burned_in_watermark(real: Settings, tmp_path: Path)
          "-i", str(MEDIA / "talk_16x9.mp4"), "-frames:v", "1", str(frame)],
         check=True,
     )  # fmt: skip
-    assert "WATERMARK" in TesseractOcr().read(frame).upper()
+    assert "WATERMARK" in TesseractOcr(ffmpeg=real.paths.ffmpeg("ffmpeg")).read(frame).upper()
 
 
 def test_mediapipe_face_detector_loads(real: Settings) -> None:
@@ -120,10 +120,14 @@ def _use_credential_manager() -> None:
 
 @pytest.mark.skipif(sys.platform != "win32", reason="Windows Credential Manager")
 def test_credential_manager_round_trip() -> None:
-    from clipper.secrets import delete_secret, get_secret, set_secret
+    import keyring
+
+    from clipper.secrets import SERVICE, delete_secret, get_secret
 
     _use_credential_manager()
-    set_secret("local_verify_probe", "ok")
+    # set_secret only accepts the app's real secret names; write the probe straight through keyring so a
+    # real token is never overwritten, then read and delete it through the app's own functions.
+    keyring.set_password(SERVICE, "local_verify_probe", "ok")
     try:
         assert get_secret("local_verify_probe") == "ok"
     finally:
