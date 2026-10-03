@@ -1082,6 +1082,7 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
         for key, value in (
             ("trigger.scout.last", (now - timedelta(minutes=9)).isoformat()),
             ("discord.heartbeat", now.isoformat()),
+            ("slots", 4),  # the demo shows a 4-slot pool set from the app (the settings default is 2)
         ):
             existing = s.get(KV, key)
             if existing is None:

@@ -72,7 +72,7 @@ export function NavTree() {
       key: "agents",
       label: "Agents",
       to: "/agents",
-      count: status ? `${status.agents_running}/${status.agents_capacity}` : "",
+      count: status ? `${status.agents_running}/${status.agents_capacity || "∞"}` : "",
       children: sessions.map((s) => ({
         key: `session-${s.session_id}`,
         label: `${ROLE_LABEL[s.role ?? ""] ?? s.role}${s.campaign_title ? ` · ${s.campaign_title}` : ""}`,

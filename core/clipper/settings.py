@@ -117,8 +117,14 @@ def _default_subagents() -> dict[str, SubagentSettings]:
 
 class AgentSettings(_Model):
     model: str = "claude-opus-5-5"
-    slots: int = Field(default=4, ge=1, le=8)
+    # How many agent sessions run at once. 0 = unlimited: the pool grows with the work (one session
+    # per active campaign plus Scout/Analyst/Director), still paused by the plan's rate limit and the
+    # free-memory floor below. Default 2 suits a Claude Pro plan.
+    slots: int = Field(default=2, ge=0)
     reserve_p0_slot: bool = True
+    # Don't start background agent sessions when free RAM drops below this (each session is a Claude
+    # Code process). Your own requests (P0) still start. 0 disables the check.
+    min_free_ram_gb: float = Field(default=2.0, ge=0)
     roles: dict[str, RoleSettings] = Field(default_factory=_default_roles)
     subagents: dict[str, SubagentSettings] = Field(default_factory=_default_subagents)
     prompts_dir: Path | None = None
@@ -136,8 +142,9 @@ class TriggerSettings(_Model):
 class UsageSettings(_Model):
     """Claude plan usage pacing. No money is tracked: only usage-window utilization."""
 
-    daily_agent_run_cap: int = 300
-    # utilization (0..1) -> max slots. The highest threshold reached wins.
+    daily_agent_run_cap: int = Field(default=300, ge=0)  # 0 = no daily cap
+    # utilization (0..1) -> max slots for a fixed pool. The highest threshold reached wins. An
+    # unlimited pool (agents.slots = 0) isn't shrunk; near the limit only P0/P1 work runs.
     shrink_steps: dict[str, int] = Field(default_factory=lambda: {"0.6": 3, "0.8": 2})
     # at or above this, only P0/P1 work runs
     p01_only_at: float = 0.9

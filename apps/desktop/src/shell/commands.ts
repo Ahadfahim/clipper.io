@@ -90,13 +90,21 @@ export function useCommands(onSwitchOff: (t: { level: "marketplace" | "social"; 
         run: () => control.mutate({ key: "dry_run", value: !c?.dry_run }),
       },
       { id: "agents.stop", label: "Stop all…", group: "Agents", run: () => ui.setStopOpen(true) },
-      ...[2, 3, 4, 5, 6].map((n) => ({
+      // 0 = unlimited (the pool grows with the campaigns); the override beats Settings → Usage pacing
+      ...[1, 2, 3, 4, 6, 8, 0].map((n) => ({
         id: `agents.slots.${n}`,
-        label: `Slot count: ${n}`,
+        label: n === 0 ? "Slot count: Unlimited" : `Slot count: ${n}`,
         group: "Agents" as const,
-        checked: (c?.slots ?? 4) === n,
+        checked: c?.slots === n,
         run: () => control.mutate({ key: "slots", value: n }),
       })),
+      {
+        id: "agents.slots.default",
+        label: "Slot count: use Settings",
+        group: "Agents" as const,
+        checked: c?.slots == null,
+        run: () => control.mutate({ key: "slots", value: null }),
+      },
       { id: "agents.director", label: "Message the Director…", group: "Agents", shortcut: "Ctrl+K >", run: () => ui.openCommand(">") },
       { id: "campaigns.scout", label: "Scout now", group: "Campaigns", run: () => trigger.mutate("scout") },
       { id: "tools.analyst", label: "Run analyst now", group: "Tools", run: () => trigger.mutate("analyst") },

@@ -30,10 +30,11 @@ from clipper.events.bus import EventEnvelope, Subscription
 from clipper.events.types import AgentSessionChanged, TriggerFired, WatchdogNudge
 from clipper.leases import LeaseManager, campaign_resource
 from clipper.rules.caps import local_day_bounds
-from clipper.services.control import kv_get, kv_set_tx, read_control
+from clipper.services.control import configured_slots, kv_get, kv_set_tx, read_control
 from clipper.supervisor.messages import build_prompt
 from clipper.supervisor.pool import PoolLimits, QueuedView, RunningView, pick
 from clipper.supervisor.router import RequestSpec, SessionInfo, route
+from clipper.system import free_ram_gb
 
 if TYPE_CHECKING:
     from clipper.core import Core
@@ -242,8 +243,9 @@ class Supervisor:
         ctl = read_control(self.core.db)
         usage = self.core.usage
         snap = usage.current()
-        slots = ctl.slots or self.core.settings.agents.slots
-        capacity = min(slots, usage.max_slots(snap))
+        agents = self.core.settings.agents
+        capacity = usage.max_slots(snap, agents.slots if ctl.slots is None else int(ctl.slots))
+        free_gb = free_ram_gb() if agents.min_free_ram_gb > 0 else None
         day_start, _ = local_day_bounds(self.core.clock.now(), self.core.settings.triggers.timezone)
         with self.core.db.read() as s:
             runs_today = s.exec(
@@ -251,12 +253,14 @@ class Supervisor:
                 .select_from(AgentRequest)
                 .where(col(AgentRequest.started_at) >= day_start)
             ).one()
-        cap_hit = runs_today >= self.core.settings.usage.daily_agent_run_cap
+        run_cap = self.core.settings.usage.daily_agent_run_cap
+        cap_hit = run_cap > 0 and runs_today >= run_cap
         return PoolLimits(
             capacity=capacity,
-            reserve_p0=self.core.settings.agents.reserve_p0_slot,
+            reserve_p0=agents.reserve_p0_slot,
             p01_only=usage.p01_only(snap) or cap_hit,
             halted=ctl.kill_switch or ctl.paused or snap.rate_limited,
+            low_memory=free_gb is not None and free_gb < agents.min_free_ram_gb,
         )
 
     def queued(self) -> list[QueuedView]:
@@ -540,7 +544,7 @@ class Supervisor:
         limits = self.limits()
         return {
             "capacity": limits.capacity,
-            "configured_slots": read_control(self.core.db).slots or self.core.settings.agents.slots,
+            "configured_slots": configured_slots(self.core.db, self.core.settings.agents.slots),
             "halted": limits.halted,
             "p01_only": limits.p01_only,
             "running": [

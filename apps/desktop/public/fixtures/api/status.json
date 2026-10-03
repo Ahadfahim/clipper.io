@@ -10,7 +10,7 @@
   "dry_run": true,
   "kill_switch": false,
   "paused": false,
-  "slots": null
+  "slots": 4
  },
  "discord_online": true,
  "earned_today": 233.76,

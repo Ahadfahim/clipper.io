@@ -45,8 +45,9 @@ from clipper.db.models import (
 )
 from clipper.rules.caps import local_day_bounds
 from clipper.rules.spec import ClipSpec
-from clipper.services.control import kv_get, read_control
+from clipper.services.control import configured_slots, kv_get, read_control
 from clipper.services.media import load_words
+from clipper.services.usage import POOL_CEILING, UNLIMITED
 
 if TYPE_CHECKING:
     from clipper.core import Core
@@ -239,9 +240,7 @@ def status(core: Core, fixture_mode: bool) -> S.StatusOut:
         control=control_state(core),
         usage=S.UsageOut(**usage),
         agents_running=running,
-        agents_capacity=min(
-            read_control(core.db).slots or core.settings.agents.slots, core.usage.max_slots()
-        ),
+        agents_capacity=_capacity_out(core),
         jobs_running=jobs_running,
         jobs_queued=jobs_queued,
         gpu_util=None if fixture_mode else gpu_util(),
@@ -618,10 +617,17 @@ def status_light(core: Core) -> dict[str, Any]:
 # ---------------------------------------------------------------- agents
 
 
+def _capacity_out(core: Core) -> int:
+    """Slots available now for the UI; 0 means unlimited (a rate-limited pool shows as halted)."""
+    configured = configured_slots(core.db, core.settings.agents.slots)
+    capacity = core.usage.max_slots(configured=configured)
+    return 0 if capacity >= POOL_CEILING else capacity
+
+
 def board(core: Core) -> S.BoardOut:
     ctl = read_control(core.db)
-    configured = ctl.slots or core.settings.agents.slots
-    capacity = min(configured, core.usage.max_slots())
+    configured = configured_slots(core.db, core.settings.agents.slots)
+    capacity = _capacity_out(core)
     with core.db.read() as s:
         running = s.exec(
             select(AgentRequest).where(AgentRequest.status == "running").order_by(col(AgentRequest.slot))
@@ -648,7 +654,9 @@ def board(core: Core) -> S.BoardOut:
                 tools[sess.id] = ev.tool if ev else None
     by_slot = {r.slot: r for r in running}
     slots: list[S.SlotOut] = []
-    for i in range(configured):
+    # an unlimited pool shows its busy slots plus one free row
+    rows = configured if configured != UNLIMITED else max((r.slot or 0 for r in running), default=-1) + 2
+    for i in range(rows):
         r = by_slot.get(i)
         sess = sessions.get((r.role, r.campaign_id)) if r else None
         slots.append(
@@ -663,7 +671,7 @@ def board(core: Core) -> S.BoardOut:
                 priority=r.priority if r else None,
                 started=r.started_at if r else None,
                 current_tool=tools.get(sess.id) if sess and sess.id else None,
-                dimmed=i >= capacity,
+                dimmed=capacity != UNLIMITED and i >= capacity,
             )
         )
     queue = [

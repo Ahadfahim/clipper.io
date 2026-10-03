@@ -55,6 +55,41 @@ function NumField({ ctx, k, label, hint, min, max, step }: { ctx: Ctx; k: string
   );
 }
 
+/** Agent slots: a fixed number, or unlimited (0), where the pool grows with the active campaigns. */
+function SlotsField({ ctx }: { ctx: Ctx }) {
+  const slots = val<number | null>(ctx, "agents.slots") ?? 2;
+  const unlimited = slots === 0;
+  const [last, setLast] = useState(unlimited ? 2 : slots);
+  return (
+    <Fieldset legend="Agents running at once">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-3">
+          <Radio name="slots-mode" checked={!unlimited} onChange={() => ctx.set("agents.slots", last)} label="Fixed number of slots" />
+          <TextField
+            type="number"
+            min={1}
+            aria-label="Number of agent slots"
+            value={unlimited ? "" : String(slots)}
+            disabled={unlimited}
+            onChange={(e) => {
+              const n = Math.max(1, Math.floor(Number(e.target.value) || 1));
+              setLast(n);
+              ctx.set("agents.slots", n);
+            }}
+            className="w-24"
+          />
+        </div>
+        <Radio name="slots-mode" checked={unlimited} onChange={() => ctx.set("agents.slots", 0)} label="Unlimited: run as many as the campaigns need" />
+        <p className="m-0 text-muted">
+          {unlimited
+            ? "One session per active campaign, plus Scout, Analyst and the Director when they have work. Your plan's usage limit still pauses everything until the reset, near the limit only P0–P1 work runs, and background agents wait while free RAM is low."
+            : "Shrinks automatically as your Claude usage window fills (see below). 2 suits a Claude Pro plan."}
+        </p>
+      </div>
+    </Fieldset>
+  );
+}
+
 function TextSetting({ ctx, k, label, hint, placeholder, width = "w-full" }: { ctx: Ctx; k: string; label: string; hint?: string; placeholder?: string; width?: string }) {
   return (
     <Field label={label} hint={hint}>
@@ -264,11 +299,12 @@ function Usage({ ctx }: { ctx: Ctx }) {
     <>
       <H>Usage pacing</H>
       <p className="m-0 text-muted">Agents run on your Claude plan login. These limits keep a day's work inside your plan's usage windows; nothing is billed per token.</p>
+      <SlotsField ctx={ctx} />
       <Fieldset legend="Limits">
         <div className="flex flex-wrap gap-4">
-          <NumField ctx={ctx} k="usage.daily_agent_run_cap" label="Agent runs per day" min={10} />
-          <NumField ctx={ctx} k="agents.slots" label="Agent slots" min={1} max={8} />
+          <NumField ctx={ctx} k="usage.daily_agent_run_cap" label="Agent runs per day" min={0} hint="0 = no daily cap" />
           <NumField ctx={ctx} k="usage.p01_only_at" label="Only P0–P1 work from usage" min={0.5} max={1} step={0.05} hint="0.9 = 90% of the window" />
+          <NumField ctx={ctx} k="agents.min_free_ram_gb" label="Keep free RAM (GB)" min={0} step={0.5} hint="Background agents wait below this; 0 = off" />
         </div>
       </Fieldset>
       <Fieldset legend="Slow down first under high usage">

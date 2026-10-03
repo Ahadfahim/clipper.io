@@ -33,6 +33,7 @@ class PoolLimits:
     reserve_p0: bool
     p01_only: bool  # usage near the limit, or the daily run cap reached
     halted: bool  # kill switch, pause, or rate-limited
+    low_memory: bool = False  # free RAM under agents.min_free_ram_gb: only the user's own (P0) work starts
 
 
 def pick(
@@ -49,6 +50,8 @@ def pick(
         if q.role in busy_roles:
             continue
         if limits.p01_only and q.priority > 1:
+            continue
+        if limits.low_memory and q.priority > 0:
             continue
         if q.priority > 0 and limits.reserve_p0 and limits.capacity >= 2 and non_p0 >= limits.capacity - 1:
             continue  # keep one slot free for the user

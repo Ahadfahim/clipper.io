@@ -62,6 +62,44 @@ def test_shrinks_and_p01_only_and_halt() -> None:
     assert pick(queued, [], PoolLimits(0, True, False, False)) is None
 
 
+def test_low_memory_starts_only_the_users_work() -> None:
+    low = PoolLimits(capacity=4, reserve_p0=True, p01_only=False, halted=False, low_memory=True)
+    assert pick([q(1, P1, cid=1), q(2, P2, cid=2)], [], low) is None
+    assert pick([q(1, P1, cid=1), q(3, P0, "director")], [], low).id == 3  # type: ignore[union-attr]
+
+
+def test_unlimited_pool_grows_with_the_campaigns(
+    env: tuple[Core, FakeAgentRunner, Supervisor, FakeClock],
+) -> None:
+    from clipper.services.usage import POOL_CEILING
+
+    core, _, sup, _ = env
+    set_control(core.db, "slots", 0)
+    limits = sup.limits()
+    assert limits.capacity == POOL_CEILING
+    running = [r(i, P2, cid=i) for i in range(1, 21)]  # 20 campaign sessions already running
+    assert pick([q(99, P2, cid=21)], running, limits).id == 99  # type: ignore[union-attr]
+    assert pick([q(98, P2, cid=5)], running, limits) is None  # still one session per campaign
+    # a fixed pool would shrink here; an unlimited one doesn't
+    core.usage.record(utilization=0.7, resets_at=T0 + timedelta(hours=1), rate_limited=False)
+    assert sup.limits().capacity == POOL_CEILING
+    core.usage.record(utilization=1.0, rate_limited=True, resets_at=T0 + timedelta(hours=1))
+    assert sup.limits().capacity == 0 and sup.limits().halted  # the plan's limit still pauses everything
+
+
+def test_slot_override_validation(env: tuple[Core, FakeAgentRunner, Supervisor, FakeClock]) -> None:
+    from clipper.services.control import configured_slots
+
+    core, _, sup, _ = env
+    for bad in (-1, 2.5, "unlimited", True):
+        with pytest.raises(ValueError, match="slots"):
+            set_control(core.db, "slots", bad)
+    set_control(core.db, "slots", 7)
+    assert configured_slots(core.db, 2) == 7 and sup.limits().capacity == 7
+    set_control(core.db, "slots", None)
+    assert configured_slots(core.db, 2) == 2
+
+
 def test_one_session_per_campaign_and_singletons() -> None:
     assert pick([q(1, P0, cid=7)], [r(9, P2, cid=7)], L4) is None
     assert pick([q(1, P3, "scout")], [r(9, P3, "scout")], L4) is None

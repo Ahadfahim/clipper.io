@@ -81,7 +81,10 @@ def overview(core: CoreDep) -> S.OverviewOut:
 
 @system.post("/control", response_model=S.ControlState)
 def control(core: CoreDep, body: S.ControlIn) -> S.ControlState:
-    set_control(core.db, body.key, body.value, by="user", via=body.via)
+    try:
+        set_control(core.db, body.key, body.value, by="user", via=body.via)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
     return views.control_state(core)
 
 

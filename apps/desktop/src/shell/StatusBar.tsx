@@ -50,7 +50,7 @@ export function StatusBar() {
       <Seg tone={run.tone}>{run.text}</Seg>
       {c.dry_run && <Seg tone="warn">Dry run</Seg>}
       <Seg tone="agent" onClick={() => void navigate({ to: "/agents" })} title="Agent slots">
-        Agents {s.agents_running}/{s.agents_capacity}
+        Agents {s.agents_running}/{s.agents_capacity || "∞"}
       </Seg>
       <Seg tone={s.jobs_running ? "ok" : "muted"} onClick={() => ui.setOutputTab("jobs")} title="Jobs">
         {s.gpu_util !== null && s.gpu_util !== undefined ? `GPU ${Math.round(s.gpu_util * 100)}% · ` : ""}
@@ -68,8 +68,17 @@ export function StatusBar() {
           <div className="font-semibold">Claude plan usage</div>
           <UsageMeter usage={s.usage} />
           <div className="text-muted">
-            Pace: <span className="text-fg">{s.usage.pace}</span>. Up to <span className="num text-fg">{s.usage.max_slots}</span> agent slots right now; the pool shrinks
-            as usage rises and only P0–P1 work runs near the limit. Runs on your Claude plan login, no API billing.
+            Pace: <span className="text-fg">{s.usage.pace}</span>.{" "}
+            {s.usage.rate_limited ? (
+              <>Every agent waits for the usage window to reset.</>
+            ) : s.usage.max_slots === 0 ? (
+              <>No slot limit: the pool grows with the campaigns.</>
+            ) : (
+              <>
+                Up to <span className="num text-fg">{s.usage.max_slots}</span> agent slots right now; a fixed pool shrinks as usage rises.
+              </>
+            )}{" "}
+            Only P0–P1 work runs near the limit. Runs on your Claude plan login, no API billing.
           </div>
         </div>
       </Popover>

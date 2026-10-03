@@ -62,9 +62,21 @@ def read_control(db: Database) -> ControlState:
     )
 
 
+def configured_slots(db: Database, setting: int) -> int:
+    """The slot count in force: the app's override if set, else ``agents.slots`` (0 = unlimited)."""
+    override = read_control(db).slots
+    return setting if override is None else int(override)
+
+
 def set_control(db: Database, key: str, value: Any, *, by: str = "user", via: str = "app") -> None:
     if key not in (DRY_RUN, PAUSED, KILL_SWITCH, SLOTS, AUTO_APPROVE_TIER):
         raise KeyError(key)
+    if (
+        key == SLOTS
+        and value is not None
+        and (isinstance(value, bool) or not isinstance(value, int) or value < 0)
+    ):
+        raise ValueError("slots must be a whole number ≥ 0 (0 = unlimited) or null for the settings value")
 
     def job(tx: WriteTx) -> None:
         kv_set_tx(tx, key, value)

@@ -16,6 +16,10 @@ from clipper.db.engine import WriteTx
 from clipper.db.models import UsageWindow
 from clipper.events.types import UsageUpdated
 from clipper.services.base import Service
+from clipper.services.control import configured_slots
+
+UNLIMITED = 0  # agents.slots == 0: no slot cap; the pool grows with the work
+POOL_CEILING = 10_000  # what "unlimited" means to the pool's arithmetic
 
 
 @dataclass(frozen=True)
@@ -67,7 +71,7 @@ class UsageTracker(Service):
                     utilization=snap.utilization,
                     resets_at=snap.resets_at.isoformat() if snap.resets_at else None,
                     rate_limited=snap.rate_limited,
-                    max_slots=self.max_slots(snap),
+                    max_slots=slots_out(self.max_slots(snap), snap.rate_limited),
                 )
             )
             return snap
@@ -84,11 +88,14 @@ class UsageTracker(Service):
 
         self.db.write(job)
 
-    def max_slots(self, snap: UsageSnapshot | None = None) -> int:
+    def max_slots(self, snap: UsageSnapshot | None = None, configured: int | None = None) -> int:
+        """Slots available now: 0 while rate-limited, ``POOL_CEILING`` for an unlimited pool."""
         snap = snap or self.current()
-        slots = self.settings.agents.slots
+        slots = configured_slots(self.db, self.settings.agents.slots) if configured is None else configured
         if snap.rate_limited:
             return 0
+        if slots == UNLIMITED:
+            return POOL_CEILING
         steps = sorted(
             ((float(k), v) for k, v in self.settings.usage.shrink_steps.items()), key=lambda kv: kv[0]
         )
@@ -108,12 +115,19 @@ class UsageTracker(Service):
             pace = "stopped until reset"
         elif self.p01_only(snap):
             pace = "only user-facing and money-critical work"
-        elif self.max_slots(snap) < self.settings.agents.slots:
-            pace = "slowed"
+        else:
+            configured = configured_slots(self.db, self.settings.agents.slots)
+            if configured != UNLIMITED and self.max_slots(snap, configured) < configured:
+                pace = "slowed"
         return {
             "utilization": round(snap.utilization, 3),
             "resets_at": snap.resets_at.isoformat() if snap.resets_at else None,
             "rate_limited": snap.rate_limited,
-            "max_slots": self.max_slots(snap),
+            "max_slots": slots_out(self.max_slots(snap), snap.rate_limited),
             "pace": pace,
         }
+
+
+def slots_out(capacity: int, rate_limited: bool) -> int:
+    """Slot count for the UI and events: 0 means unlimited unless the pool is rate-limited (also 0)."""
+    return 0 if rate_limited or capacity >= POOL_CEILING else capacity
