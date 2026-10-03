@@ -7,8 +7,9 @@ rules text goes to the brief-reader subagent, never straight into an agent with 
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 from clipper.browser.bridge import BrowserBridge
 from clipper.browser.protocol import RecipeResult
@@ -49,9 +50,36 @@ def _date(v: Any) -> datetime | None:
     return d if d.tzinfo else d.replace(tzinfo=UTC)
 
 
+def _join(v: Any) -> Literal["free", "paid", "joined", "none"]:
+    """Join state from a scraped label ("Joined", "Join free", "Join · $29") or an exact value."""
+    s = str(v or "").strip().lower()
+    if s.startswith("joined"):
+        return "joined"
+    if "free" in s:
+        return "free"
+    if "$" in s or "paid" in s:
+        return "paid"
+    return "none"
+
+
 def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
     """Normalize one scraped campaign row (keys produced by the *.list_campaigns recipes)."""
-    platforms = [p.strip().lower() for p in row.get("platforms", []) if isinstance(p, str)]
+    raw: Any = row.get("platforms") or []
+    # scraped as text ("YouTube, TikTok / Reels") or already a list
+    raw_platforms: list[Any] = re.split(r"[,/|·\s]+", raw) if isinstance(raw, str) else list(raw)
+    aliases = {
+        "yt": "youtube",
+        "shorts": "youtube",
+        "reels": "instagram",
+        "ig": "instagram",
+        "tt": "tiktok",
+        "twitter": "x",
+    }
+    platforms = [
+        aliases.get(p.strip().lower(), p.strip().lower())
+        for p in raw_platforms
+        if isinstance(p, str) and p.strip()
+    ]
     content = str(row.get("content_type") or "clipping").lower()
     return CampaignCard(
         marketplace=market,
@@ -70,7 +98,7 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
         content_type=content if content in ("clipping", "ugc") else "other",  # type: ignore[arg-type]
         tracking_window_days=int(_num(row.get("tracking_days")) or 0) or None,
         deadline=_date(row.get("deadline")),
-        join=row.get("join", "none") if row.get("join") in ("free", "paid", "joined") else "none",
+        join=_join(row.get("join")),
     )
 
 

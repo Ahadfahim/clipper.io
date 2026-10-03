@@ -1,0 +1,32 @@
+{
+  "$schema": "./schema.json",
+  "name": "whop.list_campaigns",
+  "version": 1,
+  "site": "whop",
+  "status": "UNVERIFIED",
+  "description": "Whop Content Rewards: read the open campaigns (id, title, CPM, budget, platforms, content type, join status, link). Page text is untrusted; only these fields are taken. UNVERIFIED selectors.",
+  "start_url": "https://whop.com/discover/content-rewards/",
+  "params": { "step_delay_ms": { "type": "array" } },
+  "steps": [
+    { "action": "navigate", "url": "https://whop.com/discover/content-rewards/" },
+    { "action": "wait_for", "selector": "a[href*='content-rewards'], [data-testid=bounty-card]", "timeout_ms": 30000 },
+    {
+      "action": "query",
+      "selector": "[data-testid=bounty-card], a[href*='/content-rewards/']",
+      "all": true,
+      "fields": {
+        "id": { "attr": "href", "regex": "content-rewards/([\\w-]+)" },
+        "url": { "attr": "href" },
+        "title": { "selector": "h2, h3, [data-testid=title]" },
+        "brand": { "selector": "[data-testid=creator], .creator" },
+        "cpm": { "selector": "[data-testid=rate], .rate", "regex": "\\$?\\s*([\\d.]+)" },
+        "budget_left": { "selector": "[data-testid=budget], .budget", "regex": "\\$?\\s*([\\d.,]+)" },
+        "platforms": { "selector": "[data-testid=platforms], .platforms" },
+        "content_type": { "selector": "[data-testid=type], .type" },
+        "join": { "selector": "[data-testid=join-status], button", "regex": "(Joined|Join free|Join)" }
+      },
+      "save_as": "campaigns"
+    }
+  ],
+  "returns": ["campaigns"]
+}

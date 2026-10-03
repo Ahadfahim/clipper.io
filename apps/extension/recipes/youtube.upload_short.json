@@ -1,0 +1,39 @@
+{
+  "$schema": "./schema.json",
+  "name": "youtube.upload_short",
+  "version": 1,
+  "site": "youtube",
+  "status": "UNVERIFIED",
+  "description": "YouTube Studio: upload a vertical clip as a Short, fill title and description, not made for kids, public or scheduled, publish, return the video link. UNVERIFIED selectors.",
+  "start_url": "https://studio.youtube.com/",
+  "params": {
+    "file_url": { "type": "string", "required": true, "description": "the final render on the local core" },
+    "file_name": { "type": "string" },
+    "title": { "type": "string", "required": true },
+    "caption": { "type": "string" },
+    "hashtags": { "type": "array" },
+    "schedule_at": { "type": "string", "description": "ISO time; empty = publish now" },
+    "handle": { "type": "string" },
+    "step_delay_ms": { "type": "array" }
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://studio.youtube.com/" },
+    { "action": "click", "selector": "#create-icon", "note": "Create button, top right" },
+    { "action": "click", "selector": "#text-item-0", "text": "Upload videos" },
+    { "action": "attach_file", "selector": "input[type=file][name=Filedata]", "file": "{{file_url}}", "name": "{{file_name}}" },
+    { "action": "wait_for", "selector": "#title-textarea #textbox", "timeout_ms": 180000 },
+    { "action": "type", "selector": "#title-textarea #textbox", "value": "{{title}}" },
+    { "action": "type", "selector": "#description-textarea #textbox", "value": "{{caption}} {{hashtags|tags}}" },
+    { "action": "click", "selector": "tp-yt-paper-radio-button[name=VIDEO_MADE_FOR_KIDS_NOT_MFK]" },
+    { "action": "click", "selector": "#next-button", "note": "Details → Video elements" },
+    { "action": "click", "selector": "#next-button", "note": "→ Checks" },
+    { "action": "click", "selector": "#next-button", "note": "→ Visibility" },
+    { "action": "click", "selector": "tp-yt-paper-radio-button[name=PUBLIC]" },
+    { "action": "click", "selector": "#second-container-expand-button", "when": "schedule_at", "note": "Schedule section" },
+    { "action": "type", "selector": "#datepicker-trigger input, ytcp-date-picker input", "value": "{{schedule_at}}", "when": "schedule_at" },
+    { "action": "read_text", "selector": "a.ytcp-video-info, .video-url-fadeable a", "attr": "href", "save_as": "post_url", "timeout_ms": 120000 },
+    { "action": "click", "selector": "#done-button", "final": true },
+    { "action": "wait_for", "selector": "ytcp-uploads-still-processing-dialog, ytcp-video-share-dialog", "timeout_ms": 60000, "optional": true }
+  ],
+  "returns": ["post_url"]
+}

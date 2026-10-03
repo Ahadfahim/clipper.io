@@ -1,0 +1,14 @@
+{
+  "$schema": "./schema.json",
+  "name": "whop.session_check",
+  "version": 1,
+  "site": "whop",
+  "status": "UNVERIFIED",
+  "description": "Whop: is this Chrome profile logged in? A login page ends the run as a 'login' challenge. UNVERIFIED selectors.",
+  "params": { "step_delay_ms": { "type": "array" } },
+  "steps": [
+    { "action": "navigate", "url": "https://whop.com/hub/" },
+    { "action": "query", "selector": "[data-testid=user-avatar], [aria-label*='profile' i], img[alt*='avatar' i]", "exists": true, "save_as": "logged_in" }
+  ],
+  "returns": ["logged_in"]
+}

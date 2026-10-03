@@ -1,0 +1,14 @@
+{
+  "$schema": "./schema.json",
+  "name": "vyro.session_check",
+  "version": 1,
+  "site": "vyro",
+  "status": "UNVERIFIED",
+  "description": "Vyro: is this Chrome profile logged in? A login page ends the run as a 'login' challenge. UNVERIFIED selectors.",
+  "params": { "step_delay_ms": { "type": "array" } },
+  "steps": [
+    { "action": "navigate", "url": "https://vyro.com/dashboard" },
+    { "action": "query", "selector": "[data-testid=user-menu], [aria-label*='account' i], img[alt*='avatar' i]", "exists": true, "save_as": "logged_in" }
+  ],
+  "returns": ["logged_in"]
+}

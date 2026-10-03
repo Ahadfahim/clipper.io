@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "clipper-companion-recipe",
+  "title": "Clipper Companion recipe",
+  "description": "A versioned list of steps the Companion extension runs in the user's own logged-in Chrome tab. Steps stop on any CAPTCHA, verification or login screen (never solved).",
+  "type": "object",
+  "required": ["name", "version", "site", "status", "description", "params", "steps", "returns"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "name": { "type": "string", "pattern": "^[a-z]+\\.[a-z_]+$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "site": { "enum": ["youtube", "tiktok", "instagram", "x", "vyro", "whop"] },
+    "status": { "enum": ["UNVERIFIED", "verified"], "description": "UNVERIFIED until run against the real site; selectors were written without access to it." },
+    "description": { "type": "string" },
+    "start_url": { "type": "string", "format": "uri" },
+    "params": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["type"],
+        "properties": {
+          "type": { "enum": ["string", "number", "boolean", "array"] },
+          "required": { "type": "boolean" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/step" } },
+    "returns": { "type": "array", "items": { "type": "string" } }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": { "selector": { "type": "string" }, "attr": { "type": "string" }, "regex": { "type": "string" }, "text": { "type": "boolean" } }
+    },
+    "step": {
+      "type": "object",
+      "required": ["action"],
+      "additionalProperties": false,
+      "properties": {
+        "action": { "enum": ["navigate", "wait_for", "query", "click", "type", "attach_file", "read_text", "screenshot", "snapshot"] },
+        "selector": { "type": "string" },
+        "text": { "type": "string", "description": "match an element by its visible text" },
+        "value": { "type": "string", "description": "type: text to enter; {{param}} and {{param|filter}} are filled in" },
+        "url": { "type": "string" },
+        "file": { "type": "string", "description": "attach_file: clip URL on the local core (127.0.0.1 only)" },
+        "name": { "type": "string" },
+        "clear": { "type": "boolean" },
+        "attr": { "type": "string" },
+        "all": { "type": "boolean" },
+        "exists": { "type": "boolean" },
+        "fields": { "type": "object", "additionalProperties": { "$ref": "#/$defs/field" } },
+        "save_as": { "type": "string" },
+        "regex": { "type": "string" },
+        "timeout_ms": { "type": "integer", "minimum": 0 },
+        "optional": { "type": "boolean" },
+        "final": { "type": "boolean", "description": "the irreversible click (publish/submit); dry runs stop before it" },
+        "when": { "type": "string", "description": "run only if this param is set" },
+        "note": { "type": "string" }
+      }
+    }
+  }
+}

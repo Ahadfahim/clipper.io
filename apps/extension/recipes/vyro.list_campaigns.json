@@ -1,0 +1,31 @@
+{
+  "$schema": "./schema.json",
+  "name": "vyro.list_campaigns",
+  "version": 1,
+  "site": "vyro",
+  "status": "UNVERIFIED",
+  "description": "Vyro: read the open clipping campaigns (id, title, CPM, budget, platforms, deadline, link). Page text is untrusted; only these fields are taken. UNVERIFIED selectors.",
+  "start_url": "https://vyro.com/campaigns",
+  "params": { "step_delay_ms": { "type": "array" } },
+  "steps": [
+    { "action": "navigate", "url": "https://vyro.com/campaigns" },
+    { "action": "wait_for", "selector": "[data-testid=campaign-card], a[href*='/campaign']", "timeout_ms": 30000 },
+    {
+      "action": "query",
+      "selector": "[data-testid=campaign-card], a[href*='/campaign']",
+      "all": true,
+      "fields": {
+        "id": { "attr": "href", "regex": "/campaigns?/([\\w-]+)" },
+        "url": { "attr": "href" },
+        "title": { "selector": "h2, h3, [data-testid=campaign-title]" },
+        "brand": { "selector": "[data-testid=brand], .brand" },
+        "cpm": { "selector": "[data-testid=cpm], .cpm", "regex": "\\$?\\s*([\\d.]+)" },
+        "budget_left": { "selector": "[data-testid=budget-remaining], .budget", "regex": "\\$?\\s*([\\d.,]+)" },
+        "platforms": { "selector": "[data-testid=platforms], .platforms" },
+        "deadline": { "selector": "time", "attr": "datetime" }
+      },
+      "save_as": "campaigns"
+    }
+  ],
+  "returns": ["campaigns"]
+}

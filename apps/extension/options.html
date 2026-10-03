@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Clipper Companion</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Clipper Companion</h1>
+      <p class="muted">Connects this Chrome profile to Clipper on this PC (127.0.0.1). It only acts on your own logged-in tabs, and stops on any CAPTCHA, verification or login screen.</p>
+      <form id="form">
+        <label for="profile">Profile name</label>
+        <input id="profile" name="profile" required pattern="[A-Za-z0-9 _.-]{1,64}" placeholder="main" />
+        <label for="token">Pairing token</label>
+        <input id="token" name="token" type="password" required autocomplete="off" placeholder="from Clipper → Settings → Accounts and browser" />
+        <label for="port">Port</label>
+        <input id="port" name="port" type="number" min="1024" max="65535" value="8766" />
+        <button type="submit">Save and connect</button>
+      </form>
+      <p id="status" role="status" class="muted">Checking…</p>
+    </main>
+    <script src="options.js"></script>
+  </body>
+</html>
