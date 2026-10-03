@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from clipper.agents.env import scrub_process_env
+from clipper.clock import FakeClock
+from clipper.db.engine import Database
+from clipper.events.bus import EventBus
 from clipper.secrets import use_memory_backend
 from clipper.settings import Settings, load_settings
 
@@ -44,3 +48,23 @@ def settings(tmp_path: Path) -> Settings:
             "media": {"encoder": "x264"},
         },
     )
+
+
+@pytest.fixture
+def db(tmp_path: Path, settings: Settings) -> Iterator[Database]:
+    from clipper.db.seed import seed_base
+
+    database = Database(tmp_path / "test.sqlite", create=True)
+    seed_base(database, settings)
+    yield database
+    database.close()
+
+
+@pytest.fixture
+def bus(db: Database) -> EventBus:
+    return EventBus(db)
+
+
+@pytest.fixture
+def clock() -> FakeClock:
+    return FakeClock()

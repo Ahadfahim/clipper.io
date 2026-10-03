@@ -36,6 +36,8 @@ ignore = [
   "E501",    # line length handled by formatter
   "RUF001", "RUF002", "RUF003",  # unicode in strings/comments is intentional (UI copy)
   "N815",    # camelCase wire fields in protocol models
+  "PT018",   # compound asserts are fine
+  "ASYNC109", # timeout parameters on small queue helpers are intentional
 ]
 
 [tool.ruff.lint.per-file-ignores]
@@ -54,7 +56,7 @@ filterwarnings = ["ignore::DeprecationWarning:huey.*"]
 
 [tool.pyright]
 include = ["core/clipper", "apps/bot/clipper_bot", "tests"]
-exclude = ["**/__pycache__", "core/clipper/db/migrations/versions", "core/clipper/media/gpu_scripts"]
+exclude = ["**/__pycache__", "core/clipper/db/migrations", "core/clipper/media/gpu_scripts"]
 pythonVersion = "3.12"
 typeCheckingMode = "standard"
 strict = ["core/clipper"]
