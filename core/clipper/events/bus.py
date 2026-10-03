@@ -184,6 +184,14 @@ class EventBus:
 
     # ------------------------------------------------------------ history
 
+    def latest(self, limit: int = 200, types: Iterable[str] | None = None) -> list[EventEnvelope]:
+        """The newest ``limit`` events, oldest first (UI backlog)."""
+        with self.db.read() as s:
+            q = select(Event).order_by(col(Event.id).desc()).limit(limit)
+            if types is not None:
+                q = q.where(col(Event.type).in_(list(types)))
+            return [EventEnvelope.from_row(r) for r in reversed(s.exec(q).all())]
+
     def since(
         self, after_id: int, limit: int = 500, types: Iterable[str] | None = None
     ) -> list[EventEnvelope]:

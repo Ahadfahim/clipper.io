@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 import subprocess
 from collections import defaultdict
+from collections.abc import Iterable
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -465,16 +466,8 @@ def overview(core: Core) -> S.OverviewOut:
         notes = [
             note_out(n) for n in s.exec(select(Note).where(Note.scope == "global", col(Note.pinned))).all()
         ]
-        finds = [c for c in camps.values() if c.taken_at]
     usage = core.usage.as_dict()
-    find_to_post: list[float] = []
-    for c in finds:
-        first = min(
-            (p.posted_at for p in posts_all.values() if p.campaign_id == c.id and p.posted_at), default=None
-        )
-        if first is not None and first >= c.found_at:
-            find_to_post.append((first - c.found_at).total_seconds() / 3600)
-    median = sorted(find_to_post)[len(find_to_post) // 2] if find_to_post else None
+    median = median_find_to_post_hours(camps.values(), posts_all.values())
     by_market = {m: round(day_sum(day_start, "earnings", m), 2) for m in ("vyro", "whop")}
     delta = round((earned_today - earned_yday) / earned_yday * 100, 1) if earned_yday else None
     kpis = [
@@ -1222,6 +1215,19 @@ def recipes(core: Core) -> list[S.RecipeHealth]:
 # ---------------------------------------------------------------- earnings
 
 
+def median_find_to_post_hours(camps: Iterable[Campaign], posts: Iterable[Post]) -> float | None:
+    """Median hours from a taken campaign being found to its first live post."""
+    posts = list(posts)
+    hours: list[float] = []
+    for c in camps:
+        if not c.taken_at:
+            continue
+        first = min((p.posted_at for p in posts if p.campaign_id == c.id and p.posted_at), default=None)
+        if first is not None and first >= c.found_at:
+            hours.append((first - c.found_at).total_seconds() / 3600)
+    return sorted(hours)[len(hours) // 2] if hours else None
+
+
 def earnings(core: Core, days: int = 30) -> S.EarningsOut:
     now = core.clock.now()
     start = now - timedelta(days=days)
@@ -1298,13 +1304,15 @@ def earnings(core: Core, days: int = 30) -> S.EarningsOut:
                     else None
                 )
                 row.avg_cpm = round(v["earnings"] / v["views"] * 1000, 2) if v["views"] else None
-                row.payout_delay_days = 10.0 if k == "whop" else 4.0
+                # payout dates aren't tracked yet (needs the marketplace payouts page): unknown, not guessed
+                row.payout_delay_days = None
             out.append(row)
         return out
 
     total = round(sum(m.earnings for m in metrics), 2)
     approval = sum(1 for r in reviews if r.decision == "approved") / len(reviews) if reviews else None
-    clip_count = len({p.clip_id for p in posts.values() if p.status == "live"})
+    earning_posts = {m.post_id for m in metrics}
+    clip_count = len({posts[pid].clip_id for pid in earning_posts if pid in posts})
     return S.EarningsOut(
         days=days,
         total=total,
@@ -1318,7 +1326,7 @@ def earnings(core: Core, days: int = 30) -> S.EarningsOut:
             "usd_per_clip": round(total / clip_count, 2) if clip_count else None,
             "usd_per_gpu_hour": None,
             "approval_rate": round(approval, 3) if approval is not None else None,
-            "median_find_to_post_h": None,
+            "median_find_to_post_h": median_find_to_post_hours(camps.values(), posts.values()),
         },
     )
 

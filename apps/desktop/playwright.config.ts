@@ -10,6 +10,9 @@ export default defineConfig({
   reporter: process.env.CI ? [["list"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL: "http://127.0.0.1:4173",
+    timezoneId: "UTC",
+    locale: "en-US",
+    contextOptions: { reducedMotion: "reduce" },
     trace: "retain-on-failure",
     launchOptions: executablePath ? { executablePath } : {},
   },
@@ -18,9 +21,10 @@ export default defineConfig({
     { name: "screenshots", testMatch: /.*\.shots\.ts/, use: { ...devices["Desktop Chrome"] } },
   ],
   webServer: {
-    command: "pnpm exec vite preview --mode fixtures --port 4173 --strictPort",
+    // the fixture build: every API call is answered from public/fixtures (no Python needed)
+    command: "pnpm exec vite build --mode fixtures && pnpm exec vite preview --mode fixtures --port 4173 --strictPort",
     url: "http://127.0.0.1:4173",
     reuseExistingServer: !process.env.CI,
-    timeout: 60_000,
+    timeout: 180_000,
   },
 });

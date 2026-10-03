@@ -40,7 +40,7 @@
     "thumb_url": "/api/files/clip/1/thumb",
     "variant_label": null,
     "version": 2,
-    "views": 277232
+    "views": 74126
    },
    "decision": "approved",
    "decision_reason": null,
@@ -80,7 +80,8 @@
     "layout": "split",
     "moment_id": 2,
     "platforms_posted": [
-     "tiktok"
+     "tiktok",
+     "youtube"
     ],
     "preview_url": "/api/files/clip/2/preview",
     "score": 87.0,
@@ -88,7 +89,7 @@
     "thumb_url": "/api/files/clip/2/thumb",
     "variant_label": null,
     "version": 1,
-    "views": 12800
+    "views": 70858
    },
    "decision": "approved",
    "decision_reason": null,
@@ -175,14 +176,16 @@
     "id": 4,
     "layout": "fit",
     "moment_id": 4,
-    "platforms_posted": [],
+    "platforms_posted": [
+     "youtube"
+    ],
     "preview_url": "/api/files/clip/4/preview",
     "score": 81.0,
     "status": "approved",
     "thumb_url": "/api/files/clip/4/thumb",
     "variant_label": null,
     "version": 2,
-    "views": 0
+    "views": 51429
    },
    "decision": "approved",
    "decision_reason": null,
@@ -268,14 +271,16 @@
     "id": 6,
     "layout": "split",
     "moment_id": 6,
-    "platforms_posted": [],
+    "platforms_posted": [
+     "youtube"
+    ],
     "preview_url": "/api/files/clip/6/preview",
     "score": 77.0,
     "status": "approved",
     "thumb_url": "/api/files/clip/6/thumb",
     "variant_label": null,
     "version": 1,
-    "views": 0
+    "views": 47302
    },
    "decision": "approved",
    "decision_reason": null,
@@ -408,14 +413,16 @@
     "id": 9,
     "layout": "crop",
     "moment_id": 9,
-    "platforms_posted": [],
+    "platforms_posted": [
+     "youtube"
+    ],
     "preview_url": "/api/files/clip/9/preview",
     "score": 68.0,
     "status": "approved",
     "thumb_url": "/api/files/clip/9/thumb",
     "variant_label": null,
     "version": 1,
-    "views": 0
+    "views": 46317
    },
    "decision": "approved",
    "decision_reason": null,

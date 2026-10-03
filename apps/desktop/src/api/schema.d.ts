@@ -55,6 +55,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agents/events/{event_id}/replay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Replay Event
+         * @description Debug a recorded tool call: re-check it against today's guard rules and re-run it only if it
+         *     is read-only. Calls that change state are never executed from here.
+         */
+        post: operations["replay_event_api_agents_events__event_id__replay_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agents/requests/{request_id}": {
         parameters: {
             query?: never;
@@ -151,6 +172,46 @@ export interface paths {
         put?: never;
         /** Nudge */
         post: operations["nudge_api_agents_sessions__session_id__nudge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agents/trigger/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Trigger
+         * @description Scout now / Analyst now: the supervisor routes ``trigger.fired`` like a scheduled run.
+         */
+        post: operations["trigger_api_agents_trigger__name__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/browser/profiles/{profile}/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open Chrome Profile
+         * @description Opens the Chrome window for a Clipper profile (log in, fix a challenge). Fixture mode: no-op.
+         */
+        post: operations["open_chrome_profile_api_browser_profiles__profile__open_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -541,7 +602,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Events */
+        /**
+         * Events
+         * @description Events after ``after`` (oldest first); ``latest=true`` returns the newest ``limit`` instead.
+         */
         get: operations["events_api_events_get"];
         put?: never;
         post?: never;
@@ -1317,7 +1381,7 @@ export interface components {
              */
             kind: "request" | "wakeup" | "post";
             /** Priority */
-            priority?: number | null;
+            priority: number | null;
             /** Text */
             text: string;
             /** When */
@@ -1456,9 +1520,9 @@ export interface components {
         /** BreakdownRow */
         BreakdownRow: {
             /** Approval Rate */
-            approval_rate?: number | null;
+            approval_rate: number | null;
             /** Avg Cpm */
-            avg_cpm?: number | null;
+            avg_cpm: number | null;
             /** Earnings */
             earnings: number;
             /** Key */
@@ -1466,7 +1530,7 @@ export interface components {
             /** Label */
             label: string;
             /** Payout Delay Days */
-            payout_delay_days?: number | null;
+            payout_delay_days: number | null;
             /** Posts */
             posts: number;
             /** Views */
@@ -1951,7 +2015,7 @@ export interface components {
         /** Kpi */
         Kpi: {
             /** Delta Pct */
-            delta_pct?: number | null;
+            delta_pct: number | null;
             /** Display */
             display: string;
             /** Key */
@@ -1959,13 +2023,13 @@ export interface components {
             /** Label */
             label: string;
             /** Spark */
-            spark?: number[];
+            spark: number[];
             /** Split */
-            split?: {
+            split: {
                 [key: string]: number;
             } | null;
             /** Unit */
-            unit?: string | null;
+            unit: string | null;
             /** Value */
             value: number;
         };
@@ -2037,7 +2101,7 @@ export interface components {
             /** Action */
             action: string;
             /** Args */
-            args?: {
+            args: {
                 [key: string]: unknown;
             };
             /** Label */
@@ -2103,9 +2167,9 @@ export interface components {
         /** OkOut */
         OkOut: {
             /** Detail */
-            detail?: string | null;
+            detail: string | null;
             /** Id */
-            id?: number | null;
+            id: number | null;
             /**
              * Ok
              * @default true
@@ -2290,6 +2354,37 @@ export interface components {
              * @enum {string}
              */
             via: "dashboard" | "discord";
+        };
+        /** ReplayOut */
+        ReplayOut: {
+            /** Allowed */
+            allowed: boolean;
+            /**
+             * Detail
+             * @default
+             */
+            detail: string;
+            /**
+             * Executed
+             * @default false
+             */
+            executed: boolean;
+            /** Output */
+            output: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Reason
+             * @default
+             */
+            reason: string;
+            /**
+             * Rule
+             * @default
+             */
+            rule: string;
+            /** Tool */
+            tool: string;
         };
         /** RescheduleIn */
         RescheduleIn: {
@@ -2546,18 +2641,18 @@ export interface components {
         /** SwitchPreview */
         SwitchPreview: {
             /** Active Campaigns */
-            active_campaigns?: number | null;
+            active_campaigns: number | null;
             /** Scheduled Posts */
-            scheduled_posts?: number | null;
+            scheduled_posts: number | null;
         };
         /** SwitchResult */
         SwitchResult: {
             /** Effects */
-            effects?: {
+            effects: {
                 [key: string]: unknown;
             };
             /** Needs Setup */
-            needs_setup?: string | null;
+            needs_setup: string | null;
             /** Ok */
             ok: boolean;
         };
@@ -2788,6 +2883,37 @@ export interface operations {
             };
         };
     };
+    replay_event_api_agents_events__event_id__replay_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplayOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     cancel_request_api_agents_requests__request_id__delete: {
         parameters: {
             query?: never;
@@ -2945,6 +3071,68 @@ export interface operations {
             header?: never;
             path: {
                 session_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trigger_api_agents_trigger__name__post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: "scout" | "analyst";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    open_chrome_profile_api_browser_profiles__profile__open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile: string;
             };
             cookie?: never;
         };
@@ -3664,6 +3852,7 @@ export interface operations {
                 after?: number;
                 limit?: number;
                 types?: string | null;
+                latest?: boolean;
             };
             header?: never;
             path?: never;

@@ -33,9 +33,10 @@ test:
     pnpm -r run test
 
 # Playwright screenshot tests of every screen (dark/light x 1280x800/1920x1080) into docs/screenshots.
+# The fixture build is made by Playwright's web server; PNGs are shrunk with pngquant when it's installed.
 screenshots:
-    pnpm --filter @clipper/desktop run build
     pnpm --filter @clipper/desktop exec playwright test --project=screenshots
+    -pngquant --quality=70-95 --speed 1 --force --ext .png --skip-if-larger docs/screenshots/*.png
 
 # Everything CI runs.
 ci: lint test build screenshots

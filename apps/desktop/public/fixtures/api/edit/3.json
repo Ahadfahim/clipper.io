@@ -337,10 +337,10 @@
   }
  ],
  "live_range": [
-  12.0,
-  19.0
+  2.0,
+  5.0
  ],
- "live_status": "Removing filler words 0:12-0:19\u2026",
+ "live_status": "Removing filler words 0:02-0:05\u2026",
  "locked_by": null,
  "notes": [
   {

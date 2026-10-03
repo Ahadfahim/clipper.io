@@ -70,7 +70,7 @@
    "earnings": 614.26,
    "key": "vyro",
    "label": "Vyro",
-   "payout_delay_days": 4.0,
+   "payout_delay_days": null,
    "posts": 16,
    "views": 204759
   },
@@ -80,7 +80,7 @@
    "earnings": 213.19,
    "key": "whop",
    "label": "Whop",
-   "payout_delay_days": 10.0,
+   "payout_delay_days": null,
    "posts": 14,
    "views": 85273
   }
@@ -285,7 +285,7 @@
    "thumb_url": "/api/files/clip/1/thumb",
    "variant_label": null,
    "version": 2,
-   "views": 277232
+   "views": 74126
   },
   {
    "campaign_id": 1,
@@ -299,7 +299,8 @@
    "layout": "split",
    "moment_id": 2,
    "platforms_posted": [
-    "tiktok"
+    "tiktok",
+    "youtube"
    ],
    "preview_url": "/api/files/clip/2/preview",
    "score": 87.0,
@@ -307,7 +308,7 @@
    "thumb_url": "/api/files/clip/2/thumb",
    "variant_label": null,
    "version": 1,
-   "views": 12800
+   "views": 70858
   },
   {
    "campaign_id": 1,
@@ -320,14 +321,16 @@
    "id": 4,
    "layout": "fit",
    "moment_id": 4,
-   "platforms_posted": [],
+   "platforms_posted": [
+    "youtube"
+   ],
    "preview_url": "/api/files/clip/4/preview",
    "score": 81.0,
    "status": "approved",
    "thumb_url": "/api/files/clip/4/thumb",
    "variant_label": null,
    "version": 2,
-   "views": 0
+   "views": 51429
   },
   {
    "campaign_id": 1,
@@ -340,14 +343,16 @@
    "id": 6,
    "layout": "split",
    "moment_id": 6,
-   "platforms_posted": [],
+   "platforms_posted": [
+    "youtube"
+   ],
    "preview_url": "/api/files/clip/6/preview",
    "score": 77.0,
    "status": "approved",
    "thumb_url": "/api/files/clip/6/thumb",
    "variant_label": null,
    "version": 1,
-   "views": 0
+   "views": 47302
   },
   {
    "campaign_id": 1,
@@ -360,21 +365,23 @@
    "id": 9,
    "layout": "crop",
    "moment_id": 9,
-   "platforms_posted": [],
+   "platforms_posted": [
+    "youtube"
+   ],
    "preview_url": "/api/files/clip/9/preview",
    "score": 68.0,
    "status": "approved",
    "thumb_url": "/api/files/clip/9/thumb",
    "variant_label": null,
    "version": 1,
-   "views": 0
+   "views": 46317
   }
  ],
  "total": 827.45,
  "units": {
   "approval_rate": 0.714,
-  "median_find_to_post_h": null,
-  "usd_per_clip": 413.73,
+  "median_find_to_post_h": 10.0,
+  "usd_per_clip": 165.49,
   "usd_per_gpu_hour": null
  }
 }

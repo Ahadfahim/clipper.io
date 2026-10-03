@@ -96,7 +96,7 @@
  "posts": [
   {
    "account_id": 4,
-   "clip_id": 1,
+   "clip_id": 2,
    "dry_run": false,
    "earnings": 48.7,
    "error": null,
@@ -106,13 +106,13 @@
    "posted_at": "2026-10-01T18:00:00Z",
    "scheduled_at": "2026-10-01T18:00:00Z",
    "status": "live",
-   "thumb_url": "/api/files/clip/1/thumb",
+   "thumb_url": "/api/files/clip/2/thumb",
    "url": "https://example.invalid/@beastmoments/1",
    "views": 16235
   },
   {
    "account_id": 2,
-   "clip_id": 1,
+   "clip_id": 2,
    "dry_run": false,
    "earnings": 23.06,
    "error": null,
@@ -122,7 +122,7 @@
    "posted_at": "2026-10-01T18:00:00Z",
    "scheduled_at": "2026-10-01T18:00:00Z",
    "status": "live",
-   "thumb_url": "/api/files/clip/1/thumb",
+   "thumb_url": "/api/files/clip/2/thumb",
    "url": "https://example.invalid/@podcastcuts/1",
    "views": 9224
   },

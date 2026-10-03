@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import timedelta
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -230,3 +231,50 @@ def test_websocket_backlog_and_live(client: TestClient) -> None:
     ):
         ws.receive_json()
     assert closed.value.code == 4403
+
+
+def test_events_latest_returns_newest_oldest_first(client: TestClient) -> None:
+    all_events = client.get("/api/events?after=0&limit=1000").json()
+    latest = client.get("/api/events?latest=true&limit=3").json()
+    assert [e["id"] for e in latest] == [e["id"] for e in all_events[-3:]]
+
+
+def test_trigger_scout_publishes_event(client: TestClient) -> None:
+    res = client.post("/api/agents/trigger/scout")
+    assert res.status_code == 200
+    ev = client.get("/api/events?latest=true&limit=1").json()[0]
+    assert ev["type"] == "trigger.fired" and ev["payload"]["name"] == "scout"
+    assert client.post("/api/agents/trigger/nope").status_code == 422
+
+
+def test_replay_runs_read_only_calls_and_rechecks_guard(tmp_path: Path) -> None:
+    # a fresh demo DB: other tests in this module approve and ship clips
+    app = create_app(
+        fixture_mode=True,
+        start_background=False,
+        settings=Settings().with_data_dir(tmp_path),
+        allow_test_host=True,
+    )
+    with TestClient(app) as fresh:
+        events = fresh.get("/api/agents/sessions/1").json()["events"]
+        read = next(e for e in events if e["type"] == "tool_call" and e["tool"] == "mcp__state__get_campaign")
+        out = fresh.post(f"/api/agents/events/{read['id']}/replay").json()
+        assert out["allowed"] and out["executed"] and out["output"]
+        blocked = next(e for e in events if e["type"] == "blocked")
+        out = fresh.post(f"/api/agents/events/{blocked['id']}/replay").json()
+        assert not out["allowed"] and out["rule"] == "approval" and not out["executed"]
+        clip_id = blocked["input"]["args"]["clip_id"]
+        fresh.post(
+            f"/api/review/clips/{clip_id}/decision",
+            json={"decision": "approved", "reviewer": "test", "via": "dashboard"},
+        )
+        out = fresh.post(f"/api/agents/events/{blocked['id']}/replay").json()
+        assert not out["executed"]  # changes state: never executed from the replay button
+        msg = next(e for e in events if e["type"] == "message")
+        assert fresh.post(f"/api/agents/events/{msg['id']}/replay").status_code == 400
+
+
+def test_director_messages_include_your_side(client: TestClient) -> None:
+    client.post("/api/agents/director/chat", json={"text": "how much did we make today?", "via": "dashboard"})
+    msgs = client.get("/api/agents/director/messages").json()
+    assert msgs[-1]["type"] == "user" and msgs[-1]["text"] == "how much did we make today?"

@@ -11,7 +11,8 @@
   "layout": "split",
   "moment_id": 2,
   "platforms_posted": [
-   "tiktok"
+   "tiktok",
+   "youtube"
   ],
   "preview_url": "/api/files/clip/2/preview",
   "score": 87.0,
@@ -19,7 +20,7 @@
   "thumb_url": "/api/files/clip/2/thumb",
   "variant_label": null,
   "version": 1,
-  "views": 12800
+  "views": 70858
  },
  "payoff": "Reaction lands right on the reveal",
  "posts": [
@@ -38,6 +39,102 @@
    "thumb_url": "/api/files/clip/2/thumb",
    "url": "https://www.tiktok.com/@shortsfactory/video/7420000000000000001",
    "views": 12800
+  },
+  {
+   "account_id": 4,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 21.41,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 13,
+   "platform": "youtube",
+   "posted_at": "2026-09-21T18:00:00Z",
+   "scheduled_at": "2026-09-21T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@beastmoments/11",
+   "views": 7138
+  },
+  {
+   "account_id": 2,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 12.33,
+   "error": null,
+   "handle": "@podcastcuts",
+   "id": 14,
+   "platform": "youtube",
+   "posted_at": "2026-09-21T18:00:00Z",
+   "scheduled_at": "2026-09-21T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@podcastcuts/11",
+   "views": 4931
+  },
+  {
+   "account_id": 4,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 39.81,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 23,
+   "platform": "youtube",
+   "posted_at": "2026-09-26T18:00:00Z",
+   "scheduled_at": "2026-09-26T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@beastmoments/6",
+   "views": 13270
+  },
+  {
+   "account_id": 2,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 18.15,
+   "error": null,
+   "handle": "@podcastcuts",
+   "id": 24,
+   "platform": "youtube",
+   "posted_at": "2026-09-26T18:00:00Z",
+   "scheduled_at": "2026-09-26T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@podcastcuts/6",
+   "views": 7260
+  },
+  {
+   "account_id": 4,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 48.7,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 33,
+   "platform": "youtube",
+   "posted_at": "2026-10-01T18:00:00Z",
+   "scheduled_at": "2026-10-01T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@beastmoments/1",
+   "views": 16235
+  },
+  {
+   "account_id": 2,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 23.06,
+   "error": null,
+   "handle": "@podcastcuts",
+   "id": 34,
+   "platform": "youtube",
+   "posted_at": "2026-10-01T18:00:00Z",
+   "scheduled_at": "2026-10-01T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@podcastcuts/1",
+   "views": 9224
   }
  ],
  "qa": {

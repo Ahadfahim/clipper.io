@@ -117,7 +117,12 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
                 name = "preview.mp4" if kind == "preview" else f"clip_{cid}_thumb.{ext}"
                 (out_dir / "files" / name).write_bytes(res.content)
                 files[f"/api/files/clip/{cid}/{kind}"] = f"files/{name}"
-            files[f"/api/files/clip/{cid}/proxy"] = "files/preview.mp4"
+            res = client.get(f"/api/files/clip/{cid}/proxy")
+            if res.status_code == 200:
+                # every demo clip is cut from the same fixture source: one copy serves them all
+                if not (out_dir / "files" / "source.mp4").exists():
+                    (out_dir / "files" / "source.mp4").write_bytes(res.content)
+                files[f"/api/files/clip/{cid}/proxy"] = "files/source.mp4"
     manifest = {
         "generated_at": FIXED_NOW.isoformat(),
         "paths": sorted(_name(p) for p in paths),

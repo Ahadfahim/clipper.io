@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
@@ -21,6 +21,7 @@ from clipper.db.models import (
     Campaign,
     Clip,
     DiscordRef,
+    Event,
     Lesson,
     Moment,
     Post,
@@ -138,9 +139,15 @@ def doctor(core: CoreDep, request: Request) -> list[S.HealthItem]:
 
 @system.get("/events", response_model=list[S.EventOut])
 def events(
-    core: CoreDep, after: int = 0, limit: int = Query(default=200, le=1000), types: str | None = None
+    core: CoreDep,
+    after: int = 0,
+    limit: int = Query(default=200, le=1000),
+    types: str | None = None,
+    latest: bool = False,
 ) -> list[S.EventOut]:
-    envs = core.bus.since(after, limit=limit, types=types.split(",") if types else None)
+    """Events after ``after`` (oldest first); ``latest=true`` returns the newest ``limit`` instead."""
+    wanted = types.split(",") if types else None
+    envs = core.bus.latest(limit, wanted) if latest else core.bus.since(after, limit=limit, types=wanted)
     return [S.EventOut(**e.model_dump()) for e in envs]
 
 
@@ -261,6 +268,73 @@ def cancel_request(request: Request, request_id: int) -> S.OkOut:
     return S.OkOut(id=request_id)
 
 
+@system.post("/browser/profiles/{profile}/open", response_model=S.OkOut)
+def open_chrome_profile(core: CoreDep, request: Request, profile: str) -> S.OkOut:
+    """Opens the Chrome window for a Clipper profile (log in, fix a challenge). Fixture mode: no-op."""
+    from clipper.browser.launch import open_profile
+
+    if request.app.state.fixture_mode:
+        return S.OkOut(detail="fixture mode: Chrome not opened")
+    try:
+        open_profile(core.settings, profile)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(500, f"couldn't start Chrome: {exc}") from exc
+    return S.OkOut(detail=f"opened {profile}")
+
+
+@agents.post("/trigger/{name}", response_model=S.OkOut)
+def trigger(core: CoreDep, name: Literal["scout", "analyst"]) -> S.OkOut:
+    """Scout now / Analyst now: the supervisor routes ``trigger.fired`` like a scheduled run."""
+    from clipper.events.types import TriggerFired
+
+    env = core.bus.publish(TriggerFired(name=name))
+    return S.OkOut(id=env.id)
+
+
+@agents.post("/events/{event_id}/replay", response_model=S.ReplayOut)
+async def replay_event(core: CoreDep, event_id: int) -> S.ReplayOut:
+    """Debug a recorded tool call: re-check it against today's guard rules and re-run it only if it
+    is read-only. Calls that change state are never executed from here."""
+    from clipper.agents.access import is_read_only, split_fq
+    from clipper.agents.hooks import ToolCall
+    from clipper.db.models import AgentEvent
+    from clipper.tools.base import REGISTRY, ToolContext, call_tool, ensure_loaded
+
+    with core.db.read() as s:
+        ev = s.get(AgentEvent, event_id)
+        sess = s.get(AgentSession, ev.session_id) if ev and ev.session_id else None
+    if ev is None or not ev.tool or split_fq(ev.tool) is None:
+        raise HTTPException(400, "not a recorded MCP tool call")
+    server, name = split_fq(ev.tool) or ("", "")
+    args = dict(ev.input_json.get("args") or {})
+    role = str(ev.input_json.get("subagent") or (sess.role if sess else "developer"))
+    call = ToolCall(
+        tool=ev.tool,
+        args=args,
+        role=role,
+        session_id=sess.id if sess else None,
+        campaign_id=sess.campaign_id if sess else None,
+    )
+    verdict = core.guard.evaluate(call)
+    out = S.ReplayOut(tool=ev.tool, allowed=verdict.allowed, rule=verdict.rule, reason=verdict.reason)
+    if not verdict.allowed:
+        return out
+    if not is_read_only(ev.tool):
+        out.detail = "Allowed by the guard today. Not executed: this tool changes state."
+        return out
+    ensure_loaded()
+    spec = REGISTRY.get(server, {}).get(name)
+    if spec is None:
+        raise HTTPException(400, f"{ev.tool} is not registered")
+    ctx = ToolContext(core=core, role=role, session_id=None, campaign_id=call.campaign_id)
+    result = await call_tool(ctx, spec, args)
+    out.executed = True
+    out.output = result.data or {"content": result.content, "is_error": result.is_error}
+    return out
+
+
 @agents.post("/director/chat", response_model=S.OkOut)
 def director_chat(core: CoreDep, body: S.ChatIn) -> S.OkOut:
     env = core.bus.publish(UserChat(text=body.text, via=body.via, reply_to=body.reply_to))
@@ -279,7 +353,27 @@ def director_messages(core: CoreDep, limit: int = 50) -> list[S.AgentEventOut]:
             .order_by(col(AgentEvent.id).desc())
             .limit(limit)
         ).all()
-    return [views.agent_event_out(e) for e in reversed(rows)]
+        chats = s.exec(
+            select(Event).where(Event.type == "user.chat").order_by(col(Event.id).desc()).limit(limit)
+        ).all()
+    msgs = [views.agent_event_out(e) for e in rows]
+    # your side of the conversation (from Ctrl+K, the Agents page or Discord #control)
+    msgs += [
+        S.AgentEventOut(
+            id=-(c.id or 0),
+            session_id=None,
+            ts=c.ts,
+            type="user",
+            tool=None,
+            subagent=None,
+            text=str(c.payload.get("text", "")),
+            input={"via": c.payload.get("via")},
+            output={},
+        )
+        for c in chats
+    ]
+    msgs.sort(key=lambda m: (m.ts, m.id))
+    return msgs[-limit:]
 
 
 # ---------------------------------------------------------------- campaigns

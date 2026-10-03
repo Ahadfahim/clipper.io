@@ -11,7 +11,7 @@ from clipper.rules.spec import ClipSpec
 
 
 class M(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, json_schema_serialization_defaults_required=True)
 
 
 # ---------------------------------------------------------------- system
@@ -279,6 +279,16 @@ class ChatIn(BaseModel):
     text: str = Field(min_length=1, max_length=4000)
     via: Literal["dashboard", "discord", "ctrl+k"] = "dashboard"
     reply_to: str | None = None
+
+
+class ReplayOut(M):
+    tool: str
+    allowed: bool
+    rule: str = ""
+    reason: str = ""
+    executed: bool = False
+    output: dict[str, Any] | None = None
+    detail: str = ""
 
 
 class BumpIn(BaseModel):

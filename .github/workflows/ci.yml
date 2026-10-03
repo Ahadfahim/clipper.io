@@ -61,3 +61,26 @@ jobs:
             apps/desktop/test-results
             apps/desktop/playwright-report
           if-no-files-found: ignore
+
+  tauri-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tauri Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev librsvg2-dev libayatana-appindicator3-dev libxdo-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - name: Placeholder sidecars (the real core binary is built on Windows)
+        run: |
+          touch apps/desktop/src-tauri/binaries/clipper-core-x86_64-unknown-linux-gnu
+          touch apps/desktop/src-tauri/binaries/clipper-core-x86_64-pc-windows-msvc.exe
+      - name: cargo check (Linux)
+        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
+      - name: cargo check (Windows target)
+        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc

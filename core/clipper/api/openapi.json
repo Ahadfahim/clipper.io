@@ -369,7 +369,8 @@
     "required": [
      "kind",
      "when",
-     "text"
+     "text",
+     "priority"
     ],
     "title": "AgendaEntry",
     "type": "object"
@@ -804,7 +805,10 @@
      "label",
      "earnings",
      "views",
-     "posts"
+     "posts",
+     "approval_rate",
+     "avg_cpm",
+     "payout_delay_days"
     ],
     "title": "BreakdownRow",
     "type": "object"
@@ -2144,7 +2148,8 @@
     "required": [
      "name",
      "status",
-     "detail"
+     "detail",
+     "fix"
     ],
     "title": "HealthItem",
     "type": "object"
@@ -2299,7 +2304,11 @@
      "key",
      "label",
      "value",
-     "display"
+     "display",
+     "delta_pct",
+     "spark",
+     "split",
+     "unit"
     ],
     "title": "Kpi",
     "type": "object"
@@ -2492,7 +2501,8 @@
     },
     "required": [
      "label",
-     "action"
+     "action",
+     "args"
     ],
     "title": "NeedsYouAction",
     "type": "object"
@@ -2686,6 +2696,11 @@
       "type": "boolean"
      }
     },
+    "required": [
+     "ok",
+     "id",
+     "detail"
+    ],
     "title": "OkOut",
     "type": "object"
    },
@@ -3231,6 +3246,61 @@
      }
     },
     "title": "RejectRestIn",
+    "type": "object"
+   },
+   "ReplayOut": {
+    "properties": {
+     "allowed": {
+      "title": "Allowed",
+      "type": "boolean"
+     },
+     "detail": {
+      "default": "",
+      "title": "Detail",
+      "type": "string"
+     },
+     "executed": {
+      "default": false,
+      "title": "Executed",
+      "type": "boolean"
+     },
+     "output": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Output"
+     },
+     "reason": {
+      "default": "",
+      "title": "Reason",
+      "type": "string"
+     },
+     "rule": {
+      "default": "",
+      "title": "Rule",
+      "type": "string"
+     },
+     "tool": {
+      "title": "Tool",
+      "type": "string"
+     }
+    },
+    "required": [
+     "tool",
+     "allowed",
+     "rule",
+     "reason",
+     "executed",
+     "output",
+     "detail"
+    ],
+    "title": "ReplayOut",
     "type": "object"
    },
    "RescheduleIn": {
@@ -3995,6 +4065,10 @@
       "title": "Scheduled Posts"
      }
     },
+    "required": [
+     "active_campaigns",
+     "scheduled_posts"
+    ],
     "title": "SwitchPreview",
     "type": "object"
    },
@@ -4022,7 +4096,9 @@
      }
     },
     "required": [
-     "ok"
+     "ok",
+     "needs_setup",
+     "effects"
     ],
     "title": "SwitchResult",
     "type": "object"
@@ -4473,6 +4549,49 @@
     ]
    }
   },
+  "/api/agents/events/{event_id}/replay": {
+   "post": {
+    "description": "Debug a recorded tool call: re-check it against today's guard rules and re-run it only if it\nis read-only. Calls that change state are never executed from here.",
+    "operationId": "replay_event_api_agents_events__event_id__replay_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "event_id",
+      "required": true,
+      "schema": {
+       "title": "Event Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReplayOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Replay Event",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
   "/api/agents/requests/{request_id}": {
    "delete": {
     "operationId": "cancel_request_api_agents_requests__request_id__delete",
@@ -4736,6 +4855,96 @@
     "summary": "Nudge",
     "tags": [
      "agents"
+    ]
+   }
+  },
+  "/api/agents/trigger/{name}": {
+   "post": {
+    "description": "Scout now / Analyst now: the supervisor routes ``trigger.fired`` like a scheduled run.",
+    "operationId": "trigger_api_agents_trigger__name__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "enum": [
+        "scout",
+        "analyst"
+       ],
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Trigger",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/browser/profiles/{profile}/open": {
+   "post": {
+    "description": "Opens the Chrome window for a Clipper profile (log in, fix a challenge). Fixture mode: no-op.",
+    "operationId": "open_chrome_profile_api_browser_profiles__profile__open_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "profile",
+      "required": true,
+      "schema": {
+       "title": "Profile",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Open Chrome Profile",
+    "tags": [
+     "system"
     ]
    }
   },
@@ -5759,6 +5968,7 @@
   },
   "/api/events": {
    "get": {
+    "description": "Events after ``after`` (oldest first); ``latest=true`` returns the newest ``limit`` instead.",
     "operationId": "events_api_events_get",
     "parameters": [
      {
@@ -5796,6 +6006,16 @@
         }
        ],
        "title": "Types"
+      }
+     },
+     {
+      "in": "query",
+      "name": "latest",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Latest",
+       "type": "boolean"
       }
      }
     ],

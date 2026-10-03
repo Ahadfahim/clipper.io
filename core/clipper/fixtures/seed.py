@@ -654,8 +654,9 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 )
             )
         # 14 days of earnings/views split across marketplaces (fed by older posts)
-        hist_clip = clip_ids[0]
+        approved_idx = [0, 1, 3, 5, 8]  # only approved clips earn
         for d in range(14, 0, -1):
+            hist_clip = clip_ids[approved_idx[d % len(approved_idx)]]
             day = now - timedelta(days=d)
             for handle, market, scale in (("@beastmoments", "vyro", 1.0), ("@podcastcuts", "whop", 0.55)):
                 a = acct[handle]
@@ -878,18 +879,10 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
         tx.add(
             AgentEvent(
                 session_id=s_dir.id,
-                ts=now - timedelta(minutes=26),
-                type="message",
-                input_json={"text": "User (dashboard): how much did we make this week?"},
-            )
-        )
-        tx.add(
-            AgentEvent(
-                session_id=s_dir.id,
                 ts=now - timedelta(minutes=25),
                 type="message",
                 input_json={
-                    "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #31 'Nobody tells you this' with 41k views."
+                    "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #1 'Nobody tells you this about the $1M prize' with 41k views."
                 },
             )
         )
@@ -1097,8 +1090,136 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 existing.value_json = value
                 tx.add(existing)
 
-        # a few activity events for the output panel
-        for dt, type_, entity, entity_id, payload in (
+        # activity events for the output panel (inserted in time order below)
+        more_events: list[tuple[int, str, str | None, str | None, dict[str, Any]]] = [
+            (
+                -26,
+                "user.chat",
+                "chat",
+                None,
+                {"text": "how much did we make this week?", "via": "dashboard", "reply_to": None},
+            ),
+            (
+                -58,
+                "agent.event",
+                "agent_session",
+                str(s_analyst.id),
+                {
+                    "session_id": s_analyst.id,
+                    "agent_event_id": 0,
+                    "kind": "message",
+                    "tool": None,
+                    "summary": "Cold opens earn 1.6x on Whop this week; raised hook weight for Whop campaigns",
+                },
+            ),
+            (
+                -47,
+                "job.progress",
+                "job",
+                "5",
+                {"job_id": 5, "kind": "analyze", "progress": 0.4, "campaign_id": ali.id},
+            ),
+            (
+                -44,
+                "post.live",
+                "post",
+                str(live1.id),
+                {
+                    "post_id": live1.id,
+                    "clip_id": clip_ids[0],
+                    "campaign_id": beast.id,
+                    "platform": "youtube",
+                    "url": "https://youtube.com/shorts/Abc123def45",
+                    "dry_run": True,
+                },
+            ),
+            (
+                -40,
+                "review.decided",
+                "clip",
+                str(clip_ids[1]),
+                {
+                    "clip_id": clip_ids[1],
+                    "batch_id": batch.id,
+                    "decision": "approved",
+                    "reason": None,
+                    "via": "discord",
+                    "reviewer": "you",
+                },
+            ),
+            (
+                -39,
+                "review.decided",
+                "clip",
+                str(clip_ids[9]),
+                {
+                    "clip_id": clip_ids[9],
+                    "batch_id": batch.id,
+                    "decision": "rejected",
+                    "reason": "bad_hook",
+                    "via": "discord",
+                    "reviewer": "you",
+                },
+            ),
+            (
+                -30,
+                "agent.event",
+                "agent_session",
+                str(s_scout.id),
+                {
+                    "session_id": s_scout.id,
+                    "agent_event_id": 0,
+                    "kind": "tool_call",
+                    "tool": "mcp__marketplace__list_campaigns",
+                    "summary": "Whop: 2 new campaigns, 1 scored above 80",
+                },
+            ),
+            (
+                -26,
+                "job.done",
+                "job",
+                "6",
+                {
+                    "job_id": 6,
+                    "kind": "download",
+                    "status": "failed",
+                    "campaign_id": ali.id,
+                    "result": {},
+                    "error": "RuntimeError: yt-dlp failed: Video unavailable",
+                },
+            ),
+            (
+                -14,
+                "toggles.changed",
+                "toggle",
+                "social:x",
+                {
+                    "level": "social",
+                    "name": "x",
+                    "enabled": False,
+                    "by": "user",
+                    "via": "app",
+                    "effects": {},
+                },
+            ),
+            (
+                -4,
+                "edit.op",
+                "clip",
+                str(live_clip),
+                {
+                    "clip_id": live_clip,
+                    "op_id": 0,
+                    "op": "remove_silences",
+                    "actor": f"session:{s_beast.id}",
+                    "version": 3,
+                    "reason": "3.4s of dead air",
+                    "range": None,
+                    "undone": False,
+                },
+            ),
+        ]
+        base_events: list[tuple[int, str, str | None, str | None, dict[str, Any]]] = [
             (
                 -55,
                 "job.done",
@@ -1173,11 +1294,12 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 {
                     "clip_id": live_clip,
                     "actor": f"session:{s_beast.id}",
-                    "text": "Removing filler words 0:12-0:19…",
-                    "range": [12.0, 19.0],
+                    "text": "Removing filler words 0:02-0:05…",
+                    "range": [2.0, 5.0],
                 },
             ),
-        ):
+        ]
+        for dt, type_, entity, entity_id, payload in sorted([*base_events, *more_events], key=lambda e: e[0]):
             tx.add(
                 Event(
                     type=type_,

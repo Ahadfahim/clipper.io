@@ -6,7 +6,7 @@ import type { components, paths } from "./schema";
 
 export type Schemas = components["schemas"];
 
-export const FIXTURE_MODE = import.meta.env.MODE === "fixtures";
+export const FIXTURE_MODE = import.meta.env.MODE === "fixtures" || import.meta.env.VITE_FIXTURES === "1";
 export const API_BASE: string = (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://127.0.0.1:8765";
 
 type Manifest = { generated_at: string; paths: string[]; files: Record<string, string> };

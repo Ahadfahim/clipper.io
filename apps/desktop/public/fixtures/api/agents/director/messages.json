@@ -1,26 +1,26 @@
 [
  {
-  "id": 12,
+  "id": -10,
   "input": {
-   "text": "User (dashboard): how much did we make this week?"
+   "via": "dashboard"
   },
   "output": {},
-  "session_id": 5,
+  "session_id": null,
   "subagent": null,
-  "text": "User (dashboard): how much did we make this week?",
+  "text": "how much did we make this week?",
   "tool": null,
   "ts": "2026-10-02T17:34:00Z",
-  "type": "message"
+  "type": "user"
  },
  {
-  "id": 13,
+  "id": 12,
   "input": {
-   "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #31 'Nobody tells you this' with 41k views."
+   "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #1 'Nobody tells you this about the $1M prize' with 41k views."
   },
   "output": {},
   "session_id": 5,
   "subagent": null,
-  "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #31 'Nobody tells you this' with 41k views.",
+  "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #1 'Nobody tells you this about the $1M prize' with 41k views.",
   "tool": null,
   "ts": "2026-10-02T17:35:00Z",
   "type": "message"
