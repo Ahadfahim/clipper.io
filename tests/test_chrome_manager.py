@@ -63,6 +63,20 @@ def test_closed_chrome_comes_back_hidden(
     assert state.running and not state.visible and len(ops.launched) == 2
 
 
+def test_an_already_open_window_stays_open_when_clipper_starts(
+    chrome: tuple[ChromeManager, FakeWindowOps], settings: Settings
+) -> None:
+    mgr, ops = chrome
+    ops.launch([f"--user-data-dir={settings.paths.chrome_profiles_dir / 'main'}"])  # you opened it
+    mgr.start()
+    try:
+        mgr.tick()
+        assert next(s for s in mgr.states() if s.name == "main").visible
+        assert len(ops.launched) == 1  # reused, not a second Chrome
+    finally:
+        mgr.stop()
+
+
 def test_bad_profile_names_are_refused(chrome: tuple[ChromeManager, FakeWindowOps]) -> None:
     mgr, _ = chrome
     for bad in ("..", "a/b", "", "x" * 80):

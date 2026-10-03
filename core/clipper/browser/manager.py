@@ -81,6 +81,11 @@ class ChromeManager:
                 pid = self.ops.launch(self.command(profile))
                 self._want_hidden.setdefault(profile, self.settings.browser.start_hidden)
                 log.info("started Clipper Chrome %s (pid %s)", profile, pid)
+            elif profile not in self._want_hidden:
+                # Chrome was already open (Clipper restarted, or you opened it yourself): keep it the
+                # way you left it instead of hiding a window you may be using right now.
+                visible = any(self.ops.visible(h) for h in self.ops.windows(pid))
+                self._want_hidden[profile] = not visible
             self._pids[profile] = pid
             return pid
 
