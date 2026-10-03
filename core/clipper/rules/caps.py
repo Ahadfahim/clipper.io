@@ -50,6 +50,45 @@ def local_day_bounds(at: datetime, tz: str) -> tuple[datetime, datetime]:
     return ensure_utc(start), ensure_utc(start + timedelta(days=1))
 
 
+def check_daily_cap(
+    account: AccountCaps,
+    existing: Sequence[datetime],
+    at: datetime,
+    posting: PostingSettings,
+    tz: str,
+) -> CapDecision:
+    cap = effective_daily_cap(account, at, posting)
+    day_start, day_end = local_day_bounds(at, tz)
+    used = sum(1 for t in existing if day_start <= ensure_utc(t) < day_end)
+    if used >= cap:
+        warm = " (warm-up)" if cap < (account.daily_cap or posting.default_daily_cap) else ""
+        return CapDecision(
+            False, f"daily cap reached for account {account.account_id}: {used}/{cap}{warm}", cap, used
+        )
+    return CapDecision(True, "ok", cap, used)
+
+
+def check_min_gap(
+    account: AccountCaps,
+    existing: Sequence[datetime],
+    at: datetime,
+    posting: PostingSettings,
+) -> CapDecision:
+    gap = timedelta(minutes=account.min_gap_min if account.min_gap_min is not None else posting.min_gap_min)
+    target = ensure_utc(at)
+    for t in existing:
+        if abs(ensure_utc(t) - target) < gap:
+            minutes = int(gap.total_seconds() // 60)
+            return CapDecision(
+                False,
+                f"posts on account {account.account_id} must be at least {minutes} min apart "
+                f"(conflicts with {ensure_utc(t).isoformat()})",
+                0,
+                0,
+            )
+    return CapDecision(True, "ok", 0, 0)
+
+
 def check_post_slot(
     account: AccountCaps,
     existing: Sequence[datetime],
@@ -58,24 +97,10 @@ def check_post_slot(
     tz: str,
 ) -> CapDecision:
     """Can one more post go out on ``account`` at ``at``, given the already-counted post times?"""
-    cap = effective_daily_cap(account, at, posting)
-    day_start, day_end = local_day_bounds(at, tz)
-    times = [ensure_utc(t) for t in existing]
-    used = sum(1 for t in times if day_start <= t < day_end)
-    if used >= cap:
-        warm = " (warm-up)" if cap < (account.daily_cap or posting.default_daily_cap) else ""
-        return CapDecision(
-            False, f"daily cap reached for account {account.account_id}: {used}/{cap}{warm}", cap, used
-        )
-    gap = timedelta(minutes=account.min_gap_min if account.min_gap_min is not None else posting.min_gap_min)
-    target = ensure_utc(at)
-    for t in times:
-        if abs(t - target) < gap:
-            minutes = int(gap.total_seconds() // 60)
-            return CapDecision(
-                False,
-                f"posts on account {account.account_id} must be at least {minutes} min apart (conflicts with {t.isoformat()})",
-                cap,
-                used,
-            )
-    return CapDecision(True, "ok", cap, used)
+    daily = check_daily_cap(account, existing, at, posting, tz)
+    if not daily.ok:
+        return daily
+    gap = check_min_gap(account, existing, at, posting)
+    if not gap.ok:
+        return CapDecision(False, gap.reason, daily.cap, daily.used)
+    return daily

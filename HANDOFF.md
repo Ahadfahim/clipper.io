@@ -6,7 +6,7 @@
 - Work packages:
   - WP0 ✅ Repo scaffold: uv + pnpm workspaces, ruff/pyright(strict core)/pytest, eslint/tsc/vitest/Playwright, settings example, justfile, CI
   - WP1 ✅ Data layer: 30 SQLModel tables (PLAN §9 + additions), Alembic 0001, WAL, single writer queue, typed event bus, leases, atomic cap check
-  - WP2 ❌ Guardrails
+  - WP2 ✅ Guardrails: 15 pure PreToolUse rules + SDK hook adapters, 71 table-driven cases, DB context, blocked calls logged
   - WP3 ❌ MCP tool servers
   - WP4 ❌ EDL editing engine
   - WP5 ❌ Supervisor and agent runtime
@@ -15,7 +15,7 @@
   - WP8 ❌ Discord bot
   - WP9 ❌ Companion extension
 - Test status:
-  - `uv run pytest -q` → 27 passed
+  - `uv run pytest -q` → 116 passed
   - `uv run ruff check . && uv run pyright` → clean
   - `pnpm -r run lint && pnpm -r run typecheck && pnpm -r run test` → clean, 2 passed
   - `just screenshots` → 4 passed (placeholder shell)
@@ -49,6 +49,12 @@ just test
 - `core/clipper/leases.py`: `LeaseManager` (acquire/renew/release/holder/sweep with expiry).
 - `core/clipper/rules/caps.py` (pure warm-up/daily cap/min-gap rules, local-day boundaries in `triggers.timezone`) and `core/clipper/services/posting.py` (`schedule_post_tx`: check + insert in one writer job).
 - `core/clipper/services/control.py`: dry run / pause / kill switch / slots in `kv`.
+
+### WP2
+- `core/clipper/agents/access.py`: tool catalog (server → tool → read-only) and the per-agent access matrix (PLAN §16.3), max 25 tools per agent, subagents per role.
+- `core/clipper/agents/hooks.py`: `ToolCall`, `Verdict`, `GuardContext` protocol, rules `kill_switch`, `paused`, `max_turns`, `access`, `campaign_scope`, `marketplace_switch` (with "finish" mode for live posts), `account_switch`, `social_switch`, `approval` (human review; opt-in auto tier), `posting_caps` (incl. warm-up), `min_gap`, `source_whitelist`, `domain_allowlist`, `submit_own_post`, `edit_lock`; dry-run annotation. `Guard.check()`; `make_pre_tool_use_hook()` / `make_post_tool_use_hook()` for `ClaudeAgentOptions.hooks`. Subagent calls are checked against the subagent's own access (hook input `agent_type`).
+- `core/clipper/agents/guard_context.py`: `DbGuardContext` (facts from SQLite) and `make_block_logger()` (agent_event `blocked` + `agent.event`).
+- `core/clipper/rules/urls.py` (YouTube/TikTok canonical ids, lookalike-safe domain matching), `core/clipper/rules/spec.py` (`ClipSpec`).
 
 ## 4. LOCAL-VERIFY list
 | file:line | what | how to verify | expected |
