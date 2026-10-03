@@ -42,15 +42,25 @@ async function failure(driver: TabDriver, step: number, error: string, challenge
   return { ok: false, data: {}, step, error, challenge, screenshot: await driver.screenshot().catch(() => null), dom: dom ?? (await driver.dom().catch(() => null)) };
 }
 
+/** When to check a freshly opened page for a login/CAPTCHA/verification screen (ms after load). */
+export const SETTLE_CHECKS_MS = [0, 700, 1500, 3000];
+
 /** Runs one step (recipe or a single `action` from the core's browser tools). */
 export async function runOne(driver: TabDriver, step: Step, index: number, dryRun: boolean): Promise<RunResult & { saved?: unknown }> {
   if (step.final && dryRun) return { ok: true, data: { dry_run: true, stopped_before: step.selector ?? step.text ?? step.action }, step: index };
   if (step.action === "navigate") {
     if (!step.url || !hostAllowed(step.url)) return failure(driver, index, `not allowed: ${step.url} is not on the site allowlist`);
     await driver.navigate(step.url);
-    const check = await driver.check();
-    if (check.challenge) return failure(driver, index, `${check.challenge} screen after opening the page`, check.challenge);
-    return { ok: true, data: { url: step.url } };
+    // Single-page apps redirect to a login wall or render it after "load" (TikTok, Instagram), so
+    // look again while the page settles instead of only once.
+    let waited = 0;
+    for (const at of SETTLE_CHECKS_MS) {
+      if (at > waited) await driver.sleep(at - waited);
+      waited = at;
+      const check = await driver.check();
+      if (check.challenge) return failure(driver, index, `${check.challenge} screen after opening the page`, check.challenge);
+    }
+    return { ok: true, data: { url: (await driver.currentUrl()) ?? step.url } };
   }
   const url = await driver.currentUrl();
   if (url && !hostAllowed(url)) return failure(driver, index, `the tab left the allowlist (${new URL(url).hostname}); stopped`);

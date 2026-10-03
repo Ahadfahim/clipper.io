@@ -42,6 +42,7 @@ class BrowserBridge(Protocol):
         self, profile: str, recipe: str, params: dict[str, Any], *, dry_run: bool = False
     ) -> RecipeResult: ...
     async def action(self, profile: str, action: dict[str, Any]) -> RecipeResult: ...
+    async def reload_extension(self, profile: str) -> None: ...
 
 
 # ------------------------------------------------------------------ fake
@@ -91,6 +92,11 @@ class FakeBrowserBridge:
                 dom="<main/>",
             )
         return RecipeResult(ok=True, data={})
+
+    async def reload_extension(self, profile: str) -> None:
+        if profile not in self.profiles:
+            raise ProfileNotConnected(f"Chrome profile {profile!r} is not connected")
+        self.calls.append((profile, "reload", {}))
 
 
 # ------------------------------------------------------------------ real
@@ -246,3 +252,11 @@ class CompanionBridge:
 
     async def action(self, profile: str, action: dict[str, Any]) -> RecipeResult:
         return await self._request(profile, {"type": "action", "action": action})
+
+    async def reload_extension(self, profile: str) -> None:
+        """Ask the extension to reload itself (after `just build` changed its recipes). It reconnects
+        on its own a few seconds later."""
+        peer = self._peers.get(profile)
+        if peer is None:
+            raise ProfileNotConnected(f"Chrome profile {profile!r} is not connected")
+        await peer.conn.send(json.dumps({"type": "reload"}))

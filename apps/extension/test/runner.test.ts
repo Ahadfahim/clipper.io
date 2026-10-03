@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { runOne, runRecipe, type TabDriver } from "../src/background/runner";
+import { runOne, runRecipe, SETTLE_CHECKS_MS, type TabDriver } from "../src/background/runner";
 import type { Step, StepOutcome } from "../src/shared/protocol";
 import type { Recipe } from "../src/shared/recipe";
 import { RECIPES } from "../src/background/recipes";
@@ -71,7 +71,19 @@ describe("runRecipe", () => {
     expect(typed).toContain("wait for it #mrbeast");
     expect(d.steps.some((s) => s.when === "schedule_at")).toBe(false); // skipped: no schedule
     expect(d.steps.some((s) => s.final)).toBe(true);
-    expect(new Set(d.sleeps)).toEqual(new Set([1400])); // 600 + (2200-600) * 0.5
+    // pacing between steps is 600 + (2200-600) * 0.5; the rest are the page-settle checks after navigate
+    const settle = new Set(SETTLE_CHECKS_MS.slice(1).map((at, i) => at - SETTLE_CHECKS_MS[i]!));
+    expect(new Set(d.sleeps.filter((ms) => !settle.has(ms)))).toEqual(new Set([1400]));
+  });
+
+  it("catches a login wall that appears after the page loaded", async () => {
+    const d = new FakeDriver();
+    let checks = 0;
+    d.check = async () => ({ ok: true, challenge: ++checks >= 3 ? ("login" as const) : null }); // the SPA redirects late
+    const res = await runOne(d, { action: "navigate", url: "https://www.tiktok.com/tiktokstudio" }, 0, false);
+    expect(res).toMatchObject({ ok: false, challenge: "login" });
+    expect(checks).toBe(3);
+    expect(d.steps).toEqual([]); // nothing on the page was touched
   });
 
   it("dry run stops before the publish click and never fetches or attaches the clip", async () => {

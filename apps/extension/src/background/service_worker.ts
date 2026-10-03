@@ -36,6 +36,7 @@ async function start(): Promise<void> {
       state = { state: s, detail };
       void chrome.action.setBadgeText({ text: s === "connected" ? "" : s === "bad-token" ? "!" : "…" });
     },
+    onReload: () => chrome.runtime.reload(),
   });
   bridge.start();
 }

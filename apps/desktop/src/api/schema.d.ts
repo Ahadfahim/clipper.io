@@ -215,6 +215,48 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/browser/profiles/{profile}/extension/reload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Browser Extension Reload
+         * @description Reload the Companion extension in a profile after `just build` (new or fixed recipes).
+         */
+        post: operations["browser_extension_reload_api_browser_profiles__profile__extension_reload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/browser/profiles/{profile}/probe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Browser Probe
+         * @description Look at a page in Clipper's browser without changing anything: navigate, wait, query, read,
+         *     snapshot only (no click, type or upload). Used to write and fix recipe selectors. The extension
+         *     applies the site allowlist and stops on login/CAPTCHA/verification screens.
+         */
+        post: operations["browser_probe_api_browser_profiles__profile__probe_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/browser/profiles/{profile}/{action}": {
         parameters: {
             query?: never;
@@ -2258,6 +2300,64 @@ export interface components {
             /** Views */
             views: number;
         };
+        /** ProbeIn */
+        ProbeIn: {
+            /** Steps */
+            steps: components["schemas"]["ProbeStep"][];
+        };
+        /** ProbeResult */
+        ProbeResult: {
+            /** Action */
+            action: string;
+            /** Challenge */
+            challenge: string | null;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Dom */
+            dom: string | null;
+            /** Error */
+            error: string | null;
+            /** Ok */
+            ok: boolean;
+        };
+        /** ProbeStep */
+        ProbeStep: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "navigate" | "wait_for" | "query" | "read_text" | "snapshot";
+            /**
+             * All
+             * @default false
+             */
+            all: boolean;
+            /** Attr */
+            attr?: string | null;
+            /**
+             * Exists
+             * @default false
+             */
+            exists: boolean;
+            /** Fields */
+            fields?: {
+                [key: string]: {
+                    [key: string]: string;
+                };
+            } | null;
+            /** Regex */
+            regex?: string | null;
+            /** Selector */
+            selector?: string | null;
+            /** Text */
+            text?: string | null;
+            /** Timeout Ms */
+            timeout_ms?: number | null;
+            /** Url */
+            url?: string | null;
+        };
         /** PromptIn */
         PromptIn: {
             /** Text */
@@ -2341,6 +2441,31 @@ export interface components {
             runs_7d: number;
             /** Screenshot Url */
             screenshot_url: string | null;
+        };
+        /**
+         * RecipeTestOut
+         * @description A dry-run recipe test: what the recipe returned, or where it stopped and what the page showed.
+         */
+        RecipeTestOut: {
+            /** Challenge */
+            challenge: string | null;
+            /** Data */
+            data: {
+                [key: string]: unknown;
+            };
+            /** Detail */
+            detail: string | null;
+            /** Dom */
+            dom: string | null;
+            /** Id */
+            id: number | null;
+            /**
+             * Ok
+             * @default true
+             */
+            ok: boolean;
+            /** Step */
+            step: number | null;
         };
         /** RecutIn */
         RecutIn: {
@@ -3174,6 +3299,72 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BrowserProfileOut"][];
+                };
+            };
+        };
+    };
+    browser_extension_reload_api_browser_profiles__profile__extension_reload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    browser_probe_api_browser_profiles__profile__probe_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                profile: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProbeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProbeResult"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
@@ -4451,7 +4642,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OkOut"];
+                    "application/json": components["schemas"]["RecipeTestOut"];
                 };
             };
             /** @description Validation Error */

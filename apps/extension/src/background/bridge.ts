@@ -25,6 +25,7 @@ export type BridgeOptions = {
   driver: TabDriver;
   makeSocket: (url: string) => SocketLike;
   onState?: (s: BridgeState, detail?: string) => void;
+  onReload?: () => void;
   schedule?: (fn: () => void, ms: number) => unknown;
 };
 
@@ -114,6 +115,10 @@ export class CompanionBridge {
         // one action at a time per profile: queue behind whatever is running
         this.chain = this.chain.then(() => this.execute(msg)).catch(() => undefined);
         return;
+      case "reload":
+        // the core rebuilt the extension (new recipes): reload once the running action is done
+        this.chain = this.chain.then(() => this.o.onReload?.()).catch(() => undefined);
+        return;
     }
   }
 
@@ -129,7 +134,9 @@ export class CompanionBridge {
         if (step.action === "snapshot") {
           const shot = await this.o.driver.screenshot();
           const dom = await this.o.driver.dom();
-          res = { ok: true, data: { url: await this.o.driver.currentUrl() }, screenshot: shot, dom };
+          // report a login/CAPTCHA/verification screen too (a snapshot never interacts with it)
+          const check = await this.o.driver.check().catch(() => ({ ok: true, challenge: null }));
+          res = { ok: true, data: { url: await this.o.driver.currentUrl() }, screenshot: shot, dom, challenge: check.challenge ?? null };
         } else {
           const one = await runOne(this.o.driver, step, 0, false);
           res = { ...one, data: { ...one.data, ...(one.saved !== undefined ? { value: one.saved } : {}), url: await this.o.driver.currentUrl() } };

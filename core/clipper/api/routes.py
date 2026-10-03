@@ -272,6 +272,44 @@ def cancel_request(request: Request, request_id: int) -> S.OkOut:
     return S.OkOut(id=request_id)
 
 
+@system.post("/browser/profiles/{profile}/probe", response_model=list[S.ProbeResult])
+async def browser_probe(core: CoreDep, profile: str, body: S.ProbeIn) -> list[S.ProbeResult]:
+    """Look at a page in Clipper's browser without changing anything: navigate, wait, query, read,
+    snapshot only (no click, type or upload). Used to write and fix recipe selectors. The extension
+    applies the site allowlist and stops on login/CAPTCHA/verification screens."""
+    out: list[S.ProbeResult] = []
+    for step in body.steps:
+        action = step.model_dump(exclude_none=True, exclude_defaults=True) | {"action": step.action}
+        try:
+            res = await core.adapters.browser.action(profile, action)
+        except Exception as exc:  # not connected, timed out
+            out.append(S.ProbeResult(action=step.action, ok=False, error=str(exc)))
+            break
+        out.append(
+            S.ProbeResult(
+                action=step.action,
+                ok=res.ok,
+                data=res.data,
+                error=res.error,
+                challenge=res.challenge,
+                dom=res.dom,
+            )
+        )
+        if not res.ok:
+            break
+    return out
+
+
+@system.post("/browser/profiles/{profile}/extension/reload", response_model=S.OkOut)
+async def browser_extension_reload(core: CoreDep, profile: str) -> S.OkOut:
+    """Reload the Companion extension in a profile after `just build` (new or fixed recipes)."""
+    try:
+        await core.adapters.browser.reload_extension(profile)
+    except Exception as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return S.OkOut(detail=f"extension in {profile} is reloading; it reconnects in a few seconds")
+
+
 @system.get("/browser/profiles", response_model=list[S.BrowserProfileOut])
 def browser_profiles(core: CoreDep) -> list[S.BrowserProfileOut]:
     return views.browser_profiles(core)
@@ -719,11 +757,13 @@ def recipes(core: CoreDep) -> list[S.RecipeHealth]:
     return views.recipes(core)
 
 
-@publishing.post("/recipes/{name}/test", response_model=S.OkOut)
-async def recipe_test(core: CoreDep, name: str, profile: str = "main") -> S.OkOut:
+@publishing.post("/recipes/{name}/test", response_model=S.RecipeTestOut)
+async def recipe_test(core: CoreDep, name: str, profile: str = "main") -> S.RecipeTestOut:
     res = await core.adapters.browser.run_recipe(profile, name, {"test": True}, dry_run=True)
     core.db.write(lambda tx: tx.add(RecipeRun(recipe=name, ok=res.ok, dry_run=True, error=res.error)))
-    return S.OkOut(ok=res.ok, detail=res.error)
+    return S.RecipeTestOut(
+        ok=res.ok, detail=res.error, data=res.data, step=res.step, challenge=res.challenge, dom=res.dom
+    )
 
 
 # ---------------------------------------------------------------- earnings

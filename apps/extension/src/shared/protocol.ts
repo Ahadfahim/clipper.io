@@ -26,7 +26,8 @@ export type Welcome = { type: "welcome"; profile: string; protocol: number };
 export type RunMsg = { type: "run"; id: string; recipe: string; params: Record<string, unknown>; dry_run: boolean };
 export type ActionMsg = { type: "action"; id: string; action: Step };
 export type Ping = { type: "ping" };
-export type Incoming = Welcome | RunMsg | ActionMsg | Ping;
+export type ReloadMsg = { type: "reload" }; // reload the extension (after the core rebuilt it)
+export type Incoming = Welcome | RunMsg | ActionMsg | Ping | ReloadMsg;
 
 export type ActionKind = "navigate" | "wait_for" | "query" | "click" | "type" | "attach_file" | "read_text" | "screenshot" | "snapshot";
 

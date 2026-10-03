@@ -127,6 +127,44 @@ class OkOut(M):
     detail: str | None = None
 
 
+class RecipeTestOut(OkOut):
+    """A dry-run recipe test: what the recipe returned, or where it stopped and what the page showed."""
+
+    data: dict[str, Any] = Field(default_factory=dict)
+    step: int | None = None
+    challenge: str | None = None
+    dom: str | None = None
+
+
+ProbeAction = Literal["navigate", "wait_for", "query", "read_text", "snapshot"]
+
+
+class ProbeStep(BaseModel):
+    action: ProbeAction
+    url: str | None = None
+    selector: str | None = None
+    text: str | None = None
+    attr: str | None = None
+    regex: str | None = None
+    all: bool = False
+    exists: bool = False
+    fields: dict[str, dict[str, str]] | None = None
+    timeout_ms: int | None = Field(default=None, ge=0, le=60_000)
+
+
+class ProbeIn(BaseModel):
+    steps: list[ProbeStep] = Field(min_length=1, max_length=20)
+
+
+class ProbeResult(M):
+    action: str
+    ok: bool
+    data: dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
+    challenge: str | None = None
+    dom: str | None = None
+
+
 # ---------------------------------------------------------------- overview
 
 

@@ -2916,6 +2916,199 @@
     "title": "PostOut",
     "type": "object"
    },
+   "ProbeIn": {
+    "properties": {
+     "steps": {
+      "items": {
+       "$ref": "#/components/schemas/ProbeStep"
+      },
+      "maxItems": 20,
+      "minItems": 1,
+      "title": "Steps",
+      "type": "array"
+     }
+    },
+    "required": [
+     "steps"
+    ],
+    "title": "ProbeIn",
+    "type": "object"
+   },
+   "ProbeResult": {
+    "properties": {
+     "action": {
+      "title": "Action",
+      "type": "string"
+     },
+     "challenge": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Challenge"
+     },
+     "data": {
+      "additionalProperties": true,
+      "title": "Data",
+      "type": "object"
+     },
+     "dom": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dom"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "ok": {
+      "title": "Ok",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "action",
+     "ok",
+     "data",
+     "error",
+     "challenge",
+     "dom"
+    ],
+    "title": "ProbeResult",
+    "type": "object"
+   },
+   "ProbeStep": {
+    "properties": {
+     "action": {
+      "enum": [
+       "navigate",
+       "wait_for",
+       "query",
+       "read_text",
+       "snapshot"
+      ],
+      "title": "Action",
+      "type": "string"
+     },
+     "all": {
+      "default": false,
+      "title": "All",
+      "type": "boolean"
+     },
+     "attr": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Attr"
+     },
+     "exists": {
+      "default": false,
+      "title": "Exists",
+      "type": "boolean"
+     },
+     "fields": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "additionalProperties": {
+          "type": "string"
+         },
+         "type": "object"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fields"
+     },
+     "regex": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Regex"
+     },
+     "selector": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Selector"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     },
+     "timeout_ms": {
+      "anyOf": [
+       {
+        "maximum": 60000.0,
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Timeout Ms"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "required": [
+     "action"
+    ],
+    "title": "ProbeStep",
+    "type": "object"
+   },
    "PromptIn": {
     "properties": {
      "text": {
@@ -3192,6 +3385,87 @@
      "failures_7d"
     ],
     "title": "RecipeHealth",
+    "type": "object"
+   },
+   "RecipeTestOut": {
+    "description": "A dry-run recipe test: what the recipe returned, or where it stopped and what the page showed.",
+    "properties": {
+     "challenge": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Challenge"
+     },
+     "data": {
+      "additionalProperties": true,
+      "title": "Data",
+      "type": "object"
+     },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "dom": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Dom"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "ok": {
+      "default": true,
+      "title": "Ok",
+      "type": "boolean"
+     },
+     "step": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Step"
+     }
+    },
+    "required": [
+     "ok",
+     "id",
+     "detail",
+     "data",
+     "step",
+     "challenge",
+     "dom"
+    ],
+    "title": "RecipeTestOut",
     "type": "object"
    },
    "RecutIn": {
@@ -4961,6 +5235,106 @@
      }
     },
     "summary": "Browser Profiles",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/browser/profiles/{profile}/extension/reload": {
+   "post": {
+    "description": "Reload the Companion extension in a profile after `just build` (new or fixed recipes).",
+    "operationId": "browser_extension_reload_api_browser_profiles__profile__extension_reload_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "profile",
+      "required": true,
+      "schema": {
+       "title": "Profile",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Browser Extension Reload",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/browser/profiles/{profile}/probe": {
+   "post": {
+    "description": "Look at a page in Clipper's browser without changing anything: navigate, wait, query, read,\nsnapshot only (no click, type or upload). Used to write and fix recipe selectors. The extension\napplies the site allowlist and stops on login/CAPTCHA/verification screens.",
+    "operationId": "browser_probe_api_browser_profiles__profile__probe_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "profile",
+      "required": true,
+      "schema": {
+       "title": "Profile",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ProbeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/ProbeResult"
+         },
+         "title": "Response Browser Probe Api Browser Profiles  Profile  Probe Post",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Browser Probe",
     "tags": [
      "system"
     ]
@@ -6866,7 +7240,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/OkOut"
+         "$ref": "#/components/schemas/RecipeTestOut"
         }
        }
       },

@@ -53,7 +53,7 @@ export class ChromeTabDriver implements TabDriver {
 
   async navigate(url: string): Promise<void> {
     const tabId = await this.tab();
-    await chrome.tabs.update(tabId, { url, active: true });
+    const before = (await chrome.tabs.get(tabId)).url ?? "";
     await new Promise<void>((resolve) => {
       const timer = setTimeout(done, 60_000);
       function done() {
@@ -61,10 +61,13 @@ export class ChromeTabDriver implements TabDriver {
         chrome.tabs.onUpdated.removeListener(listener);
         resolve();
       }
-      function listener(id: number, info: chrome.tabs.OnUpdatedInfo) {
-        if (id === tabId && info.status === "complete") done();
+      // A late redirect of the *previous* page also fires "complete"; only count a load once the tab
+      // has left that page (any new URL: the target, or wherever the site redirected it).
+      function listener(id: number, info: chrome.tabs.OnUpdatedInfo, tab: chrome.tabs.Tab) {
+        if (id === tabId && info.status === "complete" && (tab.url !== before || before === url)) done();
       }
       chrome.tabs.onUpdated.addListener(listener);
+      void chrome.tabs.update(tabId, { url, active: true });
     });
   }
 
