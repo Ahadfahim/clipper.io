@@ -597,15 +597,30 @@ function Media({ ctx, secrets }: { ctx: Ctx; secrets: Record<string, boolean> })
 
 function Storage({ ctx }: { ctx: Ctx }) {
   const doctor = useDoctor().data ?? [];
-  const disk = doctor.find((d) => d.name.toLowerCase().includes("disk"));
+  const disk = doctor.find((d) => d.name === "data-dir" || d.name.toLowerCase().includes("disk"));
+  const sources = doctor.find((d) => d.name === "sources-dir");
   return (
     <>
       <H>Storage</H>
       <Fieldset legend="Data folder">
-        <TextSetting ctx={ctx} k="paths.data_dir" label="Folder" hint="Moving it takes effect after a restart; move the files yourself first." />
+        <TextSetting ctx={ctx} k="paths.data_dir" label="Folder" hint="Database, logs, clips and previews. Moving it takes effect after a restart; move the files yourself first." />
         {disk && (
           <span className="flex items-center gap-1.5">
             <Dot tone={disk.status === "ok" ? "ok" : "warn"} /> {disk.detail}
+          </span>
+        )}
+      </Fieldset>
+      <Fieldset legend="Source videos">
+        <TextSetting
+          ctx={ctx}
+          k="paths.sources_dir"
+          label="Folder"
+          placeholder="C:\ClipperData\sources"
+          hint="The biggest files (1–3 GB per hour of video). Put them on your largest drive; leave empty to keep them in the data folder. The folder is created when you save."
+        />
+        {sources && (
+          <span className="flex items-center gap-1.5">
+            <Dot tone={sources.status === "ok" ? "ok" : sources.status === "fail" ? "bad" : "warn"} /> {sources.detail}
           </span>
         )}
       </Fieldset>

@@ -38,9 +38,15 @@ def _default_data_dir() -> Path:
     return Path(r"D:\Clipper.io\data") if os.name == "nt" else Path.home() / ".clipper" / "data"
 
 
+def _default_sources_dir() -> Path | None:
+    # Source videos are big (1-3 GB per hour of 1080p) and D: is small on the target machine, so on
+    # Windows they default to C:. Elsewhere they live under the data folder.
+    return Path(r"C:\ClipperData\sources") if os.name == "nt" else None
+
+
 class PathsSettings(_Model):
     data_dir: Path = Field(default_factory=_default_data_dir)
-    sources_dir: Path | None = None
+    sources_dir: Path | None = Field(default_factory=_default_sources_dir)
     work_dir: Path | None = None
     clips_dir: Path | None = None
     previews_dir: Path | None = None
@@ -298,7 +304,13 @@ class Settings(_Model):
     dry_run_default: bool = True
 
     def with_data_dir(self, data_dir: Path) -> Settings:
-        return self.model_copy(update={"paths": self.paths.model_copy(update={"data_dir": data_dir})})
+        """Move the data folder. A sources folder still on its platform default moves with it (tests
+        and fixture exports must never write into the real C:\\ClipperData\\sources); one the user chose
+        stays where it is."""
+        update: dict[str, Any] = {"data_dir": data_dir}
+        if self.paths.sources_dir == _default_sources_dir():
+            update["sources_dir"] = None
+        return self.model_copy(update={"paths": self.paths.model_copy(update=update)})
 
 
 def load_settings(path: Path | None = None, overrides: dict[str, Any] | None = None) -> Settings:

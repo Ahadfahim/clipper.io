@@ -208,6 +208,29 @@ def check_data_dir(settings: Settings) -> CheckResult:
     return CheckResult("data-dir", status, f"{data} writable, {free_gb:.0f} GB free")
 
 
+def check_sources_dir(settings: Settings) -> CheckResult:
+    """Source videos are the biggest files (1-3 GB per hour), so their folder gets its own check."""
+    sources = settings.paths.sub("sources")
+    try:
+        sources.mkdir(parents=True, exist_ok=True)
+        probe = sources / ".write-probe"
+        probe.write_text("ok")
+        probe.unlink()
+    except OSError as exc:
+        return CheckResult(
+            "sources-dir", "fail", f"{sources}: {exc}", "Pick another folder in Settings → Storage."
+        )
+    free_gb = shutil.disk_usage(sources).free / 1e9
+    if free_gb < 50:
+        return CheckResult(
+            "sources-dir",
+            "warn",
+            f"{sources}: {free_gb:.0f} GB free",
+            "Less than 50 GB free: pick a bigger drive in Settings → Storage or shorten retention.",
+        )
+    return CheckResult("sources-dir", "ok", f"{sources} writable, {free_gb:.0f} GB free")
+
+
 def check_database(settings: Settings) -> CheckResult:
     from clipper.db.migrate import current_revision, head_revision
 
@@ -240,6 +263,7 @@ def run_checks(settings: Settings, *, include_slow: bool = True) -> list[CheckRe
         check_python,
         check_no_api_key,
         lambda: check_data_dir(settings),
+        lambda: check_sources_dir(settings),
         lambda: check_database(settings),
         lambda: check_ffmpeg(settings),
         lambda: check_yt_dlp(settings),
