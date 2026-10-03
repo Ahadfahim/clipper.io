@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -46,6 +47,16 @@ def _cmd_seed(args: argparse.Namespace) -> int:
     from clipper.settings import get_settings
 
     settings = get_settings()
+    if args.fixtures and not os.environ.get("CLIPPER_DATA_DIR"):
+        # Demo campaigns and *scheduled posts* in the real database would be picked up by the real
+        # workers and the due-post runner. The demo has its own database (`just dev-api-fixtures`).
+        print(
+            "refusing to put demo data into the real database "
+            f"({settings.paths.database}). Use `just dev-api-fixtures`, or set CLIPPER_DATA_DIR "
+            "to a scratch folder first.",
+            file=sys.stderr,
+        )
+        return 2
     db = Database(settings.paths.database)
     try:
         seed_base(db, settings)

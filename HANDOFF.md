@@ -40,8 +40,10 @@ just doctor                     # environment checks; WARN rows say what is miss
 # 2. Migrate (creates D:\Clipper.io\data\clipper.sqlite)
 just migrate
 
-# 3. Seed (base switches/platforms + demo data)
-just seed fixtures
+# 3. Seed base switches/platforms. NOT `just seed fixtures`: demo data in the real database gets picked up
+#    by the real workers (it now refuses unless CLIPPER_DATA_DIR points at a scratch folder).
+#    The demo has its own database: `just dev-api-fixtures`.
+just seed
 
 # 4. Run the API in fixture mode (own demo DB under <data_dir>\fixture, no agents)   [terminal 1]
 just dev-api-fixtures           # http://127.0.0.1:8765/api/health
