@@ -3,13 +3,13 @@
   "brand": "MrBeast",
   "budget_left": 18400.0,
   "budget_total": 25000.0,
-  "clips_posted": 16,
+  "clips_posted": 2,
   "content_type": "clipping",
   "cpm": 3.0,
   "creator": "MrBeast",
   "deadline": "2026-10-11T18:00:00Z",
   "disabled_reason": null,
-  "earned": 614.26,
+  "earned": 162.0,
   "id": 1,
   "marketplace": "vyro",
   "matching_accounts": [
@@ -27,14 +27,13 @@
   "title": "MrBeast #42 clipping"
  },
  "money": {
-  "earnings": 614.26,
-  "posts": 16,
+  "earnings": 162.0,
+  "posts": 2,
   "submissions": {
-   "approved": 8,
-   "paid": 7,
+   "approved": 1,
    "pending": 1
   },
-  "views": 204759
+  "views": 54000
  },
  "payout": {
   "cap_per_post": 1000.0,

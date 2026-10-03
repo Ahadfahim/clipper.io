@@ -243,7 +243,7 @@ def status(core: Core, fixture_mode: bool) -> S.StatusOut:
         jobs_running=jobs_running,
         jobs_queued=jobs_queued,
         gpu_util=None if fixture_mode else gpu_util(),
-        extension_profiles=["main", "beast"] if fixture_mode else core.adapters.browser.connected_profiles(),
+        extension_profiles=core.adapters.browser.connected_profiles(),
         discord_online=discord_online,
         earned_today=round(float(earned), 2),
         needs_you=len(needs),
@@ -368,11 +368,8 @@ def _stages(s: Session, c: Campaign) -> list[S.Stage]:
     active_idx = next((i for i, d in enumerate(done) if not d), len(done))
     stages: list[S.Stage] = []
     for i, name in enumerate(STAGES):
-        state = (
-            "done"
-            if done[i] and i < active_idx
-            else ("active" if i == active_idx else ("done" if done[i] else "todo"))
-        )
+        # a stepper reads left to right: everything after the first unfinished stage is still to do
+        state = "done" if i < active_idx else ("active" if i == active_idx else "todo")
         stages.append(S.Stage(name=name, state=state))  # type: ignore[arg-type]
     return stages
 
@@ -475,7 +472,7 @@ def overview(core: Core) -> S.OverviewOut:
         first = min(
             (p.posted_at for p in posts_all.values() if p.campaign_id == c.id and p.posted_at), default=None
         )
-        if first is not None:
+        if first is not None and first >= c.found_at:
             find_to_post.append((first - c.found_at).total_seconds() / 3600)
     median = sorted(find_to_post)[len(find_to_post) // 2] if find_to_post else None
     by_market = {m: round(day_sum(day_start, "earnings", m), 2) for m in ("vyro", "whop")}

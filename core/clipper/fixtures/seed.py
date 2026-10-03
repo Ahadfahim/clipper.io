@@ -11,8 +11,9 @@ import random
 import shutil
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from clipper.browser.bridge import FakeBrowserBridge
 from clipper.clock import utcnow
 from clipper.db.engine import Database, WriteTx
 from clipper.db.models import (
@@ -47,6 +48,9 @@ from clipper.media.edl import ops
 from clipper.media.edl.schema import CaptionWord, SourceInfo, new_edl
 from clipper.media.edl.schema import Edl as EdlDoc
 from clipper.settings import REPO_ROOT, Settings
+
+if TYPE_CHECKING:
+    from clipper.core import Core
 
 FIXTURE_VIDEO = REPO_ROOT / "tests" / "fixtures" / "media" / "talk_16x9.mp4"
 FIXTURE_WORDS = REPO_ROOT / "tests" / "fixtures" / "media" / "talk_16x9.words.json"
@@ -136,6 +140,15 @@ def _demo_edl(path: str) -> EdlDoc:
         e, ops.SetLayoutArgs(start=2.0, end=3.5, layout="split", focus_x=0.3, focus2_x=0.7)
     ).edl
     return ops.emphasize(e, ops.EmphasizeArgs(words=["money"])).edl
+
+
+DEMO_PROFILES = {"main": "https://studio.youtube.com/", "beast": "https://www.tiktok.com/upload"}
+
+
+def demo_adapters(core: Core) -> None:
+    """Point the fake adapters at the demo data (both Chrome profiles connected)."""
+    if isinstance(core.adapters.browser, FakeBrowserBridge):
+        core.adapters.browser.profiles = dict(DEMO_PROFILES)
 
 
 def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> dict[str, Any]:
@@ -341,11 +354,11 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
             cpm=1.2,
             budget_total=9000,
             budget_left=6400,
-            platforms=["tiktok"],
+            platforms=["tiktok", "youtube"],
             status="paused",
             score=69,
-            found_at=now - timedelta(days=4),
-            taken_at=now - timedelta(days=4),
+            found_at=now - timedelta(days=14, hours=9),
+            taken_at=now - timedelta(days=14, hours=8),
         )
         gadget = camp(
             marketplace="whop",
@@ -649,7 +662,7 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 p = Post(
                     clip_id=hist_clip,
                     account_id=a.id or 0,
-                    campaign_id=(beast.id if market == "vyro" else ali.id),
+                    campaign_id=(lex.id if market == "vyro" else kai.id),
                     platform=a.platform,
                     scheduled_at=day,
                     posted_at=day,

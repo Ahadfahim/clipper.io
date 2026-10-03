@@ -3,13 +3,13 @@
   "brand": "Lex Fridman",
   "budget_left": 0.0,
   "budget_total": 5000.0,
-  "clips_posted": 0,
+  "clips_posted": 14,
   "content_type": "clipping",
   "cpm": 2.0,
   "creator": "Lex Fridman",
   "deadline": null,
   "disabled_reason": null,
-  "earned": 0.0,
+  "earned": 452.26,
   "id": 6,
   "marketplace": "vyro",
   "matching_accounts": [],
@@ -22,10 +22,13 @@
   "title": "Lex Fridman #410"
  },
  "money": {
-  "earnings": 0.0,
-  "posts": 0,
-  "submissions": {},
-  "views": 0
+  "earnings": 452.26,
+  "posts": 14,
+  "submissions": {
+   "approved": 7,
+   "paid": 7
+  },
+  "views": 150759
  },
  "payout": {
   "cap_per_post": null,

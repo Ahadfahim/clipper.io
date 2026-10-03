@@ -3,13 +3,13 @@
   "brand": "Ali Abdaal",
   "budget_left": 7200.0,
   "budget_total": 8000.0,
-  "clips_posted": 14,
+  "clips_posted": 0,
   "content_type": "clipping",
   "cpm": 2.5,
   "creator": "Ali Abdaal",
   "deadline": "2026-10-23T18:00:00Z",
   "disabled_reason": null,
-  "earned": 213.19,
+  "earned": 0.0,
   "id": 2,
   "marketplace": "whop",
   "matching_accounts": [
@@ -26,13 +26,10 @@
   "title": "Ali Abdaal podcast cuts"
  },
  "money": {
-  "earnings": 213.19,
-  "posts": 14,
-  "submissions": {
-   "approved": 7,
-   "paid": 7
-  },
-  "views": 85273
+  "earnings": 0.0,
+  "posts": 0,
+  "submissions": {},
+  "views": 0
  },
  "payout": {
   "cap_per_post": 500.0,

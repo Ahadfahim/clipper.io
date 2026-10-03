@@ -35,22 +35,32 @@
   {
    "approval_rate": null,
    "avg_cpm": null,
-   "earnings": 614.26,
-   "key": "1",
-   "label": "MrBeast #42 clipping",
+   "earnings": 452.26,
+   "key": "6",
+   "label": "Lex Fridman #410",
    "payout_delay_days": null,
-   "posts": 16,
-   "views": 204759
+   "posts": 14,
+   "views": 150759
   },
   {
    "approval_rate": null,
    "avg_cpm": null,
    "earnings": 213.19,
-   "key": "2",
-   "label": "Ali Abdaal podcast cuts",
+   "key": "7",
+   "label": "Kai Cenat stream highlights",
    "payout_delay_days": null,
    "posts": 14,
    "views": 85273
+  },
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 162.0,
+   "key": "1",
+   "label": "MrBeast #42 clipping",
+   "payout_delay_days": null,
+   "posts": 2,
+   "views": 54000
   }
  ],
  "by_marketplace": [

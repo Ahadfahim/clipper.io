@@ -67,7 +67,7 @@ class LoopbackGuard(BaseHTTPMiddleware):
 
 
 def _fixture_core(settings: Settings) -> Core:
-    from clipper.fixtures.seed import seed_demo
+    from clipper.fixtures.seed import demo_adapters, seed_demo
 
     data = settings.paths.data_dir / "fixture"
     fixture_settings = settings.with_data_dir(data)
@@ -77,6 +77,7 @@ def _fixture_core(settings: Settings) -> Core:
             p.unlink()
     data.mkdir(parents=True, exist_ok=True)
     core = Core.create(fixture_settings, fakes=True, db_path=db_path)
+    demo_adapters(core)
     seed_demo(core.db, fixture_settings)
     return core
 

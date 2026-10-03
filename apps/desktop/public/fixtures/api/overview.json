@@ -30,11 +30,11 @@
     },
     {
      "name": "Post",
-     "state": "done"
+     "state": "todo"
     },
     {
      "name": "Submit",
-     "state": "done"
+     "state": "todo"
     }
    ],
    "status": "active",
@@ -70,11 +70,11 @@
     },
     {
      "name": "Post",
-     "state": "done"
+     "state": "todo"
     },
     {
      "name": "Submit",
-     "state": "done"
+     "state": "todo"
     }
    ],
    "status": "active",
@@ -127,7 +127,7 @@
  ],
  "health": [
   {
-   "detail": "1 profile(s) connected",
+   "detail": "2 profile(s) connected",
    "fix": "",
    "name": "Extension",
    "status": "ok"
@@ -245,13 +245,13 @@
   },
   {
    "delta_pct": null,
-   "display": "-306h 00m",
+   "display": "10h 00m",
    "key": "find_to_post",
    "label": "Find \u2192 post",
    "spark": [],
    "split": null,
    "unit": "hours",
-   "value": -306.0
+   "value": 10.0
   }
  ],
  "needs_you": [
