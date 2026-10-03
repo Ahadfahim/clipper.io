@@ -1,0 +1,36 @@
+{
+ "agents_capacity": 4,
+ "agents_running": 1,
+ "campaigns_by_market": {
+  "vyro": 2,
+  "whop": 4
+ },
+ "control": {
+  "auto_approve_tier": null,
+  "dry_run": true,
+  "kill_switch": false,
+  "paused": false,
+  "slots": null
+ },
+ "discord_online": true,
+ "earned_today": 233.76,
+ "extension_profiles": [
+  "main",
+  "beast"
+ ],
+ "fixture_mode": true,
+ "gpu_util": null,
+ "jobs_queued": 1,
+ "jobs_running": 2,
+ "library_count": 12,
+ "needs_you": 7,
+ "review_pending": 5,
+ "usage": {
+  "max_slots": 4,
+  "pace": "normal",
+  "rate_limited": false,
+  "resets_at": "2026-10-02T20:14:00+00:00",
+  "utilization": 0.38
+ },
+ "version": "0.1.0"
+}

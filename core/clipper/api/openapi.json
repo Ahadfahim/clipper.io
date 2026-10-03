@@ -1,0 +1,7669 @@
+{
+ "components": {
+  "schemas": {
+   "AccountIn": {
+    "properties": {
+     "chrome_profile": {
+      "default": "main",
+      "title": "Chrome Profile",
+      "type": "string"
+     },
+     "daily_cap": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daily Cap"
+     },
+     "handle": {
+      "title": "Handle",
+      "type": "string"
+     },
+     "new_account": {
+      "default": true,
+      "title": "New Account",
+      "type": "boolean"
+     },
+     "niche_tags": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Niche Tags",
+      "type": "array"
+     },
+     "platform": {
+      "enum": [
+       "youtube",
+       "tiktok",
+       "instagram",
+       "x"
+      ],
+      "title": "Platform",
+      "type": "string"
+     }
+    },
+    "required": [
+     "platform",
+     "handle"
+    ],
+    "title": "AccountIn",
+    "type": "object"
+   },
+   "AccountOut": {
+    "properties": {
+     "cap_today": {
+      "title": "Cap Today",
+      "type": "integer"
+     },
+     "chrome_profile": {
+      "title": "Chrome Profile",
+      "type": "string"
+     },
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     },
+     "extension_connected": {
+      "title": "Extension Connected",
+      "type": "boolean"
+     },
+     "handle": {
+      "title": "Handle",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "min_gap_min": {
+      "title": "Min Gap Min",
+      "type": "integer"
+     },
+     "niche_tags": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Niche Tags",
+      "type": "array"
+     },
+     "paused_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paused Reason"
+     },
+     "platform": {
+      "title": "Platform",
+      "type": "string"
+     },
+     "posts_today": {
+      "title": "Posts Today",
+      "type": "integer"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "warmup_week": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Warmup Week"
+     }
+    },
+    "required": [
+     "id",
+     "platform",
+     "handle",
+     "niche_tags",
+     "chrome_profile",
+     "enabled",
+     "status",
+     "paused_reason",
+     "posts_today",
+     "cap_today",
+     "min_gap_min",
+     "warmup_week",
+     "extension_connected"
+    ],
+    "title": "AccountOut",
+    "type": "object"
+   },
+   "AccountPatch": {
+    "properties": {
+     "daily_cap": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Daily Cap"
+     },
+     "enabled": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Enabled"
+     },
+     "min_gap_min": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Min Gap Min"
+     },
+     "niche_tags": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Niche Tags"
+     }
+    },
+    "title": "AccountPatch",
+    "type": "object"
+   },
+   "AccountSwitch": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     },
+     "handle": {
+      "title": "Handle",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "paused_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Paused Reason"
+     },
+     "platform": {
+      "title": "Platform",
+      "type": "string"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "platform",
+     "handle",
+     "enabled",
+     "status",
+     "paused_reason"
+    ],
+    "title": "AccountSwitch",
+    "type": "object"
+   },
+   "ActiveCampaign": {
+    "properties": {
+     "budget_left": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Budget Left"
+     },
+     "budget_total": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Budget Total"
+     },
+     "deadline": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Deadline"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "marketplace": {
+      "title": "Marketplace",
+      "type": "string"
+     },
+     "runs_out_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Runs Out At"
+     },
+     "stages": {
+      "items": {
+       "$ref": "#/components/schemas/Stage"
+      },
+      "title": "Stages",
+      "type": "array"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "title",
+     "marketplace",
+     "status",
+     "stages",
+     "budget_left",
+     "budget_total",
+     "runs_out_at",
+     "deadline"
+    ],
+    "title": "ActiveCampaign",
+    "type": "object"
+   },
+   "AgendaEntry": {
+    "properties": {
+     "kind": {
+      "enum": [
+       "request",
+       "wakeup",
+       "post"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "priority": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Priority"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     },
+     "when": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "When"
+     }
+    },
+    "required": [
+     "kind",
+     "when",
+     "text"
+    ],
+    "title": "AgendaEntry",
+    "type": "object"
+   },
+   "AgendaItemOut": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "result": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Result"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "text",
+     "status",
+     "result"
+    ],
+    "title": "AgendaItemOut",
+    "type": "object"
+   },
+   "AgentEventOut": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "input": {
+      "additionalProperties": true,
+      "title": "Input",
+      "type": "object"
+     },
+     "output": {
+      "additionalProperties": true,
+      "title": "Output",
+      "type": "object"
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Session Id"
+     },
+     "subagent": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Subagent"
+     },
+     "text": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Text"
+     },
+     "tool": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Tool"
+     },
+     "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "session_id",
+     "ts",
+     "type",
+     "tool",
+     "subagent",
+     "text",
+     "input",
+     "output"
+    ],
+    "title": "AgentEventOut",
+    "type": "object"
+   },
+   "AnswerIn": {
+    "properties": {
+     "answer": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Answer",
+      "type": "string"
+     },
+     "by": {
+      "default": "you",
+      "title": "By",
+      "type": "string"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "answer"
+    ],
+    "title": "AnswerIn",
+    "type": "object"
+   },
+   "AutoApproveOffer": {
+    "properties": {
+     "current_tier": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Current Tier"
+     },
+     "eligible": {
+      "title": "Eligible",
+      "type": "boolean"
+     },
+     "offers": {
+      "items": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Offers",
+      "type": "array"
+     }
+    },
+    "required": [
+     "eligible",
+     "offers",
+     "current_tier"
+    ],
+    "title": "AutoApproveOffer",
+    "type": "object"
+   },
+   "BatchDetail": {
+    "properties": {
+     "approve_all_threshold": {
+      "title": "Approve All Threshold",
+      "type": "integer"
+     },
+     "batch": {
+      "$ref": "#/components/schemas/BatchRow"
+     },
+     "clips": {
+      "items": {
+       "$ref": "#/components/schemas/ReviewClip"
+      },
+      "title": "Clips",
+      "type": "array"
+     }
+    },
+    "required": [
+     "batch",
+     "clips",
+     "approve_all_threshold"
+    ],
+    "title": "BatchDetail",
+    "type": "object"
+   },
+   "BatchRow": {
+    "properties": {
+     "approved": {
+      "title": "Approved",
+      "type": "integer"
+     },
+     "campaign_id": {
+      "title": "Campaign Id",
+      "type": "integer"
+     },
+     "campaign_title": {
+      "title": "Campaign Title",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "pending": {
+      "title": "Pending",
+      "type": "integer"
+     },
+     "rejected": {
+      "title": "Rejected",
+      "type": "integer"
+     },
+     "source_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Title"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "timeout_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Timeout At"
+     },
+     "total": {
+      "title": "Total",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id",
+     "campaign_id",
+     "campaign_title",
+     "source_title",
+     "status",
+     "total",
+     "approved",
+     "rejected",
+     "pending",
+     "created_at",
+     "timeout_at"
+    ],
+    "title": "BatchRow",
+    "type": "object"
+   },
+   "BoardOut": {
+    "properties": {
+     "capacity": {
+      "title": "Capacity",
+      "type": "integer"
+     },
+     "configured_slots": {
+      "title": "Configured Slots",
+      "type": "integer"
+     },
+     "halted": {
+      "title": "Halted",
+      "type": "boolean"
+     },
+     "p01_only": {
+      "title": "P01 Only",
+      "type": "boolean"
+     },
+     "queue": {
+      "items": {
+       "$ref": "#/components/schemas/QueueItem"
+      },
+      "title": "Queue",
+      "type": "array"
+     },
+     "slots": {
+      "items": {
+       "$ref": "#/components/schemas/SlotOut"
+      },
+      "title": "Slots",
+      "type": "array"
+     }
+    },
+    "required": [
+     "capacity",
+     "configured_slots",
+     "halted",
+     "p01_only",
+     "slots",
+     "queue"
+    ],
+    "title": "BoardOut",
+    "type": "object"
+   },
+   "Branding": {
+    "additionalProperties": false,
+    "properties": {
+     "handle_overlay": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Handle Overlay"
+     },
+     "position": {
+      "default": "none",
+      "enum": [
+       "top",
+       "bottom",
+       "none"
+      ],
+      "title": "Position",
+      "type": "string"
+     },
+     "watermark": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Watermark"
+     }
+    },
+    "title": "Branding",
+    "type": "object"
+   },
+   "BreakdownRow": {
+    "properties": {
+     "approval_rate": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Approval Rate"
+     },
+     "avg_cpm": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Avg Cpm"
+     },
+     "earnings": {
+      "title": "Earnings",
+      "type": "number"
+     },
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "payout_delay_days": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Payout Delay Days"
+     },
+     "posts": {
+      "title": "Posts",
+      "type": "integer"
+     },
+     "views": {
+      "title": "Views",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "key",
+     "label",
+     "earnings",
+     "views",
+     "posts"
+    ],
+    "title": "BreakdownRow",
+    "type": "object"
+   },
+   "BumpIn": {
+    "properties": {
+     "priority": {
+      "maximum": 3.0,
+      "minimum": 0.0,
+      "title": "Priority",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "priority"
+    ],
+    "title": "BumpIn",
+    "type": "object"
+   },
+   "CalendarOut": {
+    "properties": {
+     "accounts": {
+      "items": {
+       "$ref": "#/components/schemas/AccountOut"
+      },
+      "title": "Accounts",
+      "type": "array"
+     },
+     "platforms_enabled": {
+      "additionalProperties": {
+       "type": "boolean"
+      },
+      "title": "Platforms Enabled",
+      "type": "object"
+     },
+     "posts": {
+      "items": {
+       "$ref": "#/components/schemas/PostOut"
+      },
+      "title": "Posts",
+      "type": "array"
+     }
+    },
+    "required": [
+     "accounts",
+     "posts",
+     "platforms_enabled"
+    ],
+    "title": "CalendarOut",
+    "type": "object"
+   },
+   "CampaignDetail": {
+    "properties": {
+     "campaign": {
+      "$ref": "#/components/schemas/CampaignRow"
+     },
+     "money": {
+      "$ref": "#/components/schemas/MoneyOut"
+     },
+     "payout": {
+      "additionalProperties": true,
+      "title": "Payout",
+      "type": "object"
+     },
+     "rules_raw": {
+      "title": "Rules Raw",
+      "type": "string"
+     },
+     "score_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Score Reason"
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Session Id"
+     },
+     "sources": {
+      "items": {
+       "$ref": "#/components/schemas/SourceOut"
+      },
+      "title": "Sources",
+      "type": "array"
+     },
+     "spec": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/ClipSpec"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "timeline": {
+      "items": {
+       "$ref": "#/components/schemas/TimelineEntry"
+      },
+      "title": "Timeline",
+      "type": "array"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "required": [
+     "campaign",
+     "url",
+     "score_reason",
+     "payout",
+     "rules_raw",
+     "spec",
+     "sources",
+     "session_id",
+     "timeline",
+     "money"
+    ],
+    "title": "CampaignDetail",
+    "type": "object"
+   },
+   "CampaignRow": {
+    "properties": {
+     "brand": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Brand"
+     },
+     "budget_left": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Budget Left"
+     },
+     "budget_total": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Budget Total"
+     },
+     "clips_posted": {
+      "title": "Clips Posted",
+      "type": "integer"
+     },
+     "content_type": {
+      "title": "Content Type",
+      "type": "string"
+     },
+     "cpm": {
+      "title": "Cpm",
+      "type": "number"
+     },
+     "creator": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Creator"
+     },
+     "deadline": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Deadline"
+     },
+     "disabled_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Disabled Reason"
+     },
+     "earned": {
+      "title": "Earned",
+      "type": "number"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "marketplace": {
+      "title": "Marketplace",
+      "type": "string"
+     },
+     "matching_accounts": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Matching Accounts",
+      "type": "array"
+     },
+     "platforms": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Platforms",
+      "type": "array"
+     },
+     "runs_out_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Runs Out At"
+     },
+     "score": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Score"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "marketplace",
+     "title",
+     "brand",
+     "creator",
+     "status",
+     "score",
+     "cpm",
+     "budget_total",
+     "budget_left",
+     "runs_out_at",
+     "deadline",
+     "content_type",
+     "platforms",
+     "matching_accounts",
+     "clips_posted",
+     "earned",
+     "disabled_reason"
+    ],
+    "title": "CampaignRow",
+    "type": "object"
+   },
+   "CaptionIn": {
+    "properties": {
+     "platform": {
+      "enum": [
+       "youtube",
+       "tiktok",
+       "instagram",
+       "x"
+      ],
+      "title": "Platform",
+      "type": "string"
+     },
+     "text": {
+      "maxLength": 2200,
+      "title": "Text",
+      "type": "string"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "platform",
+     "text"
+    ],
+    "title": "CaptionIn",
+    "type": "object"
+   },
+   "ChatIn": {
+    "properties": {
+     "reply_to": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reply To"
+     },
+     "text": {
+      "maxLength": 4000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord",
+       "ctrl+k"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "ChatIn",
+    "type": "object"
+   },
+   "ClipDetail": {
+    "properties": {
+     "clip": {
+      "$ref": "#/components/schemas/ClipRow"
+     },
+     "payoff": {
+      "title": "Payoff",
+      "type": "string"
+     },
+     "posts": {
+      "items": {
+       "$ref": "#/components/schemas/PostOut"
+      },
+      "title": "Posts",
+      "type": "array"
+     },
+     "qa": {
+      "additionalProperties": true,
+      "title": "Qa",
+      "type": "object"
+     },
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     },
+     "review": {
+      "anyOf": [
+       {
+        "additionalProperties": true,
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Review"
+     },
+     "scores": {
+      "additionalProperties": true,
+      "title": "Scores",
+      "type": "object"
+     },
+     "signals": {
+      "additionalProperties": true,
+      "title": "Signals",
+      "type": "object"
+     },
+     "source_id": {
+      "title": "Source Id",
+      "type": "integer"
+     },
+     "source_range": {
+      "items": {
+       "type": "number"
+      },
+      "title": "Source Range",
+      "type": "array"
+     },
+     "source_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Source Title"
+     },
+     "transcript": {
+      "items": {
+       "$ref": "#/components/schemas/WordOut"
+      },
+      "title": "Transcript",
+      "type": "array"
+     },
+     "variants": {
+      "items": {
+       "$ref": "#/components/schemas/ClipRow"
+      },
+      "title": "Variants",
+      "type": "array"
+     }
+    },
+    "required": [
+     "clip",
+     "source_id",
+     "source_title",
+     "source_range",
+     "reason",
+     "payoff",
+     "scores",
+     "qa",
+     "review",
+     "posts",
+     "variants",
+     "transcript",
+     "signals"
+    ],
+    "title": "ClipDetail",
+    "type": "object"
+   },
+   "ClipRow": {
+    "properties": {
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "campaign_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Title"
+     },
+     "caption_style": {
+      "title": "Caption Style",
+      "type": "string"
+     },
+     "decision": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision"
+     },
+     "duration": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration"
+     },
+     "editing_live": {
+      "title": "Editing Live",
+      "type": "boolean"
+     },
+     "hook": {
+      "title": "Hook",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "layout": {
+      "title": "Layout",
+      "type": "string"
+     },
+     "moment_id": {
+      "title": "Moment Id",
+      "type": "integer"
+     },
+     "platforms_posted": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Platforms Posted",
+      "type": "array"
+     },
+     "preview_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preview Url"
+     },
+     "score": {
+      "title": "Score",
+      "type": "number"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "thumb_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Thumb Url"
+     },
+     "variant_label": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Variant Label"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     },
+     "views": {
+      "title": "Views",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id",
+     "campaign_id",
+     "campaign_title",
+     "moment_id",
+     "score",
+     "duration",
+     "status",
+     "layout",
+     "caption_style",
+     "hook",
+     "version",
+     "variant_label",
+     "thumb_url",
+     "preview_url",
+     "platforms_posted",
+     "views",
+     "decision",
+     "editing_live"
+    ],
+    "title": "ClipRow",
+    "type": "object"
+   },
+   "ClipSpec": {
+    "additionalProperties": false,
+    "properties": {
+     "allow_cross_submit": {
+      "default": false,
+      "title": "Allow Cross Submit",
+      "type": "boolean"
+     },
+     "allow_music": {
+      "default": false,
+      "title": "Allow Music",
+      "type": "boolean"
+     },
+     "banned": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Banned",
+      "type": "array"
+     },
+     "branding": {
+      "$ref": "#/components/schemas/Branding"
+     },
+     "caption_style": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Caption Style"
+     },
+     "content_type": {
+      "default": "clipping",
+      "enum": [
+       "clipping",
+       "ugc",
+       "other"
+      ],
+      "title": "Content Type",
+      "type": "string"
+     },
+     "deliverable": {
+      "default": "link",
+      "enum": [
+       "link",
+       "upload"
+      ],
+      "title": "Deliverable",
+      "type": "string"
+     },
+     "duration_max_s": {
+      "default": 60.0,
+      "title": "Duration Max S",
+      "type": "number"
+     },
+     "duration_min_s": {
+      "default": 15.0,
+      "title": "Duration Min S",
+      "type": "number"
+     },
+     "min_views_to_pay": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Min Views To Pay"
+     },
+     "notes": {
+      "default": "",
+      "title": "Notes",
+      "type": "string"
+     },
+     "platforms": {
+      "items": {
+       "enum": [
+        "youtube",
+        "tiktok",
+        "instagram",
+        "x"
+       ],
+       "type": "string"
+      },
+      "title": "Platforms",
+      "type": "array"
+     },
+     "profanity_mask": {
+      "default": false,
+      "title": "Profanity Mask",
+      "type": "boolean"
+     },
+     "required_tags": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Required Tags",
+      "type": "array"
+     },
+     "required_text": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Required Text",
+      "type": "array"
+     },
+     "source_whitelist": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Source Whitelist",
+      "type": "array"
+     },
+     "summary": {
+      "default": "",
+      "title": "Summary",
+      "type": "string"
+     },
+     "unclear": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Unclear",
+      "type": "array"
+     }
+    },
+    "title": "ClipSpec",
+    "type": "object"
+   },
+   "ControlIn": {
+    "properties": {
+     "key": {
+      "enum": [
+       "dry_run",
+       "paused",
+       "kill_switch",
+       "slots",
+       "auto_approve_tier"
+      ],
+      "title": "Key",
+      "type": "string"
+     },
+     "value": {
+      "title": "Value"
+     },
+     "via": {
+      "default": "app",
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "value"
+    ],
+    "title": "ControlIn",
+    "type": "object"
+   },
+   "ControlState": {
+    "properties": {
+     "auto_approve_tier": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Auto Approve Tier"
+     },
+     "dry_run": {
+      "title": "Dry Run",
+      "type": "boolean"
+     },
+     "kill_switch": {
+      "title": "Kill Switch",
+      "type": "boolean"
+     },
+     "paused": {
+      "title": "Paused",
+      "type": "boolean"
+     },
+     "slots": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Slots"
+     }
+    },
+    "required": [
+     "paused",
+     "dry_run",
+     "kill_switch",
+     "slots",
+     "auto_approve_tier"
+    ],
+    "title": "ControlState",
+    "type": "object"
+   },
+   "DecisionIn": {
+    "properties": {
+     "decision": {
+      "enum": [
+       "approved",
+       "rejected",
+       "pending"
+      ],
+      "title": "Decision",
+      "type": "string"
+     },
+     "platforms": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "string"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Platforms"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "reviewer": {
+      "default": "you",
+      "title": "Reviewer",
+      "type": "string"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "decision"
+    ],
+    "title": "DecisionIn",
+    "type": "object"
+   },
+   "DiscordRefIn": {
+    "properties": {
+     "channel_id": {
+      "title": "Channel Id",
+      "type": "string"
+     },
+     "entity_id": {
+      "title": "Entity Id",
+      "type": "string"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "message_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Message Id"
+     },
+     "thread_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Thread Id"
+     }
+    },
+    "required": [
+     "kind",
+     "entity_id",
+     "channel_id"
+    ],
+    "title": "DiscordRefIn",
+    "type": "object"
+   },
+   "DiscordRefOut": {
+    "properties": {
+     "channel_id": {
+      "title": "Channel Id",
+      "type": "string"
+     },
+     "entity_id": {
+      "title": "Entity Id",
+      "type": "string"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "message_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Message Id"
+     },
+     "thread_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Thread Id"
+     }
+    },
+    "required": [
+     "kind",
+     "entity_id",
+     "channel_id",
+     "message_id",
+     "thread_id"
+    ],
+    "title": "DiscordRefOut",
+    "type": "object"
+   },
+   "EarningsOut": {
+    "properties": {
+     "by_account": {
+      "items": {
+       "$ref": "#/components/schemas/BreakdownRow"
+      },
+      "title": "By Account",
+      "type": "array"
+     },
+     "by_campaign": {
+      "items": {
+       "$ref": "#/components/schemas/BreakdownRow"
+      },
+      "title": "By Campaign",
+      "type": "array"
+     },
+     "by_marketplace": {
+      "items": {
+       "$ref": "#/components/schemas/BreakdownRow"
+      },
+      "title": "By Marketplace",
+      "type": "array"
+     },
+     "by_platform": {
+      "items": {
+       "$ref": "#/components/schemas/BreakdownRow"
+      },
+      "title": "By Platform",
+      "type": "array"
+     },
+     "days": {
+      "title": "Days",
+      "type": "integer"
+     },
+     "series": {
+      "items": {
+       "$ref": "#/components/schemas/SeriesPoint"
+      },
+      "title": "Series",
+      "type": "array"
+     },
+     "top_clips": {
+      "items": {
+       "$ref": "#/components/schemas/ClipRow"
+      },
+      "title": "Top Clips",
+      "type": "array"
+     },
+     "total": {
+      "title": "Total",
+      "type": "number"
+     },
+     "units": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "title": "Units",
+      "type": "object"
+     }
+    },
+    "required": [
+     "days",
+     "total",
+     "series",
+     "by_marketplace",
+     "by_campaign",
+     "by_platform",
+     "by_account",
+     "top_clips",
+     "units"
+    ],
+    "title": "EarningsOut",
+    "type": "object"
+   },
+   "EditOpIn": {
+    "properties": {
+     "args": {
+      "additionalProperties": true,
+      "title": "Args",
+      "type": "object"
+     },
+     "op": {
+      "title": "Op",
+      "type": "string"
+     },
+     "reason": {
+      "default": "",
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "op"
+    ],
+    "title": "EditOpIn",
+    "type": "object"
+   },
+   "EditOpOut": {
+    "properties": {
+     "actor": {
+      "title": "Actor",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "op": {
+      "title": "Op",
+      "type": "string"
+     },
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     },
+     "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+     },
+     "undone": {
+      "title": "Undone",
+      "type": "boolean"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id",
+     "version",
+     "actor",
+     "op",
+     "reason",
+     "ts",
+     "undone"
+    ],
+    "title": "EditOpOut",
+    "type": "object"
+   },
+   "EditState": {
+    "properties": {
+     "clip": {
+      "$ref": "#/components/schemas/ClipRow"
+     },
+     "duration": {
+      "title": "Duration",
+      "type": "number"
+     },
+     "edl": {
+      "additionalProperties": true,
+      "title": "Edl",
+      "type": "object"
+     },
+     "history": {
+      "items": {
+       "$ref": "#/components/schemas/EditOpOut"
+      },
+      "title": "History",
+      "type": "array"
+     },
+     "live_range": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "number"
+        },
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Live Range"
+     },
+     "live_status": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Live Status"
+     },
+     "locked_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Locked By"
+     },
+     "notes": {
+      "items": {
+       "$ref": "#/components/schemas/NoteOut"
+      },
+      "title": "Notes",
+      "type": "array"
+     },
+     "plan": {
+      "items": {
+       "$ref": "#/components/schemas/AgendaItemOut"
+      },
+      "title": "Plan",
+      "type": "array"
+     },
+     "proxy_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Proxy Url"
+     },
+     "variants": {
+      "items": {
+       "$ref": "#/components/schemas/ClipRow"
+      },
+      "title": "Variants",
+      "type": "array"
+     },
+     "version": {
+      "title": "Version",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "clip",
+     "edl",
+     "version",
+     "locked_by",
+     "duration",
+     "history",
+     "plan",
+     "notes",
+     "live_status",
+     "live_range",
+     "proxy_url",
+     "variants"
+    ],
+    "title": "EditState",
+    "type": "object"
+   },
+   "EventOut": {
+    "properties": {
+     "entity": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Entity"
+     },
+     "entity_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Entity Id"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "payload": {
+      "additionalProperties": true,
+      "title": "Payload",
+      "type": "object"
+     },
+     "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "type",
+     "entity",
+     "entity_id",
+     "payload",
+     "ts"
+    ],
+    "title": "EventOut",
+    "type": "object"
+   },
+   "HTTPValidationError": {
+    "properties": {
+     "detail": {
+      "items": {
+       "$ref": "#/components/schemas/ValidationError"
+      },
+      "title": "Detail",
+      "type": "array"
+     }
+    },
+    "title": "HTTPValidationError",
+    "type": "object"
+   },
+   "HealthItem": {
+    "properties": {
+     "detail": {
+      "title": "Detail",
+      "type": "string"
+     },
+     "fix": {
+      "default": "",
+      "title": "Fix",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "status": {
+      "enum": [
+       "ok",
+       "warn",
+       "fail",
+       "skip"
+      ],
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "status",
+     "detail"
+    ],
+    "title": "HealthItem",
+    "type": "object"
+   },
+   "JobOut": {
+    "properties": {
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "finished_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Finished At"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "progress": {
+      "title": "Progress",
+      "type": "number"
+     },
+     "started_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started At"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "kind",
+     "status",
+     "progress",
+     "campaign_id",
+     "error",
+     "created_at",
+     "started_at",
+     "finished_at"
+    ],
+    "title": "JobOut",
+    "type": "object"
+   },
+   "Kpi": {
+    "properties": {
+     "delta_pct": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Delta Pct"
+     },
+     "display": {
+      "title": "Display",
+      "type": "string"
+     },
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "spark": {
+      "items": {
+       "type": "number"
+      },
+      "title": "Spark",
+      "type": "array"
+     },
+     "split": {
+      "anyOf": [
+       {
+        "additionalProperties": {
+         "type": "number"
+        },
+        "type": "object"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Split"
+     },
+     "unit": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Unit"
+     },
+     "value": {
+      "title": "Value",
+      "type": "number"
+     }
+    },
+    "required": [
+     "key",
+     "label",
+     "value",
+     "display"
+    ],
+    "title": "Kpi",
+    "type": "object"
+   },
+   "LessonOut": {
+    "properties": {
+     "active": {
+      "title": "Active",
+      "type": "boolean"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "created_by": {
+      "title": "Created By",
+      "type": "string"
+     },
+     "entity_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Entity Id"
+     },
+     "evidence_ref": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Evidence Ref"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "note": {
+      "title": "Note",
+      "type": "string"
+     },
+     "scope": {
+      "title": "Scope",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "scope",
+     "entity_id",
+     "note",
+     "evidence_ref",
+     "created_by",
+     "created_at",
+     "active"
+    ],
+    "title": "LessonOut",
+    "type": "object"
+   },
+   "LessonPatch": {
+    "properties": {
+     "note": {
+      "maxLength": 600,
+      "minLength": 3,
+      "title": "Note",
+      "type": "string"
+     }
+    },
+    "required": [
+     "note"
+    ],
+    "title": "LessonPatch",
+    "type": "object"
+   },
+   "ManualCampaignIn": {
+    "properties": {
+     "marketplace": {
+      "enum": [
+       "vyro",
+       "whop"
+      ],
+      "title": "Marketplace",
+      "type": "string"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "url": {
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "marketplace",
+     "url"
+    ],
+    "title": "ManualCampaignIn",
+    "type": "object"
+   },
+   "MarketSwitch": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     },
+     "mode": {
+      "title": "Mode",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "session_ok": {
+      "title": "Session Ok",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "name",
+     "enabled",
+     "session_ok",
+     "mode"
+    ],
+    "title": "MarketSwitch",
+    "type": "object"
+   },
+   "MoneyOut": {
+    "properties": {
+     "earnings": {
+      "title": "Earnings",
+      "type": "number"
+     },
+     "posts": {
+      "title": "Posts",
+      "type": "integer"
+     },
+     "submissions": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "title": "Submissions",
+      "type": "object"
+     },
+     "views": {
+      "title": "Views",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "views",
+     "earnings",
+     "posts",
+     "submissions"
+    ],
+    "title": "MoneyOut",
+    "type": "object"
+   },
+   "NeedsYouAction": {
+    "properties": {
+     "action": {
+      "title": "Action",
+      "type": "string"
+     },
+     "args": {
+      "additionalProperties": true,
+      "title": "Args",
+      "type": "object"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     }
+    },
+    "required": [
+     "label",
+     "action"
+    ],
+    "title": "NeedsYouAction",
+    "type": "object"
+   },
+   "NeedsYouItem": {
+    "properties": {
+     "actions": {
+      "items": {
+       "$ref": "#/components/schemas/NeedsYouAction"
+      },
+      "title": "Actions",
+      "type": "array"
+     },
+     "detail": {
+      "title": "Detail",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "challenge",
+       "question",
+       "review",
+       "campaign",
+       "failure"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "title": {
+      "title": "Title",
+      "type": "string"
+     },
+     "urgency": {
+      "title": "Urgency",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "kind",
+     "urgency",
+     "title",
+     "detail",
+     "actions"
+    ],
+    "title": "NeedsYouItem",
+    "type": "object"
+   },
+   "NoteIn": {
+    "properties": {
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "pinned": {
+      "default": false,
+      "title": "Pinned",
+      "type": "boolean"
+     },
+     "scope": {
+      "enum": [
+       "clip",
+       "campaign",
+       "creator",
+       "global"
+      ],
+      "title": "Scope",
+      "type": "string"
+     },
+     "scope_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scope Id"
+     },
+     "text": {
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "scope",
+     "text"
+    ],
+    "title": "NoteIn",
+    "type": "object"
+   },
+   "NoteOut": {
+    "properties": {
+     "author": {
+      "title": "Author",
+      "type": "string"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "pinned": {
+      "title": "Pinned",
+      "type": "boolean"
+     },
+     "response": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Response"
+     },
+     "scope": {
+      "title": "Scope",
+      "type": "string"
+     },
+     "scope_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scope Id"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "scope",
+     "scope_id",
+     "text",
+     "author",
+     "pinned",
+     "response",
+     "created_at"
+    ],
+    "title": "NoteOut",
+    "type": "object"
+   },
+   "OkOut": {
+    "properties": {
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
+     "id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "ok": {
+      "default": true,
+      "title": "Ok",
+      "type": "boolean"
+     }
+    },
+    "title": "OkOut",
+    "type": "object"
+   },
+   "OverviewOut": {
+    "properties": {
+     "active_campaigns": {
+      "items": {
+       "$ref": "#/components/schemas/ActiveCampaign"
+      },
+      "title": "Active Campaigns",
+      "type": "array"
+     },
+     "agenda": {
+      "items": {
+       "$ref": "#/components/schemas/AgendaEntry"
+      },
+      "title": "Agenda",
+      "type": "array"
+     },
+     "health": {
+      "items": {
+       "$ref": "#/components/schemas/HealthItem"
+      },
+      "title": "Health",
+      "type": "array"
+     },
+     "kpis": {
+      "items": {
+       "$ref": "#/components/schemas/Kpi"
+      },
+      "title": "Kpis",
+      "type": "array"
+     },
+     "needs_you": {
+      "items": {
+       "$ref": "#/components/schemas/NeedsYouItem"
+      },
+      "title": "Needs You",
+      "type": "array"
+     },
+     "next_scout_in_s": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Next Scout In S"
+     },
+     "notes": {
+      "items": {
+       "$ref": "#/components/schemas/NoteOut"
+      },
+      "title": "Notes",
+      "type": "array"
+     },
+     "upcoming_posts": {
+      "items": {
+       "$ref": "#/components/schemas/UpcomingPost"
+      },
+      "title": "Upcoming Posts",
+      "type": "array"
+     }
+    },
+    "required": [
+     "needs_you",
+     "kpis",
+     "active_campaigns",
+     "upcoming_posts",
+     "agenda",
+     "notes",
+     "health",
+     "next_scout_in_s"
+    ],
+    "title": "OverviewOut",
+    "type": "object"
+   },
+   "PostOut": {
+    "properties": {
+     "account_id": {
+      "title": "Account Id",
+      "type": "integer"
+     },
+     "clip_id": {
+      "title": "Clip Id",
+      "type": "integer"
+     },
+     "dry_run": {
+      "title": "Dry Run",
+      "type": "boolean"
+     },
+     "earnings": {
+      "title": "Earnings",
+      "type": "number"
+     },
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "handle": {
+      "title": "Handle",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "platform": {
+      "title": "Platform",
+      "type": "string"
+     },
+     "posted_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Posted At"
+     },
+     "scheduled_at": {
+      "format": "date-time",
+      "title": "Scheduled At",
+      "type": "string"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "thumb_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Thumb Url"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     },
+     "views": {
+      "title": "Views",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id",
+     "clip_id",
+     "account_id",
+     "handle",
+     "platform",
+     "scheduled_at",
+     "posted_at",
+     "url",
+     "status",
+     "dry_run",
+     "views",
+     "earnings",
+     "error",
+     "thumb_url"
+    ],
+    "title": "PostOut",
+    "type": "object"
+   },
+   "PromptIn": {
+    "properties": {
+     "text": {
+      "maxLength": 20000,
+      "minLength": 50,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "PromptIn",
+    "type": "object"
+   },
+   "PromptOut": {
+    "properties": {
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "overridden": {
+      "title": "Overridden",
+      "type": "boolean"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "text",
+     "overridden"
+    ],
+    "title": "PromptOut",
+    "type": "object"
+   },
+   "PromptSaveOut": {
+    "properties": {
+     "eval_status": {
+      "title": "Eval Status",
+      "type": "string"
+     },
+     "saved": {
+      "title": "Saved",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "saved",
+     "eval_status"
+    ],
+    "title": "PromptSaveOut",
+    "type": "object"
+   },
+   "QuestionOut": {
+    "properties": {
+     "answer": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Answer"
+     },
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "created_at": {
+      "format": "date-time",
+      "title": "Created At",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "options": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Options",
+      "type": "array"
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Session Id"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     },
+     "timeout_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Timeout At"
+     }
+    },
+    "required": [
+     "id",
+     "session_id",
+     "campaign_id",
+     "text",
+     "options",
+     "status",
+     "answer",
+     "created_at",
+     "timeout_at"
+    ],
+    "title": "QuestionOut",
+    "type": "object"
+   },
+   "QueueItem": {
+    "properties": {
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "campaign_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Title"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "merged": {
+      "title": "Merged",
+      "type": "integer"
+     },
+     "priority": {
+      "title": "Priority",
+      "type": "integer"
+     },
+     "queued_at": {
+      "format": "date-time",
+      "title": "Queued At",
+      "type": "string"
+     },
+     "request_id": {
+      "title": "Request Id",
+      "type": "integer"
+     },
+     "role": {
+      "title": "Role",
+      "type": "string"
+     }
+    },
+    "required": [
+     "request_id",
+     "priority",
+     "role",
+     "kind",
+     "campaign_id",
+     "campaign_title",
+     "merged",
+     "queued_at"
+    ],
+    "title": "QueueItem",
+    "type": "object"
+   },
+   "RecipeHealth": {
+    "properties": {
+     "failures_7d": {
+      "title": "Failures 7D",
+      "type": "integer"
+     },
+     "last_error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Error"
+     },
+     "last_failure": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Failure"
+     },
+     "last_success": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Last Success"
+     },
+     "recipe": {
+      "title": "Recipe",
+      "type": "string"
+     },
+     "runs_7d": {
+      "title": "Runs 7D",
+      "type": "integer"
+     },
+     "screenshot_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Screenshot Url"
+     }
+    },
+    "required": [
+     "recipe",
+     "last_success",
+     "last_failure",
+     "last_error",
+     "screenshot_url",
+     "runs_7d",
+     "failures_7d"
+    ],
+    "title": "RecipeHealth",
+    "type": "object"
+   },
+   "RecutIn": {
+    "properties": {
+     "end_delta": {
+      "default": 0.0,
+      "maximum": 30.0,
+      "minimum": -30.0,
+      "title": "End Delta",
+      "type": "number"
+     },
+     "layout": {
+      "anyOf": [
+       {
+        "enum": [
+         "crop",
+         "split",
+         "fit"
+        ],
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Layout"
+     },
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 500,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     },
+     "start_delta": {
+      "default": 0.0,
+      "maximum": 30.0,
+      "minimum": -30.0,
+      "title": "Start Delta",
+      "type": "number"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "title": "RecutIn",
+    "type": "object"
+   },
+   "RejectRestIn": {
+    "properties": {
+     "reason": {
+      "default": "other",
+      "title": "Reason",
+      "type": "string"
+     },
+     "reviewer": {
+      "default": "you",
+      "title": "Reviewer",
+      "type": "string"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "title": "RejectRestIn",
+    "type": "object"
+   },
+   "RescheduleIn": {
+    "properties": {
+     "scheduled_at": {
+      "format": "date-time",
+      "title": "Scheduled At",
+      "type": "string"
+     }
+    },
+    "required": [
+     "scheduled_at"
+    ],
+    "title": "RescheduleIn",
+    "type": "object"
+   },
+   "ReviewClip": {
+    "properties": {
+     "captions": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "title": "Captions",
+      "type": "object"
+     },
+     "clip": {
+      "$ref": "#/components/schemas/ClipRow"
+     },
+     "decision": {
+      "title": "Decision",
+      "type": "string"
+     },
+     "decision_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Decision Reason"
+     },
+     "platforms": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Platforms",
+      "type": "array"
+     },
+     "platforms_allowed": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Platforms Allowed",
+      "type": "array"
+     },
+     "qa_ok": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Qa Ok"
+     },
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     },
+     "reviewer": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reviewer"
+     },
+     "source_range": {
+      "items": {
+       "type": "number"
+      },
+      "title": "Source Range",
+      "type": "array"
+     },
+     "via": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Via"
+     }
+    },
+    "required": [
+     "clip",
+     "source_range",
+     "reason",
+     "decision",
+     "decision_reason",
+     "via",
+     "reviewer",
+     "platforms_allowed",
+     "platforms",
+     "captions",
+     "qa_ok"
+    ],
+    "title": "ReviewClip",
+    "type": "object"
+   },
+   "SecretIn": {
+    "properties": {
+     "value": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "value"
+    ],
+    "title": "SecretIn",
+    "type": "object"
+   },
+   "SeriesPoint": {
+    "properties": {
+     "day": {
+      "title": "Day",
+      "type": "string"
+     },
+     "earnings": {
+      "additionalProperties": {
+       "type": "number"
+      },
+      "title": "Earnings",
+      "type": "object"
+     },
+     "views": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "title": "Views",
+      "type": "object"
+     }
+    },
+    "required": [
+     "day",
+     "earnings",
+     "views"
+    ],
+    "title": "SeriesPoint",
+    "type": "object"
+   },
+   "SessionDetail": {
+    "properties": {
+     "events": {
+      "items": {
+       "$ref": "#/components/schemas/AgentEventOut"
+      },
+      "title": "Events",
+      "type": "array"
+     },
+     "requests": {
+      "items": {
+       "$ref": "#/components/schemas/QueueItem"
+      },
+      "title": "Requests",
+      "type": "array"
+     },
+     "session": {
+      "$ref": "#/components/schemas/SessionOut"
+     }
+    },
+    "required": [
+     "session",
+     "requests",
+     "events"
+    ],
+    "title": "SessionDetail",
+    "type": "object"
+   },
+   "SessionOut": {
+    "properties": {
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "campaign_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Title"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "input_tokens": {
+      "title": "Input Tokens",
+      "type": "integer"
+     },
+     "last_active": {
+      "format": "date-time",
+      "title": "Last Active",
+      "type": "string"
+     },
+     "max_turns": {
+      "title": "Max Turns",
+      "type": "integer"
+     },
+     "output_tokens": {
+      "title": "Output Tokens",
+      "type": "integer"
+     },
+     "role": {
+      "title": "Role",
+      "type": "string"
+     },
+     "sdk_session_id": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Sdk Session Id"
+     },
+     "started": {
+      "format": "date-time",
+      "title": "Started",
+      "type": "string"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "summary": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Summary"
+     },
+     "turns": {
+      "title": "Turns",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "id",
+     "role",
+     "campaign_id",
+     "campaign_title",
+     "status",
+     "turns",
+     "max_turns",
+     "input_tokens",
+     "output_tokens",
+     "started",
+     "last_active",
+     "summary",
+     "sdk_session_id"
+    ],
+    "title": "SessionOut",
+    "type": "object"
+   },
+   "SettingsOut": {
+    "properties": {
+     "pairing_token": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Pairing Token"
+     },
+     "secrets_present": {
+      "additionalProperties": {
+       "type": "boolean"
+      },
+      "title": "Secrets Present",
+      "type": "object"
+     },
+     "settings": {
+      "additionalProperties": true,
+      "title": "Settings",
+      "type": "object"
+     }
+    },
+    "required": [
+     "settings",
+     "secrets_present",
+     "pairing_token"
+    ],
+    "title": "SettingsOut",
+    "type": "object"
+   },
+   "SettingsPatch": {
+    "properties": {
+     "values": {
+      "additionalProperties": true,
+      "title": "Values",
+      "type": "object"
+     }
+    },
+    "required": [
+     "values"
+    ],
+    "title": "SettingsPatch",
+    "type": "object"
+   },
+   "ShipIn": {
+    "properties": {
+     "reviewer": {
+      "default": "you",
+      "title": "Reviewer",
+      "type": "string"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "title": "ShipIn",
+    "type": "object"
+   },
+   "SlotOut": {
+    "properties": {
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "campaign_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Title"
+     },
+     "current_tool": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Current Tool"
+     },
+     "dimmed": {
+      "title": "Dimmed",
+      "type": "boolean"
+     },
+     "kind": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Kind"
+     },
+     "priority": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Priority"
+     },
+     "request_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Request Id"
+     },
+     "role": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Role"
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Session Id"
+     },
+     "slot": {
+      "title": "Slot",
+      "type": "integer"
+     },
+     "started": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Started"
+     }
+    },
+    "required": [
+     "slot",
+     "request_id",
+     "session_id",
+     "role",
+     "campaign_id",
+     "campaign_title",
+     "kind",
+     "priority",
+     "started",
+     "current_tool",
+     "dimmed"
+    ],
+    "title": "SlotOut",
+    "type": "object"
+   },
+   "SocialSwitch": {
+    "properties": {
+     "accounts": {
+      "title": "Accounts",
+      "type": "integer"
+     },
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "enabled",
+     "accounts"
+    ],
+    "title": "SocialSwitch",
+    "type": "object"
+   },
+   "SourceOut": {
+    "properties": {
+     "duration": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration"
+     },
+     "heatmap": {
+      "items": {
+       "type": "number"
+      },
+      "title": "Heatmap",
+      "type": "array"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Title"
+     },
+     "url": {
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "url",
+     "title",
+     "status",
+     "duration",
+     "heatmap"
+    ],
+    "title": "SourceOut",
+    "type": "object"
+   },
+   "Stage": {
+    "properties": {
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "state": {
+      "enum": [
+       "done",
+       "active",
+       "todo"
+      ],
+      "title": "State",
+      "type": "string"
+     }
+    },
+    "required": [
+     "name",
+     "state"
+    ],
+    "title": "Stage",
+    "type": "object"
+   },
+   "StatusOut": {
+    "properties": {
+     "agents_capacity": {
+      "title": "Agents Capacity",
+      "type": "integer"
+     },
+     "agents_running": {
+      "title": "Agents Running",
+      "type": "integer"
+     },
+     "campaigns_by_market": {
+      "additionalProperties": {
+       "type": "integer"
+      },
+      "title": "Campaigns By Market",
+      "type": "object"
+     },
+     "control": {
+      "$ref": "#/components/schemas/ControlState"
+     },
+     "discord_online": {
+      "title": "Discord Online",
+      "type": "boolean"
+     },
+     "earned_today": {
+      "title": "Earned Today",
+      "type": "number"
+     },
+     "extension_profiles": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Extension Profiles",
+      "type": "array"
+     },
+     "fixture_mode": {
+      "title": "Fixture Mode",
+      "type": "boolean"
+     },
+     "gpu_util": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Gpu Util"
+     },
+     "jobs_queued": {
+      "title": "Jobs Queued",
+      "type": "integer"
+     },
+     "jobs_running": {
+      "title": "Jobs Running",
+      "type": "integer"
+     },
+     "library_count": {
+      "title": "Library Count",
+      "type": "integer"
+     },
+     "needs_you": {
+      "title": "Needs You",
+      "type": "integer"
+     },
+     "review_pending": {
+      "title": "Review Pending",
+      "type": "integer"
+     },
+     "usage": {
+      "$ref": "#/components/schemas/UsageOut"
+     },
+     "version": {
+      "title": "Version",
+      "type": "string"
+     }
+    },
+    "required": [
+     "version",
+     "fixture_mode",
+     "control",
+     "usage",
+     "agents_running",
+     "agents_capacity",
+     "jobs_running",
+     "jobs_queued",
+     "gpu_util",
+     "extension_profiles",
+     "discord_online",
+     "earned_today",
+     "needs_you",
+     "review_pending",
+     "campaigns_by_market",
+     "library_count"
+    ],
+    "title": "StatusOut",
+    "type": "object"
+   },
+   "SwitchIn": {
+    "properties": {
+     "enabled": {
+      "title": "Enabled",
+      "type": "boolean"
+     },
+     "level": {
+      "enum": [
+       "marketplace",
+       "social",
+       "account"
+      ],
+      "title": "Level",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "on_active": {
+      "default": "finish",
+      "enum": [
+       "finish",
+       "pause"
+      ],
+      "title": "On Active",
+      "type": "string"
+     },
+     "on_scheduled": {
+      "default": "keep",
+      "enum": [
+       "cancel",
+       "keep"
+      ],
+      "title": "On Scheduled",
+      "type": "string"
+     },
+     "via": {
+      "default": "app",
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "level",
+     "name",
+     "enabled"
+    ],
+    "title": "SwitchIn",
+    "type": "object"
+   },
+   "SwitchPreview": {
+    "properties": {
+     "active_campaigns": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Active Campaigns"
+     },
+     "scheduled_posts": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scheduled Posts"
+     }
+    },
+    "title": "SwitchPreview",
+    "type": "object"
+   },
+   "SwitchResult": {
+    "properties": {
+     "effects": {
+      "additionalProperties": true,
+      "title": "Effects",
+      "type": "object"
+     },
+     "needs_setup": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Needs Setup"
+     },
+     "ok": {
+      "title": "Ok",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "ok"
+    ],
+    "title": "SwitchResult",
+    "type": "object"
+   },
+   "SwitchesOut": {
+    "properties": {
+     "accounts": {
+      "items": {
+       "$ref": "#/components/schemas/AccountSwitch"
+      },
+      "title": "Accounts",
+      "type": "array"
+     },
+     "marketplaces": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/MarketSwitch"
+      },
+      "title": "Marketplaces",
+      "type": "object"
+     },
+     "socials": {
+      "additionalProperties": {
+       "$ref": "#/components/schemas/SocialSwitch"
+      },
+      "title": "Socials",
+      "type": "object"
+     }
+    },
+    "required": [
+     "marketplaces",
+     "socials",
+     "accounts"
+    ],
+    "title": "SwitchesOut",
+    "type": "object"
+   },
+   "ThresholdIn": {
+    "properties": {
+     "reviewer": {
+      "default": "you",
+      "title": "Reviewer",
+      "type": "string"
+     },
+     "threshold": {
+      "default": 80,
+      "title": "Threshold",
+      "type": "number"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "title": "ThresholdIn",
+    "type": "object"
+   },
+   "TimelineEntry": {
+    "properties": {
+     "text": {
+      "title": "Text",
+      "type": "string"
+     },
+     "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+     },
+     "type": {
+      "title": "Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "ts",
+     "type",
+     "text"
+    ],
+    "title": "TimelineEntry",
+    "type": "object"
+   },
+   "ToolStat": {
+    "properties": {
+     "blocked_7d": {
+      "title": "Blocked 7D",
+      "type": "integer"
+     },
+     "calls_7d": {
+      "title": "Calls 7D",
+      "type": "integer"
+     },
+     "errors_7d": {
+      "title": "Errors 7D",
+      "type": "integer"
+     },
+     "read_only": {
+      "title": "Read Only",
+      "type": "integer"
+     },
+     "server": {
+      "title": "Server",
+      "type": "string"
+     },
+     "tools": {
+      "title": "Tools",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "server",
+     "tools",
+     "read_only",
+     "calls_7d",
+     "errors_7d",
+     "blocked_7d"
+    ],
+    "title": "ToolStat",
+    "type": "object"
+   },
+   "ToolsOut": {
+    "properties": {
+     "access": {
+      "additionalProperties": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "title": "Access",
+      "type": "object"
+     },
+     "servers": {
+      "items": {
+       "$ref": "#/components/schemas/ToolStat"
+      },
+      "title": "Servers",
+      "type": "array"
+     },
+     "subagents": {
+      "additionalProperties": {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      "title": "Subagents",
+      "type": "object"
+     }
+    },
+    "required": [
+     "servers",
+     "access",
+     "subagents"
+    ],
+    "title": "ToolsOut",
+    "type": "object"
+   },
+   "UndoIn": {
+    "properties": {
+     "op_id": {
+      "title": "Op Id",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "op_id"
+    ],
+    "title": "UndoIn",
+    "type": "object"
+   },
+   "UpcomingPost": {
+    "properties": {
+     "account_id": {
+      "title": "Account Id",
+      "type": "integer"
+     },
+     "clip_id": {
+      "title": "Clip Id",
+      "type": "integer"
+     },
+     "handle": {
+      "title": "Handle",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "platform": {
+      "title": "Platform",
+      "type": "string"
+     },
+     "scheduled_at": {
+      "format": "date-time",
+      "title": "Scheduled At",
+      "type": "string"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "thumb_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Thumb Url"
+     }
+    },
+    "required": [
+     "id",
+     "account_id",
+     "handle",
+     "platform",
+     "scheduled_at",
+     "clip_id",
+     "status",
+     "thumb_url"
+    ],
+    "title": "UpcomingPost",
+    "type": "object"
+   },
+   "UsageOut": {
+    "properties": {
+     "max_slots": {
+      "title": "Max Slots",
+      "type": "integer"
+     },
+     "pace": {
+      "title": "Pace",
+      "type": "string"
+     },
+     "rate_limited": {
+      "title": "Rate Limited",
+      "type": "boolean"
+     },
+     "resets_at": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Resets At"
+     },
+     "utilization": {
+      "title": "Utilization",
+      "type": "number"
+     }
+    },
+    "required": [
+     "utilization",
+     "resets_at",
+     "rate_limited",
+     "max_slots",
+     "pace"
+    ],
+    "title": "UsageOut",
+    "type": "object"
+   },
+   "ValidationError": {
+    "properties": {
+     "ctx": {
+      "title": "Context",
+      "type": "object"
+     },
+     "input": {
+      "title": "Input"
+     },
+     "loc": {
+      "items": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "integer"
+        }
+       ]
+      },
+      "title": "Location",
+      "type": "array"
+     },
+     "msg": {
+      "title": "Message",
+      "type": "string"
+     },
+     "type": {
+      "title": "Error Type",
+      "type": "string"
+     }
+    },
+    "required": [
+     "loc",
+     "msg",
+     "type"
+    ],
+    "title": "ValidationError",
+    "type": "object"
+   },
+   "WordOut": {
+    "properties": {
+     "end": {
+      "title": "End",
+      "type": "number"
+     },
+     "t": {
+      "title": "T",
+      "type": "number"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "t",
+     "end",
+     "text"
+    ],
+    "title": "WordOut",
+    "type": "object"
+   }
+  }
+ },
+ "info": {
+  "title": "Clipper.io core",
+  "version": "0.1.0"
+ },
+ "openapi": "3.1.0",
+ "paths": {
+  "/api/agents/board": {
+   "get": {
+    "operationId": "board_api_agents_board_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BoardOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Board",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/director/chat": {
+   "post": {
+    "operationId": "director_chat_api_agents_director_chat_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ChatIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Director Chat",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/director/messages": {
+   "get": {
+    "operationId": "director_messages_api_agents_director_messages_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/AgentEventOut"
+         },
+         "title": "Response Director Messages Api Agents Director Messages Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Director Messages",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/requests/{request_id}": {
+   "delete": {
+    "operationId": "cancel_request_api_agents_requests__request_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "request_id",
+      "required": true,
+      "schema": {
+       "title": "Request Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel Request",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/requests/{request_id}/bump": {
+   "post": {
+    "operationId": "bump_api_agents_requests__request_id__bump_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "request_id",
+      "required": true,
+      "schema": {
+       "title": "Request Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/BumpIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Bump",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/sessions": {
+   "get": {
+    "operationId": "sessions_api_agents_sessions_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/SessionOut"
+         },
+         "title": "Response Sessions Api Agents Sessions Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Sessions",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/sessions/{session_id}": {
+   "get": {
+    "operationId": "session_api_agents_sessions__session_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "session_id",
+      "required": true,
+      "schema": {
+       "title": "Session Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "After",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 200,
+       "maximum": 1000,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SessionDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Session",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/sessions/{session_id}/interrupt": {
+   "post": {
+    "operationId": "interrupt_api_agents_sessions__session_id__interrupt_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "session_id",
+      "required": true,
+      "schema": {
+       "title": "Session Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Interrupt",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/sessions/{session_id}/nudge": {
+   "post": {
+    "operationId": "nudge_api_agents_sessions__session_id__nudge_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "session_id",
+      "required": true,
+      "schema": {
+       "title": "Session Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Nudge",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/campaigns": {
+   "get": {
+    "operationId": "campaign_list_api_campaigns_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "market",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Market"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/CampaignRow"
+         },
+         "title": "Response Campaign List Api Campaigns Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Campaign List",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/manual": {
+   "post": {
+    "operationId": "manual_api_campaigns_manual_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ManualCampaignIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Manual",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/{campaign_id}": {
+   "get": {
+    "operationId": "campaign_get_api_campaigns__campaign_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CampaignDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Campaign Get",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/{campaign_id}/pause": {
+   "post": {
+    "operationId": "pause_campaign_api_campaigns__campaign_id__pause_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Pause Campaign",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/{campaign_id}/skip": {
+   "post": {
+    "operationId": "skip_api_campaigns__campaign_id__skip_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "via",
+      "required": false,
+      "schema": {
+       "default": "dashboard",
+       "title": "Via",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Skip",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/{campaign_id}/spec": {
+   "put": {
+    "operationId": "put_spec_api_campaigns__campaign_id__spec_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ClipSpec"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ClipSpec"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Put Spec",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/{campaign_id}/take": {
+   "post": {
+    "operationId": "take_api_campaigns__campaign_id__take_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "via",
+      "required": false,
+      "schema": {
+       "default": "dashboard",
+       "title": "Via",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Take",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/clips": {
+   "get": {
+    "operationId": "clip_list_api_clips_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "campaign_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "integer"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Campaign Id"
+      }
+     },
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     },
+     {
+      "in": "query",
+      "name": "min_score",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "number"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Min Score"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/ClipRow"
+         },
+         "title": "Response Clip List Api Clips Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Clip List",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/clips/{clip_id}": {
+   "get": {
+    "operationId": "clip_get_api_clips__clip_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ClipDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Clip Get",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/control": {
+   "post": {
+    "operationId": "control_api_control_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ControlIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ControlState"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Control",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/discord/clip/{clip_id}/preview-path": {
+   "get": {
+    "description": "The bot runs on the same machine and uploads the preview file directly.",
+    "operationId": "preview_path_api_discord_clip__clip_id__preview_path_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Preview Path Api Discord Clip  Clip Id  Preview Path Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Preview Path",
+    "tags": [
+     "discord"
+    ]
+   }
+  },
+  "/api/discord/heartbeat": {
+   "post": {
+    "operationId": "heartbeat_api_discord_heartbeat_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Heartbeat",
+    "tags": [
+     "discord"
+    ]
+   }
+  },
+  "/api/discord/refs": {
+   "post": {
+    "operationId": "ref_put_api_discord_refs_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DiscordRefIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Ref Put",
+    "tags": [
+     "discord"
+    ]
+   }
+  },
+  "/api/discord/refs/{kind}/{entity_id}": {
+   "get": {
+    "operationId": "ref_get_api_discord_refs__kind___entity_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "kind",
+      "required": true,
+      "schema": {
+       "title": "Kind",
+       "type": "string"
+      }
+     },
+     {
+      "in": "path",
+      "name": "entity_id",
+      "required": true,
+      "schema": {
+       "title": "Entity Id",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/DiscordRefOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Ref Get",
+    "tags": [
+     "discord"
+    ]
+   }
+  },
+  "/api/doctor": {
+   "get": {
+    "operationId": "doctor_api_doctor_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/HealthItem"
+         },
+         "title": "Response Doctor Api Doctor Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Doctor",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/earnings": {
+   "get": {
+    "operationId": "earnings_get_api_earnings_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "days",
+      "required": false,
+      "schema": {
+       "default": 30,
+       "maximum": 365,
+       "minimum": 1,
+       "title": "Days",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EarningsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Earnings Get",
+    "tags": [
+     "earnings"
+    ]
+   }
+  },
+  "/api/edit/{clip_id}": {
+   "get": {
+    "operationId": "edit_get_api_edit__clip_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EditState"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Edit Get",
+    "tags": [
+     "edit"
+    ]
+   }
+  },
+  "/api/edit/{clip_id}/hand-back": {
+   "post": {
+    "operationId": "hand_back_api_edit__clip_id__hand_back_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Hand Back",
+    "tags": [
+     "edit"
+    ]
+   }
+  },
+  "/api/edit/{clip_id}/ops": {
+   "post": {
+    "operationId": "edit_op_api_edit__clip_id__ops_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/EditOpIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EditState"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Edit Op",
+    "tags": [
+     "edit"
+    ]
+   }
+  },
+  "/api/edit/{clip_id}/preview": {
+   "post": {
+    "operationId": "edit_preview_api_edit__clip_id__preview_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Edit Preview",
+    "tags": [
+     "edit"
+    ]
+   }
+  },
+  "/api/edit/{clip_id}/take-over": {
+   "post": {
+    "operationId": "take_over_api_edit__clip_id__take_over_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Take Over",
+    "tags": [
+     "edit"
+    ]
+   }
+  },
+  "/api/edit/{clip_id}/undo": {
+   "post": {
+    "operationId": "edit_undo_api_edit__clip_id__undo_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/UndoIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/EditState"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Edit Undo",
+    "tags": [
+     "edit"
+    ]
+   }
+  },
+  "/api/events": {
+   "get": {
+    "operationId": "events_api_events_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "after",
+      "required": false,
+      "schema": {
+       "default": 0,
+       "title": "After",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 200,
+       "maximum": 1000,
+       "title": "Limit",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "types",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Types"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/EventOut"
+         },
+         "title": "Response Events Api Events Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Events",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/files/clip/{clip_id}/{kind}": {
+   "get": {
+    "operationId": "clip_file_api_files_clip__clip_id___kind__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "path",
+      "name": "kind",
+      "required": true,
+      "schema": {
+       "title": "Kind",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Clip File",
+    "tags": [
+     "files"
+    ]
+   }
+  },
+  "/api/files/screenshot/{run_id}": {
+   "get": {
+    "operationId": "screenshot_api_files_screenshot__run_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "run_id",
+      "required": true,
+      "schema": {
+       "title": "Run Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Screenshot",
+    "tags": [
+     "files"
+    ]
+   }
+  },
+  "/api/files/upload/{post_id}": {
+   "get": {
+    "description": "The final render of a post's clip, for the Companion extension's upload recipe.",
+    "operationId": "upload_file_api_files_upload__post_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "post_id",
+      "required": true,
+      "schema": {
+       "title": "Post Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Upload File",
+    "tags": [
+     "files"
+    ]
+   }
+  },
+  "/api/health": {
+   "get": {
+    "operationId": "health_check_api_health_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Health Check Api Health Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Health Check",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/jobs": {
+   "get": {
+    "operationId": "jobs_api_jobs_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "limit",
+      "required": false,
+      "schema": {
+       "default": 50,
+       "title": "Limit",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/JobOut"
+         },
+         "title": "Response Jobs Api Jobs Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Jobs",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/notes": {
+   "get": {
+    "operationId": "notes_api_notes_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "scope",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Scope"
+      }
+     },
+     {
+      "in": "query",
+      "name": "scope_id",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Scope Id"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/NoteOut"
+         },
+         "title": "Response Notes Api Notes Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Notes",
+    "tags": [
+     "system"
+    ]
+   },
+   "post": {
+    "operationId": "add_note_api_notes_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/NoteIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Add Note",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/notes/{note_id}": {
+   "delete": {
+    "operationId": "clear_note_api_notes__note_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "note_id",
+      "required": true,
+      "schema": {
+       "title": "Note Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Clear Note",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/overview": {
+   "get": {
+    "operationId": "overview_api_overview_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OverviewOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Overview",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/publishing/accounts": {
+   "get": {
+    "operationId": "account_list_api_publishing_accounts_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/AccountOut"
+         },
+         "title": "Response Account List Api Publishing Accounts Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Account List",
+    "tags": [
+     "publishing"
+    ]
+   },
+   "post": {
+    "operationId": "account_add_api_publishing_accounts_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AccountIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Account Add",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/accounts/{account_id}": {
+   "patch": {
+    "operationId": "account_patch_api_publishing_accounts__account_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "account_id",
+      "required": true,
+      "schema": {
+       "title": "Account Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AccountPatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Account Patch",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/accounts/{account_id}/resume": {
+   "post": {
+    "operationId": "account_resume_api_publishing_accounts__account_id__resume_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "account_id",
+      "required": true,
+      "schema": {
+       "title": "Account Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Account Resume",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/calendar": {
+   "get": {
+    "operationId": "calendar_api_publishing_calendar_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "start",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "format": "date-time",
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Start"
+      }
+     },
+     {
+      "in": "query",
+      "name": "days",
+      "required": false,
+      "schema": {
+       "default": 7,
+       "maximum": 31,
+       "minimum": 1,
+       "title": "Days",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/CalendarOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Calendar",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/posts/{post_id}/cancel": {
+   "post": {
+    "operationId": "cancel_post_api_publishing_posts__post_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "post_id",
+      "required": true,
+      "schema": {
+       "title": "Post Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Cancel Post",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/posts/{post_id}/reschedule": {
+   "post": {
+    "operationId": "reschedule_api_publishing_posts__post_id__reschedule_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "post_id",
+      "required": true,
+      "schema": {
+       "title": "Post Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RescheduleIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reschedule",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/recipes": {
+   "get": {
+    "operationId": "recipes_api_publishing_recipes_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/RecipeHealth"
+         },
+         "title": "Response Recipes Api Publishing Recipes Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Recipes",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/recipes/{name}/test": {
+   "post": {
+    "operationId": "recipe_test_api_publishing_recipes__name__test_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "profile",
+      "required": false,
+      "schema": {
+       "default": "main",
+       "title": "Profile",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Recipe Test",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/questions": {
+   "get": {
+    "operationId": "questions_api_questions_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": "open",
+       "title": "Status"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/QuestionOut"
+         },
+         "title": "Response Questions Api Questions Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Questions",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/questions/{question_id}/answer": {
+   "post": {
+    "operationId": "answer_api_questions__question_id__answer_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "question_id",
+      "required": true,
+      "schema": {
+       "title": "Question Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AnswerIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Answer",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/review/auto-approve": {
+   "get": {
+    "operationId": "auto_approve_api_review_auto_approve_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AutoApproveOffer"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Auto Approve",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/batches": {
+   "get": {
+    "operationId": "batch_list_api_review_batches_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "status",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Status"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/BatchRow"
+         },
+         "title": "Response Batch List Api Review Batches Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Batch List",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/batches/{batch_id}": {
+   "get": {
+    "operationId": "batch_get_api_review_batches__batch_id__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "batch_id",
+      "required": true,
+      "schema": {
+       "title": "Batch Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BatchDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Batch Get",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/batches/{batch_id}/approve-all": {
+   "post": {
+    "operationId": "approve_all_api_review_batches__batch_id__approve_all_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "batch_id",
+      "required": true,
+      "schema": {
+       "title": "Batch Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ThresholdIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "type": "integer"
+         },
+         "title": "Response Approve All Api Review Batches  Batch Id  Approve All Post",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Approve All",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/batches/{batch_id}/reject-rest": {
+   "post": {
+    "operationId": "reject_rest_api_review_batches__batch_id__reject_rest_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "batch_id",
+      "required": true,
+      "schema": {
+       "title": "Batch Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RejectRestIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "type": "integer"
+         },
+         "title": "Response Reject Rest Api Review Batches  Batch Id  Reject Rest Post",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Reject Rest",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/batches/{batch_id}/ship": {
+   "post": {
+    "operationId": "ship_api_review_batches__batch_id__ship_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "batch_id",
+      "required": true,
+      "schema": {
+       "title": "Batch Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ShipIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": {
+          "items": {
+           "type": "integer"
+          },
+          "type": "array"
+         },
+         "title": "Response Ship Api Review Batches  Batch Id  Ship Post",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Ship",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/clips/{clip_id}/caption": {
+   "put": {
+    "operationId": "caption_api_review_clips__clip_id__caption_put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CaptionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Caption",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/clips/{clip_id}/decision": {
+   "post": {
+    "operationId": "decide_api_review_clips__clip_id__decision_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DecisionIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Decide",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/review/clips/{clip_id}/recut": {
+   "post": {
+    "operationId": "recut_api_review_clips__clip_id__recut_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "clip_id",
+      "required": true,
+      "schema": {
+       "title": "Clip Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RecutIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Recut",
+    "tags": [
+     "review"
+    ]
+   }
+  },
+  "/api/settings": {
+   "get": {
+    "operationId": "settings_get_api_settings_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SettingsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Settings Get",
+    "tags": [
+     "settings"
+    ]
+   },
+   "patch": {
+    "operationId": "settings_patch_api_settings_patch",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SettingsPatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Settings Patch",
+    "tags": [
+     "settings"
+    ]
+   }
+  },
+  "/api/settings/lessons": {
+   "get": {
+    "operationId": "lessons_api_settings_lessons_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "scope",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Scope"
+      }
+     },
+     {
+      "in": "query",
+      "name": "q",
+      "required": false,
+      "schema": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "title": "Q"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/LessonOut"
+         },
+         "title": "Response Lessons Api Settings Lessons Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Lessons",
+    "tags": [
+     "settings"
+    ]
+   }
+  },
+  "/api/settings/lessons/{lesson_id}": {
+   "delete": {
+    "operationId": "lesson_delete_api_settings_lessons__lesson_id__delete",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lesson_id",
+      "required": true,
+      "schema": {
+       "title": "Lesson Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Lesson Delete",
+    "tags": [
+     "settings"
+    ]
+   },
+   "patch": {
+    "operationId": "lesson_patch_api_settings_lessons__lesson_id__patch",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "lesson_id",
+      "required": true,
+      "schema": {
+       "title": "Lesson Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/LessonPatch"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Lesson Patch",
+    "tags": [
+     "settings"
+    ]
+   }
+  },
+  "/api/settings/prompts": {
+   "get": {
+    "operationId": "prompts_api_settings_prompts_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/PromptOut"
+         },
+         "title": "Response Prompts Api Settings Prompts Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Prompts",
+    "tags": [
+     "settings"
+    ]
+   }
+  },
+  "/api/settings/prompts/{name}": {
+   "put": {
+    "operationId": "prompt_put_api_settings_prompts__name__put",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PromptIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PromptSaveOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Prompt Put",
+    "tags": [
+     "settings"
+    ]
+   }
+  },
+  "/api/settings/secrets/{name}": {
+   "post": {
+    "operationId": "secret_set_api_settings_secrets__name__post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SecretIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Secret Set",
+    "tags": [
+     "settings"
+    ]
+   }
+  },
+  "/api/settings/tools": {
+   "get": {
+    "operationId": "tools_api_settings_tools_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ToolsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Tools",
+    "tags": [
+     "settings"
+    ]
+   }
+  },
+  "/api/status": {
+   "get": {
+    "operationId": "status_api_status_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/StatusOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Status",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/switches": {
+   "get": {
+    "operationId": "switches_api_switches_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SwitchesOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Switches",
+    "tags": [
+     "system"
+    ]
+   },
+   "post": {
+    "operationId": "set_switch_api_switches_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SwitchIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SwitchResult"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Set Switch",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/switches/preview": {
+   "get": {
+    "operationId": "switch_preview_api_switches_preview_get",
+    "parameters": [
+     {
+      "in": "query",
+      "name": "level",
+      "required": true,
+      "schema": {
+       "title": "Level",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SwitchPreview"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Switch Preview",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/version": {
+   "get": {
+    "operationId": "version_api_version_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "additionalProperties": true,
+         "title": "Response Version Api Version Get",
+         "type": "object"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Version"
+   }
+  }
+ }
+}

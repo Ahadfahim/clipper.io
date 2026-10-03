@@ -81,8 +81,18 @@ def _cmd_openapi(args: argparse.Namespace) -> int:
     from clipper.api.app import create_app
 
     app = create_app(fixture_mode=True, start_background=False)
-    Path(args.path).write_text(json.dumps(app.openapi(), indent=2) + "\n", encoding="utf-8")
+    Path(args.path).write_text(json.dumps(app.openapi(), indent=1, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {args.path}")
+    return 0
+
+
+def _cmd_fixtures_export(args: argparse.Namespace) -> int:
+    from clipper.fixtures.export import export_fixtures
+
+    manifest = export_fixtures(Path(args.dir))
+    print(
+        f"exported {len(manifest['paths'])} responses and {len(set(manifest['files'].values()))} files to {args.dir}"
+    )
     return 0
 
 
@@ -110,6 +120,9 @@ def main(argv: list[str] | None = None) -> None:
     p = sub.add_parser("openapi")
     p.add_argument("path")
     p.set_defaults(fn=_cmd_openapi)
+    p = sub.add_parser("fixtures-export")
+    p.add_argument("dir")
+    p.set_defaults(fn=_cmd_fixtures_export)
     args = parser.parse_args(argv)
     sys.exit(args.fn(args))
 

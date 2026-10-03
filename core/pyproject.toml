@@ -17,6 +17,7 @@ dependencies = [
   "keyring>=25",
   "tzdata>=2024.2",
   "anyio>=4.6",
+  "tomli-w>=1.1",
 ]
 
 [project.scripts]

@@ -1,0 +1,61 @@
+{
+ "campaign": {
+  "brand": "DOAC",
+  "budget_left": 11500.0,
+  "budget_total": 12000.0,
+  "clips_posted": 0,
+  "content_type": "clipping",
+  "cpm": 1.8,
+  "creator": "Steven Bartlett",
+  "deadline": "2026-10-16T18:00:00Z",
+  "disabled_reason": null,
+  "earned": 0.0,
+  "id": 3,
+  "marketplace": "whop",
+  "matching_accounts": [],
+  "platforms": [
+   "youtube",
+   "tiktok",
+   "instagram"
+  ],
+  "runs_out_at": null,
+  "score": 81.0,
+  "status": "suggested",
+  "title": "Diary of a CEO clips"
+ },
+ "money": {
+  "earnings": 0.0,
+  "posts": 0,
+  "submissions": {},
+  "views": 0
+ },
+ "payout": {
+  "cap_per_post": null,
+  "cpm": 1.8,
+  "deliverable": "link",
+  "min_views_to_pay": 2000,
+  "tracking_window_days": null
+ },
+ "rules_raw": "",
+ "score_reason": "Large budget, $1.8 CPM, strong podcast fit; Whop pays ~10 days late (lesson #4).",
+ "session_id": null,
+ "sources": [
+  {
+   "duration": null,
+   "heatmap": [],
+   "id": 4,
+   "status": "listed",
+   "title": "The Habit Expert",
+   "url": "https://www.youtube.com/watch?v=doac0000001"
+  }
+ ],
+ "spec": null,
+ "timeline": [
+  {
+   "text": "Found by the Scout",
+   "ts": "2026-10-02T17:51:00Z",
+   "type": "campaign.found"
+  }
+ ],
+ "url": null
+}

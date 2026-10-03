@@ -84,6 +84,7 @@ doctor:
 # Regenerate the typed TS API client from the FastAPI schema.
 gen-api:
     uv run clipper openapi core/clipper/api/openapi.json
+    uv run clipper fixtures-export apps/desktop/public/fixtures
     pnpm --filter @clipper/desktop run gen:api
 
 # Create the isolated CUDA env for WhisperX (versions verified on the RTX 5080, docs/LOCAL_CHECKS.md).

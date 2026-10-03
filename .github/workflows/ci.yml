@@ -40,6 +40,10 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: TS client matches the OpenAPI schema
+        run: |
+          pnpm --filter @clipper/desktop run gen:api
+          git diff --exit-code apps/desktop/src/api/schema.d.ts
       - run: pnpm -r run lint
       - run: pnpm -r run typecheck
       - run: pnpm -r run test

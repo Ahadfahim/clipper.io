@@ -1,0 +1,30 @@
+{
+ "events": [],
+ "requests": [
+  {
+   "campaign_id": 2,
+   "campaign_title": "Ali Abdaal podcast cuts",
+   "kind": "job.done",
+   "merged": 0,
+   "priority": 2,
+   "queued_at": "2026-10-02T17:58:00Z",
+   "request_id": 3,
+   "role": "campaign"
+  }
+ ],
+ "session": {
+  "campaign_id": 2,
+  "campaign_title": "Ali Abdaal podcast cuts",
+  "id": 2,
+  "input_tokens": 38000,
+  "last_active": "2026-10-02T17:42:00Z",
+  "max_turns": 80,
+  "output_tokens": 4100,
+  "role": "campaign",
+  "sdk_session_id": "7d1e9a44-ali",
+  "started": "2026-10-02T15:00:00Z",
+  "status": "waiting",
+  "summary": "Waiting for analysis of source 3",
+  "turns": 9
+ }
+}

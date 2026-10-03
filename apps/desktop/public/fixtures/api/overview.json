@@ -1,0 +1,449 @@
+{
+ "active_campaigns": [
+  {
+   "budget_left": 18400.0,
+   "budget_total": 25000.0,
+   "deadline": "2026-10-11T18:00:00Z",
+   "id": 1,
+   "marketplace": "vyro",
+   "runs_out_at": "2026-10-04T21:00:00Z",
+   "stages": [
+    {
+     "name": "Brief",
+     "state": "done"
+    },
+    {
+     "name": "Sources",
+     "state": "done"
+    },
+    {
+     "name": "Analyze",
+     "state": "done"
+    },
+    {
+     "name": "Clips",
+     "state": "done"
+    },
+    {
+     "name": "Review",
+     "state": "active"
+    },
+    {
+     "name": "Post",
+     "state": "done"
+    },
+    {
+     "name": "Submit",
+     "state": "done"
+    }
+   ],
+   "status": "active",
+   "title": "MrBeast #42 clipping"
+  },
+  {
+   "budget_left": 7200.0,
+   "budget_total": 8000.0,
+   "deadline": "2026-10-23T18:00:00Z",
+   "id": 2,
+   "marketplace": "whop",
+   "runs_out_at": "2026-10-11T18:00:00Z",
+   "stages": [
+    {
+     "name": "Brief",
+     "state": "done"
+    },
+    {
+     "name": "Sources",
+     "state": "done"
+    },
+    {
+     "name": "Analyze",
+     "state": "active"
+    },
+    {
+     "name": "Clips",
+     "state": "todo"
+    },
+    {
+     "name": "Review",
+     "state": "todo"
+    },
+    {
+     "name": "Post",
+     "state": "done"
+    },
+    {
+     "name": "Submit",
+     "state": "done"
+    }
+   ],
+   "status": "active",
+   "title": "Ali Abdaal podcast cuts"
+  }
+ ],
+ "agenda": [
+  {
+   "kind": "request",
+   "priority": 0,
+   "text": "campaign \u00b7 MrBeast #42 clipping: note.added",
+   "when": "2026-10-02T17:59:30Z"
+  },
+  {
+   "kind": "request",
+   "priority": 2,
+   "text": "campaign \u00b7 Ali Abdaal podcast cuts: job.done",
+   "when": "2026-10-02T17:58:00Z"
+  },
+  {
+   "kind": "request",
+   "priority": 3,
+   "text": "scout: trigger.fired",
+   "when": "2026-10-02T17:59:00Z"
+  },
+  {
+   "kind": "post",
+   "priority": null,
+   "text": "Post clip 4 on @beastmoments",
+   "when": "2026-10-02T20:10:00Z"
+  },
+  {
+   "kind": "post",
+   "priority": null,
+   "text": "Post clip 6 on @shortsfactory",
+   "when": "2026-10-02T23:00:00Z"
+  },
+  {
+   "kind": "post",
+   "priority": null,
+   "text": "Post clip 9 on @podcastcuts.reels",
+   "when": "2026-10-03T05:00:00Z"
+  },
+  {
+   "kind": "post",
+   "priority": null,
+   "text": "Post clip 6 on @beastmoments",
+   "when": "2026-10-03T13:00:00Z"
+  }
+ ],
+ "health": [
+  {
+   "detail": "1 profile(s) connected",
+   "fix": "",
+   "name": "Extension",
+   "status": "ok"
+  },
+  {
+   "detail": "online",
+   "fix": "",
+   "name": "Discord bot",
+   "status": "ok"
+  },
+  {
+   "detail": "2 running, 1 queued",
+   "fix": "",
+   "name": "GPU worker",
+   "status": "ok"
+  },
+  {
+   "detail": "session valid",
+   "fix": "",
+   "name": "Vyro",
+   "status": "ok"
+  },
+  {
+   "detail": "session valid",
+   "fix": "",
+   "name": "Whop Content Rewards",
+   "status": "ok"
+  },
+  {
+   "detail": "38% \u00b7 normal",
+   "fix": "",
+   "name": "Claude usage",
+   "status": "ok"
+  },
+  {
+   "detail": "30 GB free",
+   "fix": "",
+   "name": "Disk",
+   "status": "ok"
+  }
+ ],
+ "kpis": [
+  {
+   "delta_pct": 250.6,
+   "display": "$233.76",
+   "key": "earned_today",
+   "label": "Earned today",
+   "spark": [
+    26.0,
+    23.46,
+    29.27,
+    33.74,
+    36.69,
+    44.05,
+    45.65,
+    49.05,
+    57.96,
+    56.3,
+    60.39,
+    64.46,
+    66.67,
+    233.76
+   ],
+   "split": {
+    "vyro": 210.7,
+    "whop": 23.06
+   },
+   "unit": "usd",
+   "value": 233.76
+  },
+  {
+   "delta_pct": null,
+   "display": "79.5k",
+   "key": "views_today",
+   "label": "Views today",
+   "spark": [
+    9145.0,
+    8321.0,
+    10332.0,
+    12069.0,
+    13029.0,
+    15691.0,
+    16204.0,
+    17392.0,
+    20530.0,
+    19897.0,
+    21481.0,
+    22777.0,
+    23705.0,
+    79459.0
+   ],
+   "split": null,
+   "unit": null,
+   "value": 79459.0
+  },
+  {
+   "delta_pct": null,
+   "display": "1/15",
+   "key": "posted_today",
+   "label": "Clips posted",
+   "spark": [],
+   "split": null,
+   "unit": null,
+   "value": 1.0
+  },
+  {
+   "delta_pct": null,
+   "display": "38%",
+   "key": "usage",
+   "label": "Claude usage",
+   "spark": [],
+   "split": null,
+   "unit": "ratio",
+   "value": 0.38
+  },
+  {
+   "delta_pct": null,
+   "display": "-306h 00m",
+   "key": "find_to_post",
+   "label": "Find \u2192 post",
+   "spark": [],
+   "split": null,
+   "unit": "hours",
+   "value": -306.0
+  }
+ ],
+ "needs_you": [
+  {
+   "actions": [
+    {
+     "action": "open_profile",
+     "args": {
+      "profile": "main"
+     },
+     "label": "Open window"
+    },
+    {
+     "action": "resume_account",
+     "args": {
+      "account_id": 1
+     },
+     "label": "Resume"
+    }
+   ],
+   "detail": "verification needed",
+   "kind": "challenge",
+   "title": "TikTok @clipsdaily paused",
+   "urgency": 0
+  },
+  {
+   "actions": [
+    {
+     "action": "answer",
+     "args": {
+      "answer": "Yes",
+      "question_id": 1
+     },
+     "label": "Yes"
+    },
+    {
+     "action": "answer",
+     "args": {
+      "answer": "No",
+      "question_id": 1
+     },
+     "label": "No"
+    },
+    {
+     "action": "answer",
+     "args": {
+      "answer": "Skip campaign",
+      "question_id": 1
+     },
+     "label": "Skip campaign"
+    }
+   ],
+   "detail": "Asked by the campaign agent (campaign 1)",
+   "kind": "question",
+   "title": "Rules unclear: can we use the trailer footage?",
+   "urgency": 1
+  },
+  {
+   "actions": [
+    {
+     "action": "review",
+     "args": {
+      "batch_id": 1
+     },
+     "label": "Review"
+    }
+   ],
+   "detail": "Batch 1, times out 2026-10-02T23:00:00+00:00",
+   "kind": "review",
+   "title": "5 of 12 clips to review: MrBeast #42 clipping",
+   "urgency": 2
+  },
+  {
+   "actions": [
+    {
+     "action": "take",
+     "args": {
+      "campaign_id": 3
+     },
+     "label": "Take"
+    },
+    {
+     "action": "skip",
+     "args": {
+      "campaign_id": 3
+     },
+     "label": "Skip"
+    }
+   ],
+   "detail": "Whop",
+   "kind": "campaign",
+   "title": "New campaign: Diary of a CEO clips, score 81, $1.8 CPM",
+   "urgency": 3
+  },
+  {
+   "actions": [
+    {
+     "action": "take",
+     "args": {
+      "campaign_id": 4
+     },
+     "label": "Take"
+    },
+    {
+     "action": "skip",
+     "args": {
+      "campaign_id": 4
+     },
+     "label": "Skip"
+    }
+   ],
+   "detail": "Vyro",
+   "kind": "campaign",
+   "title": "New campaign: Hormozi gym launch, score 74, $3.2 CPM",
+   "urgency": 3
+  },
+  {
+   "actions": [
+    {
+     "action": "open_campaign",
+     "args": {
+      "campaign_id": 8
+     },
+     "label": "Open"
+    }
+   ],
+   "detail": "Whop",
+   "kind": "campaign",
+   "title": "Gadget review shorts: Paid join ($29): needs you.",
+   "urgency": 3
+  },
+  {
+   "actions": [],
+   "detail": "RuntimeError: yt-dlp failed: Video unavailable",
+   "kind": "failure",
+   "title": "download failed",
+   "urgency": 4
+  }
+ ],
+ "next_scout_in_s": 360,
+ "notes": [
+  {
+   "author": "user",
+   "created_at": "2026-10-02T16:00:00Z",
+   "id": 1,
+   "pinned": true,
+   "response": null,
+   "scope": "global",
+   "scope_id": null,
+   "text": "Focus on Whop campaigns today"
+  }
+ ],
+ "upcoming_posts": [
+  {
+   "account_id": 4,
+   "clip_id": 4,
+   "handle": "@beastmoments",
+   "id": 3,
+   "platform": "youtube",
+   "scheduled_at": "2026-10-02T20:10:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/4/thumb"
+  },
+  {
+   "account_id": 5,
+   "clip_id": 6,
+   "handle": "@shortsfactory",
+   "id": 4,
+   "platform": "tiktok",
+   "scheduled_at": "2026-10-02T23:00:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/6/thumb"
+  },
+  {
+   "account_id": 3,
+   "clip_id": 9,
+   "handle": "@podcastcuts.reels",
+   "id": 5,
+   "platform": "instagram",
+   "scheduled_at": "2026-10-03T05:00:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/9/thumb"
+  },
+  {
+   "account_id": 4,
+   "clip_id": 6,
+   "handle": "@beastmoments",
+   "id": 6,
+   "platform": "youtube",
+   "scheduled_at": "2026-10-03T13:00:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/6/thumb"
+  }
+ ]
+}

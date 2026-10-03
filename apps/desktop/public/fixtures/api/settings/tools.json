@@ -1,0 +1,311 @@
+{
+ "access": {
+  "analyst": [
+   "mcp__state__get_campaign",
+   "mcp__state__list_campaigns",
+   "mcp__state__update_campaign",
+   "mcp__state__set_tuning",
+   "mcp__state__log_note",
+   "mcp__marketplace__get_earnings",
+   "mcp__marketplace__get_submission_status",
+   "mcp__publish__get_post_metrics",
+   "mcp__publish__account_health",
+   "mcp__supervisor__get_usage",
+   "mcp__supervisor__report_status",
+   "mcp__notify__send_report",
+   "mcp__notify__alert",
+   "mcp__memory__recall",
+   "mcp__memory__remember",
+   "mcp__memory__forget",
+   "mcp__memory__list_lessons",
+   "mcp__trends__niche_trends",
+   "mcp__trends__best_post_times",
+   "mcp__insights__query",
+   "mcp__insights__performance_by",
+   "mcp__insights__approval_rate_by",
+   "mcp__insights__top_clips",
+   "mcp__insights__campaign_report",
+   "Agent"
+  ],
+  "brief-reader": [
+   "mcp__memory__recall",
+   "mcp__memory__list_lessons"
+  ],
+  "browser-fixer": [
+   "mcp__browser__snapshot",
+   "mcp__browser__click",
+   "mcp__browser__type",
+   "mcp__browser__attach_file",
+   "mcp__browser__navigate",
+   "mcp__memory__recall",
+   "mcp__memory__remember",
+   "mcp__notify__alert"
+  ],
+  "campaign": [
+   "mcp__state__get_campaign",
+   "mcp__state__update_campaign",
+   "mcp__state__save_spec",
+   "mcp__state__save_moments",
+   "mcp__state__get_clip",
+   "mcp__state__log_note",
+   "mcp__marketplace__get_campaign_page",
+   "mcp__marketplace__join_campaign",
+   "mcp__marketplace__submit_post_url",
+   "mcp__media__download",
+   "mcp__media__render",
+   "mcp__review__post_batch",
+   "mcp__review__get_decisions",
+   "mcp__publish__list_accounts",
+   "mcp__publish__schedule_post",
+   "mcp__edit__render_final",
+   "mcp__agenda__set_plan",
+   "mcp__agenda__check",
+   "mcp__agenda__ack_note",
+   "mcp__supervisor__wake_me",
+   "mcp__notify__alert",
+   "mcp__notify__ask_user",
+   "mcp__memory__recall",
+   "mcp__memory__remember",
+   "Agent"
+  ],
+  "copywriter": [
+   "mcp__state__get_clip",
+   "mcp__state__get_campaign",
+   "mcp__memory__recall",
+   "mcp__memory__list_lessons",
+   "mcp__trends__hashtags",
+   "mcp__trends__best_post_times"
+  ],
+  "cutter": [
+   "mcp__edit__get_edl",
+   "mcp__edit__trim",
+   "mcp__edit__split",
+   "mcp__edit__delete_range",
+   "mcp__edit__remove_silences",
+   "mcp__edit__remove_fillers",
+   "mcp__edit__set_layout",
+   "mcp__edit__set_camera_keyframes",
+   "mcp__edit__set_caption_style",
+   "mcp__edit__edit_caption_words",
+   "mcp__edit__emphasize",
+   "mcp__edit__set_hook",
+   "mcp__edit__add_overlay",
+   "mcp__edit__set_audio",
+   "mcp__edit__make_variant",
+   "mcp__edit__preview",
+   "mcp__edit__undo",
+   "mcp__agenda__set_plan",
+   "mcp__agenda__check",
+   "mcp__agenda__get_notes",
+   "mcp__agenda__ack_note",
+   "mcp__media__get_transcript",
+   "mcp__media__frames",
+   "mcp__memory__recall"
+  ],
+  "director": [
+   "mcp__state__get_campaign",
+   "mcp__state__list_campaigns",
+   "mcp__state__get_clip",
+   "mcp__state__update_campaign",
+   "mcp__marketplace__get_submission_status",
+   "mcp__marketplace__get_earnings",
+   "mcp__media__job_status",
+   "mcp__review__get_batch_status",
+   "mcp__review__get_decisions",
+   "mcp__publish__list_accounts",
+   "mcp__publish__cancel_post",
+   "mcp__supervisor__get_usage",
+   "mcp__supervisor__list_wakeups",
+   "mcp__notify__alert",
+   "mcp__memory__recall",
+   "mcp__memory__remember",
+   "mcp__memory__forget",
+   "mcp__trends__niche_trends",
+   "mcp__insights__query",
+   "mcp__insights__campaign_report",
+   "mcp__insights__performance_by",
+   "mcp__agenda__get_notes",
+   "mcp__edit__get_edl",
+   "mcp__clipper__set_switch",
+   "mcp__clipper__set_paused"
+  ],
+  "editor": [
+   "mcp__state__get_campaign",
+   "mcp__state__get_clip",
+   "mcp__state__get_learning_examples",
+   "mcp__media__get_transcript",
+   "mcp__media__get_signals",
+   "mcp__media__get_comments",
+   "mcp__media__frames",
+   "mcp__memory__recall",
+   "mcp__trends__saturation"
+  ],
+  "qa-checker": [
+   "mcp__state__get_clip",
+   "mcp__state__get_campaign",
+   "mcp__media__frames",
+   "mcp__media__contact_sheet",
+   "mcp__media__ocr_frames",
+   "mcp__edit__get_edl",
+   "mcp__memory__recall"
+  ],
+  "research": [
+   "WebSearch",
+   "WebFetch",
+   "mcp__memory__remember"
+  ],
+  "scout": [
+   "mcp__state__get_campaign",
+   "mcp__state__list_campaigns",
+   "mcp__state__update_campaign",
+   "mcp__state__log_note",
+   "mcp__marketplace__list_campaigns",
+   "mcp__marketplace__get_campaign_page",
+   "mcp__media__download",
+   "mcp__review__post_campaign_card",
+   "mcp__supervisor__wake_me",
+   "mcp__supervisor__list_wakeups",
+   "mcp__supervisor__cancel_wakeup",
+   "mcp__supervisor__get_usage",
+   "mcp__supervisor__report_status",
+   "mcp__notify__alert",
+   "mcp__memory__recall",
+   "mcp__memory__remember",
+   "mcp__memory__forget",
+   "mcp__memory__list_lessons",
+   "mcp__trends__niche_trends",
+   "mcp__trends__hashtags",
+   "mcp__trends__saturation",
+   "mcp__trends__best_post_times"
+  ]
+ },
+ "servers": [
+  {
+   "blocked_7d": 0,
+   "calls_7d": 1,
+   "errors_7d": 0,
+   "read_only": 4,
+   "server": "state",
+   "tools": 9
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 4,
+   "server": "marketplace",
+   "tools": 7
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 7,
+   "server": "media",
+   "tools": 10
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 2,
+   "server": "review",
+   "tools": 5
+  },
+  {
+   "blocked_7d": 1,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 3,
+   "server": "publish",
+   "tools": 5
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 1,
+   "server": "browser",
+   "tools": 5
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 2,
+   "server": "supervisor",
+   "tools": 5
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 0,
+   "server": "notify",
+   "tools": 3
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 2,
+   "server": "memory",
+   "tools": 4
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 4,
+   "server": "trends",
+   "tools": 4
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 5,
+   "server": "insights",
+   "tools": 5
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 1,
+   "errors_7d": 0,
+   "read_only": 1,
+   "server": "edit",
+   "tools": 18
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 1,
+   "server": "agenda",
+   "tools": 4
+  },
+  {
+   "blocked_7d": 0,
+   "calls_7d": 0,
+   "errors_7d": 0,
+   "read_only": 6,
+   "server": "clipper",
+   "tools": 9
+  }
+ ],
+ "subagents": {
+  "analyst": [
+   "research"
+  ],
+  "campaign": [
+   "brief-reader",
+   "editor",
+   "cutter",
+   "qa-checker",
+   "copywriter",
+   "browser-fixer"
+  ],
+  "director": [],
+  "scout": []
+ }
+}

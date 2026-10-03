@@ -1,0 +1,117 @@
+[
+ {
+  "entity": "job",
+  "entity_id": "4",
+  "id": 1,
+  "payload": {
+   "campaign_id": 1,
+   "error": null,
+   "job_id": 4,
+   "kind": "render_preview",
+   "result": {
+    "clip_id": 1
+   },
+   "status": "done"
+  },
+  "ts": "2026-10-02T17:05:00Z",
+  "type": "job.done"
+ },
+ {
+  "entity": "review_batch",
+  "entity_id": "1",
+  "id": 2,
+  "payload": {
+   "batch_id": 1,
+   "campaign_id": 1,
+   "clip_ids": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ]
+  },
+  "ts": "2026-10-02T17:10:00Z",
+  "type": "review.batch_posted"
+ },
+ {
+  "entity": "question",
+  "entity_id": "1",
+  "id": 3,
+  "payload": {
+   "campaign_id": 1,
+   "options": [
+    "Yes",
+    "No",
+    "Skip campaign"
+   ],
+   "question_id": 1,
+   "session_id": 1,
+   "text": "Rules unclear: can we use the trailer footage?"
+  },
+  "ts": "2026-10-02T17:26:00Z",
+  "type": "question.asked"
+ },
+ {
+  "entity": "alert",
+  "entity_id": null,
+  "id": 4,
+  "payload": {
+   "campaign_id": null,
+   "level": "warning",
+   "source": "publish",
+   "text": "@clipsdaily (tiktok) paused: verification challenge during upload. Fix it in the Clipper Chrome window, then resume."
+  },
+  "ts": "2026-10-02T17:40:00Z",
+  "type": "alert"
+ },
+ {
+  "entity": "campaign",
+  "entity_id": "3",
+  "id": 5,
+  "payload": {
+   "campaign_id": 3,
+   "marketplace": "whop",
+   "score": null
+  },
+  "ts": "2026-10-02T17:51:00Z",
+  "type": "campaign.found"
+ },
+ {
+  "entity": "agent_session",
+  "entity_id": "1",
+  "id": 6,
+  "payload": {
+   "agent_event_id": 9,
+   "kind": "blocked",
+   "session_id": 1,
+   "summary": "[approval] clip has no approved review",
+   "tool": "mcp__publish__schedule_post"
+  },
+  "ts": "2026-10-02T17:54:00Z",
+  "type": "agent.event"
+ },
+ {
+  "entity": "clip",
+  "entity_id": "3",
+  "id": 7,
+  "payload": {
+   "actor": "session:1",
+   "clip_id": 3,
+   "range": [
+    12.0,
+    19.0
+   ],
+   "text": "Removing filler words 0:12-0:19\u2026"
+  },
+  "ts": "2026-10-02T17:59:00Z",
+  "type": "edit.status"
+ }
+]

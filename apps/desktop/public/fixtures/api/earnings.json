@@ -1,0 +1,370 @@
+{
+ "by_account": [
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 575.86,
+   "key": "4",
+   "label": "@beastmoments",
+   "payout_delay_days": null,
+   "posts": 15,
+   "views": 191959
+  },
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 213.19,
+   "key": "2",
+   "label": "@podcastcuts",
+   "payout_delay_days": null,
+   "posts": 14,
+   "views": 85273
+  },
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 38.4,
+   "key": "5",
+   "label": "@shortsfactory",
+   "payout_delay_days": null,
+   "posts": 1,
+   "views": 12800
+  }
+ ],
+ "by_campaign": [
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 614.26,
+   "key": "1",
+   "label": "MrBeast #42 clipping",
+   "payout_delay_days": null,
+   "posts": 16,
+   "views": 204759
+  },
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 213.19,
+   "key": "2",
+   "label": "Ali Abdaal podcast cuts",
+   "payout_delay_days": null,
+   "posts": 14,
+   "views": 85273
+  }
+ ],
+ "by_marketplace": [
+  {
+   "approval_rate": 0.938,
+   "avg_cpm": 3.0,
+   "earnings": 614.26,
+   "key": "vyro",
+   "label": "Vyro",
+   "payout_delay_days": 4.0,
+   "posts": 16,
+   "views": 204759
+  },
+  {
+   "approval_rate": 1.0,
+   "avg_cpm": 2.5,
+   "earnings": 213.19,
+   "key": "whop",
+   "label": "Whop",
+   "payout_delay_days": 10.0,
+   "posts": 14,
+   "views": 85273
+  }
+ ],
+ "by_platform": [
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 789.05,
+   "key": "youtube",
+   "label": "YouTube Shorts",
+   "payout_delay_days": null,
+   "posts": 29,
+   "views": 277232
+  },
+  {
+   "approval_rate": null,
+   "avg_cpm": null,
+   "earnings": 38.4,
+   "key": "tiktok",
+   "label": "TikTok",
+   "payout_delay_days": null,
+   "posts": 1,
+   "views": 12800
+  }
+ ],
+ "days": 30,
+ "series": [
+  {
+   "day": "2026-09-19",
+   "earnings": {
+    "vyro": 18.81,
+    "whop": 7.19
+   },
+   "views": {
+    "vyro": 6271,
+    "whop": 2874
+   }
+  },
+  {
+   "day": "2026-09-20",
+   "earnings": {
+    "vyro": 15.97,
+    "whop": 7.49
+   },
+   "views": {
+    "vyro": 5324,
+    "whop": 2997
+   }
+  },
+  {
+   "day": "2026-09-21",
+   "earnings": {
+    "vyro": 20.65,
+    "whop": 8.62
+   },
+   "views": {
+    "vyro": 6883,
+    "whop": 3449
+   }
+  },
+  {
+   "day": "2026-09-22",
+   "earnings": {
+    "vyro": 21.41,
+    "whop": 12.33
+   },
+   "views": {
+    "vyro": 7138,
+    "whop": 4931
+   }
+  },
+  {
+   "day": "2026-09-23",
+   "earnings": {
+    "vyro": 24.71,
+    "whop": 11.98
+   },
+   "views": {
+    "vyro": 8236,
+    "whop": 4793
+   }
+  },
+  {
+   "day": "2026-09-24",
+   "earnings": {
+    "vyro": 28.96,
+    "whop": 15.09
+   },
+   "views": {
+    "vyro": 9654,
+    "whop": 6037
+   }
+  },
+  {
+   "day": "2026-09-25",
+   "earnings": {
+    "vyro": 30.79,
+    "whop": 14.86
+   },
+   "views": {
+    "vyro": 10262,
+    "whop": 5942
+   }
+  },
+  {
+   "day": "2026-09-26",
+   "earnings": {
+    "vyro": 33.4,
+    "whop": 15.65
+   },
+   "views": {
+    "vyro": 11133,
+    "whop": 6259
+   }
+  },
+  {
+   "day": "2026-09-27",
+   "earnings": {
+    "vyro": 39.81,
+    "whop": 18.15
+   },
+   "views": {
+    "vyro": 13270,
+    "whop": 7260
+   }
+  },
+  {
+   "day": "2026-09-28",
+   "earnings": {
+    "vyro": 39.38,
+    "whop": 16.92
+   },
+   "views": {
+    "vyro": 13128,
+    "whop": 6769
+   }
+  },
+  {
+   "day": "2026-09-29",
+   "earnings": {
+    "vyro": 40.13,
+    "whop": 20.26
+   },
+   "views": {
+    "vyro": 13378,
+    "whop": 8103
+   }
+  },
+  {
+   "day": "2026-09-30",
+   "earnings": {
+    "vyro": 45.1,
+    "whop": 19.36
+   },
+   "views": {
+    "vyro": 15033,
+    "whop": 7744
+   }
+  },
+  {
+   "day": "2026-10-01",
+   "earnings": {
+    "vyro": 44.44,
+    "whop": 22.23
+   },
+   "views": {
+    "vyro": 14814,
+    "whop": 8891
+   }
+  },
+  {
+   "day": "2026-10-02",
+   "earnings": {
+    "vyro": 210.7,
+    "whop": 23.06
+   },
+   "views": {
+    "vyro": 70235,
+    "whop": 9224
+   }
+  }
+ ],
+ "top_clips": [
+  {
+   "campaign_id": 1,
+   "campaign_title": "MrBeast #42 clipping",
+   "caption_style": "bold-pop",
+   "decision": "approved",
+   "duration": 42.0,
+   "editing_live": false,
+   "hook": "Nobody tells you this about the $1M prize",
+   "id": 1,
+   "layout": "crop",
+   "moment_id": 1,
+   "platforms_posted": [
+    "youtube"
+   ],
+   "preview_url": "/api/files/clip/1/preview",
+   "score": 92.0,
+   "status": "posted",
+   "thumb_url": "/api/files/clip/1/thumb",
+   "variant_label": null,
+   "version": 2,
+   "views": 277232
+  },
+  {
+   "campaign_id": 1,
+   "campaign_title": "MrBeast #42 clipping",
+   "caption_style": "clean",
+   "decision": "approved",
+   "duration": 38.0,
+   "editing_live": false,
+   "hook": "The moment the crowd realized",
+   "id": 2,
+   "layout": "split",
+   "moment_id": 2,
+   "platforms_posted": [
+    "tiktok"
+   ],
+   "preview_url": "/api/files/clip/2/preview",
+   "score": 87.0,
+   "status": "posted",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "variant_label": null,
+   "version": 1,
+   "views": 12800
+  },
+  {
+   "campaign_id": 1,
+   "campaign_title": "MrBeast #42 clipping",
+   "caption_style": "karaoke",
+   "decision": "approved",
+   "duration": 29.0,
+   "editing_live": false,
+   "hook": "Last to leave wins a car",
+   "id": 4,
+   "layout": "fit",
+   "moment_id": 4,
+   "platforms_posted": [],
+   "preview_url": "/api/files/clip/4/preview",
+   "score": 81.0,
+   "status": "approved",
+   "thumb_url": "/api/files/clip/4/thumb",
+   "variant_label": null,
+   "version": 2,
+   "views": 0
+  },
+  {
+   "campaign_id": 1,
+   "campaign_title": "MrBeast #42 clipping",
+   "caption_style": "clean",
+   "decision": "approved",
+   "duration": 33.0,
+   "editing_live": false,
+   "hook": "Wait for the twist at the end",
+   "id": 6,
+   "layout": "split",
+   "moment_id": 6,
+   "platforms_posted": [],
+   "preview_url": "/api/files/clip/6/preview",
+   "score": 77.0,
+   "status": "approved",
+   "thumb_url": "/api/files/clip/6/thumb",
+   "variant_label": null,
+   "version": 1,
+   "views": 0
+  },
+  {
+   "campaign_id": 1,
+   "campaign_title": "MrBeast #42 clipping",
+   "caption_style": "bold-pop",
+   "decision": "approved",
+   "duration": 26.0,
+   "editing_live": false,
+   "hook": "The worst gift ever",
+   "id": 9,
+   "layout": "crop",
+   "moment_id": 9,
+   "platforms_posted": [],
+   "preview_url": "/api/files/clip/9/preview",
+   "score": 68.0,
+   "status": "approved",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "variant_label": null,
+   "version": 1,
+   "views": 0
+  }
+ ],
+ "total": 827.45,
+ "units": {
+  "approval_rate": 0.714,
+  "median_find_to_post_h": null,
+  "usd_per_clip": 413.73,
+  "usd_per_gpu_hour": null
+ }
+}

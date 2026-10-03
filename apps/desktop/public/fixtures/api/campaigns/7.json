@@ -1,0 +1,44 @@
+{
+ "campaign": {
+  "brand": "Kai Cenat",
+  "budget_left": 6400.0,
+  "budget_total": 9000.0,
+  "clips_posted": 0,
+  "content_type": "clipping",
+  "cpm": 1.2,
+  "creator": "Kai Cenat",
+  "deadline": null,
+  "disabled_reason": null,
+  "earned": 0.0,
+  "id": 7,
+  "marketplace": "whop",
+  "matching_accounts": [],
+  "platforms": [
+   "tiktok"
+  ],
+  "runs_out_at": null,
+  "score": 69.0,
+  "status": "paused",
+  "title": "Kai Cenat stream highlights"
+ },
+ "money": {
+  "earnings": 0.0,
+  "posts": 0,
+  "submissions": {},
+  "views": 0
+ },
+ "payout": {
+  "cap_per_post": null,
+  "cpm": 1.2,
+  "deliverable": "link",
+  "min_views_to_pay": null,
+  "tracking_window_days": null
+ },
+ "rules_raw": "",
+ "score_reason": null,
+ "session_id": null,
+ "sources": [],
+ "spec": null,
+ "timeline": [],
+ "url": null
+}

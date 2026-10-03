@@ -10,12 +10,12 @@
   - WP3 ✅ MCP tools: 13 servers + `clipper` umbrella (93 tools), typed args, readOnlyHint, guard in every call path, adapters with fakes (marketplace, publish, browser bridge, transcriber, encoder, downloader, faces, OCR, trends), durable job queue, stdio entry
   - WP4 ✅ EDL engine: schema, 13 pure ops, renderer (eased crop/split/fit/zoom/progress bar/two-pass loudnorm), ASS captions with safe zones + face avoidance, QA checks, EdlService (edit_op log, undo by replay, locks, variants), golden renders
   - WP5 ✅ Supervisor + agents: slot pool (P0-P3, P0 reserve, usage shrink, rate-limit pause/auto-resume, daily cap), event -> resume routing with merging, wakeups, watchdog, triggers, kill switch; agent definitions (setting_sources=[], dontAsk, per-role effort/max_turns, claude-opus-5-5); real prompts; SdkAgentRunner + FakeAgentRunner; end-to-end dry-run test
-  - WP6 ❌ API
+  - WP6 ✅ API: FastAPI REST (70 paths) + WebSocket `/api/ws` on 127.0.0.1 (Host/Origin checks), fixture mode with a seeded demo DB, OpenAPI → typed TS client, static fixture export for the UI
   - WP7 ❌ Desktop UI
   - WP8 ❌ Discord bot
   - WP9 ❌ Companion extension
 - Test status:
-  - `uv run pytest -q` → 239 passed (golden renders need ffmpeg on PATH)
+  - `uv run pytest -q` → 279 passed (golden renders and the fixture-export check need ffmpeg on PATH)
   - `uv run ruff check . && uv run pyright` → clean
   - `pnpm -r run lint && pnpm -r run typecheck && pnpm -r run test` → clean, 2 passed
   - `just screenshots` → 4 passed (placeholder shell)
@@ -28,6 +28,9 @@ just setup                         # uv sync --all-packages + pnpm install
 just doctor                        # environment checks
 just lint
 just test
+just dev-api-fixtures              # API on http://127.0.0.1:8765 with seeded demo data (no agents)
+just dev-ui-fixtures               # UI on http://127.0.0.1:1420 reading the static fixture export (no Python)
+just gen-api                       # after changing an API route: openapi.json + UI fixtures + TS client
 ```
 
 ## 3. What was built
@@ -73,6 +76,15 @@ just test
 - `core/clipper/supervisor/`: `router.route()` (event -> priority/role/campaign; merging in `Supervisor.enqueue`), `pool.pick()` (pure scheduling), `messages.build_prompt()` (short resume messages with usage/dry-run/pinned notes), `supervisor.Supervisor` (inbox with DB catch-up cursor, dispatch, one session per campaign resumed via `resume=`, persistent Director, fresh Scout/Analyst, leases, triggers, wakeups, watchdog, due posts, question timeouts, kill switch, slot board, bump/cancel, `run_until_idle()` for tests).
 - `CampaignService.update`: agents can take a campaign only in `auto` mode above the auto-take score (enforced in code).
 - `core/clipper/evaluation.py` + `tests/golden/`: `clipper eval` scoring (pure, tested); the picker needs a real editor run.
+
+### WP6
+- `core/clipper/api/app.py`: `create_app(fixture_mode=, start_background=, core=, settings=)`. Lifespan builds `Core`; normal mode also starts the `CompanionBridge` WS server and the `Supervisor` with `SdkAgentRunner`; fixture mode seeds a fresh DB at `<data_dir>/fixture/fixture.sqlite` and starts nothing. `LoopbackGuard` rejects non-loopback `Host` headers (DNS rebinding); CORS only for the Tauri/Vite origins (`APP_ORIGINS`); the extension origin may only read `/api/files/...` (uploads). WebSocket `/api/ws?after=<event id>&types=a,b.*` replays the backlog then streams live events (`agent.event`, `job.progress`, `clip.updated`, `review.decided`, `post.status`, `alert`, `edit.op`, `agenda.updated`, ...), with pings; bad origin → close 4403.
+- `core/clipper/api/routes.py`: routers `system` (status, health, doctor, switches + switch-off preview, control, events, jobs, notes, questions), `agents` (board, sessions, interrupt/nudge, bump/cancel requests, Director chat), `campaigns` (list/detail/take/skip/pause/spec/manual), `library` (clips), `review` (batches, decisions, caption, re-cut, approve-all >= N, reject rest, ship, auto-approve offer), `edit` (state, ops, undo, take-over/hand-back, preview), `publishing` (accounts, calendar, cancel/reschedule, recipes + test), `earnings`, `settings` (settings.toml patch, prompts, lessons, tools matrix, secrets → Credential Manager), `files` (clip previews/thumbs, recipe screenshots, upload files; root allowlist), `discord` (bot heartbeat, message refs, preview path). Every mutation goes through the same services (and guards) the agents use, with `actor="user"`.
+- `core/clipper/api/views.py` (read models) and `schemas.py` (response/request models; the TS types come from these).
+- `core/clipper/api/settings_file.py`: validated `settings.toml` patches (agent billing keys and paths are not writable from the app).
+- `core/clipper/fixtures/seed.py`: `seed_demo()` (8 campaigns in every state, a 12-clip review batch, live/scheduled posts, 14 days of metrics, sessions/events/requests/jobs/questions/notes/lessons/recipe runs, usage; renders a real preview + thumbnails with ffmpeg). `clipper seed --fixtures`.
+- `core/clipper/fixtures/export.py` + `clipper fixtures-export <dir>`: deterministic static export of every GET the UI makes (`apps/desktop/public/fixtures/api/*.json`, `manifest.json`, media in `files/`). `tests/api/test_generated.py` fails when it or `core/clipper/api/openapi.json` is stale.
+- `apps/desktop/src/api/schema.d.ts` (generated by `openapi-typescript`) and `client.ts` (`openapi-fetch` client; in `--mode fixtures` a fetch adapter serves the static export, mutations return `{ok: true}`; `fileUrl()` maps media).
 
 ### WP4 (built before WP3: the `edit` tools sit on it)
 - `core/clipper/media/edl/schema.py`: `Edl` (segments/camera/captions in source time, overlays in output time), `new_edl()`.
