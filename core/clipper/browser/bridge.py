@@ -125,6 +125,7 @@ class CompanionBridge:
         host: str = "127.0.0.1",
         port: int = 8766,
         timeout_s: float = 90.0,
+        recipe_timeout_s: float = 900.0,
         on_status: Callable[[str, str | None], None] | None = None,
     ) -> None:
         if host not in ("127.0.0.1", "localhost", "::1"):
@@ -132,7 +133,8 @@ class CompanionBridge:
         self.token = token
         self.host = host
         self.port = port
-        self.timeout_s = timeout_s
+        self.timeout_s = timeout_s  # one action (navigate, click, snapshot)
+        self.recipe_timeout_s = recipe_timeout_s  # a whole recipe: uploads and list scans take minutes
         self.on_status = on_status
         self._peers: dict[str, _Peer] = {}
         self._server: Server | None = None
@@ -233,7 +235,9 @@ class CompanionBridge:
             if self.on_status is not None:
                 self.on_status(peer.profile, status.url)
 
-    async def _request(self, profile: str, message: dict[str, Any]) -> RecipeResult:
+    async def _request(
+        self, profile: str, message: dict[str, Any], timeout_s: float | None = None
+    ) -> RecipeResult:
         peer = self._peers.get(profile)
         if peer is None:
             raise ProfileNotConnected(f"Chrome profile {profile!r} is not connected")
@@ -243,10 +247,11 @@ class CompanionBridge:
             peer.pending[req_id] = fut
             try:
                 await peer.conn.send(json.dumps({**message, "id": req_id}))
-                result = await asyncio.wait_for(fut, timeout=self.timeout_s)
+                result = await asyncio.wait_for(fut, timeout=timeout_s or self.timeout_s)
             except TimeoutError as exc:
                 raise BridgeError(
-                    f"{message.get('recipe') or message.get('action')} timed out after {self.timeout_s:.0f}s"
+                    f"{message.get('recipe') or message.get('action')} timed out after "
+                    f"{timeout_s or self.timeout_s:.0f}s"
                 ) from exc
             finally:
                 peer.pending.pop(req_id, None)
@@ -256,7 +261,9 @@ class CompanionBridge:
         self, profile: str, recipe: str, params: dict[str, Any], *, dry_run: bool = False
     ) -> RecipeResult:
         return await self._request(
-            profile, {"type": "run", "recipe": recipe, "params": params, "dry_run": dry_run}
+            profile,
+            {"type": "run", "recipe": recipe, "params": params, "dry_run": dry_run},
+            self.recipe_timeout_s,
         )
 
     async def action(self, profile: str, action: dict[str, Any]) -> RecipeResult:

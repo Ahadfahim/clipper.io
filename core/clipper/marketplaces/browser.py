@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 from typing import Any, Literal
+from urllib.parse import urlsplit
 
 from clipper.browser.bridge import BrowserBridge
 from clipper.browser.protocol import RecipeResult
@@ -40,25 +41,36 @@ def _num(v: Any) -> float | None:
         return None
 
 
+# dates as sites display them, in the browser's (this PC's) time zone: Vyro's "October 17, 2026, 09:10:00"
+_SHOWN_DATES = ("%B %d, %Y, %H:%M:%S", "%B %d, %Y, %H:%M", "%B %d, %Y", "%b %d, %Y")
+
+
 def _date(v: Any) -> datetime | None:
     if not v:
         return None
+    s = str(v).strip()
     try:
-        d = datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+        d = datetime.fromisoformat(s.replace("Z", "+00:00"))
     except ValueError:
+        for fmt in _SHOWN_DATES:
+            try:
+                return datetime.strptime(s, fmt).astimezone(UTC)  # naive = local time
+            except ValueError:
+                continue
         return None
     return d if d.tzinfo else d.replace(tzinfo=UTC)
 
 
 def _join(v: Any) -> Literal["free", "paid", "joined", "none"]:
-    """Join state from a scraped label ("Joined", "Join free", "Join · $29") or an exact value."""
+    """Join state from the join button's label: "Joined"/"Submit post" (already in), "Join free" and
+    Vyro's "Join campaign" (free), "Join · $29" (paid)."""
     s = str(v or "").strip().lower()
-    if s.startswith("joined"):
+    if s.startswith("joined") or s.startswith(("submit", "add post")):
         return "joined"
-    if "free" in s:
-        return "free"
     if "$" in s or "paid" in s:
         return "paid"
+    if "free" in s or s.startswith("join"):
+        return "free"
     return "none"
 
 
@@ -84,11 +96,11 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
     return CampaignCard(
         marketplace=market,
         external_id=str(row["id"]),
-        title=str(row.get("title") or row["id"])[:200],
+        title=str(row.get("title") or row.get("card_title") or row["id"])[:200],
         cpm_usd=_num(row.get("cpm")) or 0.0,
         brand=row.get("brand"),
         creator=row.get("creator") or row.get("brand"),
-        url=row.get("url"),
+        url=row.get("url") or row.get("opened_url"),
         budget_total=_num(row.get("budget_total")),
         budget_left=_num(row.get("budget_left")),
         cap_per_post=_num(row.get("cap_per_post")),
@@ -133,11 +145,18 @@ class RecipeMarketplace:
         res = await self._run("get_campaign", {"id": external_id})
         row = dict(res.data.get("campaign") or {})
         row.setdefault("id", external_id)
+        row.setdefault("url", res.data.get("page_url"))
+        links: list[Any] = list(res.data.get("sources") or [])
         return CampaignDetail(
             card_from_row(self.name, row),
             str(res.data.get("rules_text", ""))[:20_000],
-            list(res.data.get("sources", [])),
+            [u for u in links if isinstance(u, str) and not self._own_page(u)],
         )
+
+    def _own_page(self, url: str) -> bool:
+        """The marketplace's own help/support links aren't campaign sources."""
+        host = (urlsplit(url).hostname or "").lower()
+        return host == f"{self.name}.com" or host.endswith(f".{self.name}.com")
 
     async def join_campaign(self, external_id: str) -> JoinResult:  # LOCAL-VERIFY
         res = await self._run("join_campaign", {"id": external_id})

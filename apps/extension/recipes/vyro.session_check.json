@@ -1,14 +1,15 @@
 {
   "$schema": "./schema.json",
   "name": "vyro.session_check",
-  "version": 1,
+  "version": 2,
   "site": "vyro",
   "status": "UNVERIFIED",
-  "description": "Vyro: is this Chrome profile logged in? A login page ends the run as a 'login' challenge. UNVERIFIED selectors.",
+  "description": "Vyro: is this Chrome profile logged in? The app (app.vyro.com) sends a logged-out visitor to its login page, which ends the run as a 'login' challenge.",
   "params": { "step_delay_ms": { "type": "array" } },
   "steps": [
-    { "action": "navigate", "url": "https://vyro.com/dashboard" },
-    { "action": "query", "selector": "[data-testid=user-menu], [aria-label*='account' i], img[alt*='avatar' i]", "exists": true, "save_as": "logged_in" }
+    { "action": "navigate", "url": "https://app.vyro.com/" },
+    { "action": "wait_for", "selector": "a[href='/campaigns']", "timeout_ms": 30000 },
+    { "action": "query", "selector": "a[href='/earnings']", "exists": true, "save_as": "logged_in" }
   ],
   "returns": ["logged_in"]
 }

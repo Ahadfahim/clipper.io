@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from datetime import timedelta
 from pathlib import Path
@@ -278,3 +279,26 @@ def test_director_messages_include_your_side(client: TestClient) -> None:
     client.post("/api/agents/director/chat", json={"text": "how much did we make today?", "via": "dashboard"})
     msgs = client.get("/api/agents/director/messages").json()
     assert msgs[-1]["type"] == "user" and msgs[-1]["text"] == "how much did we make today?"
+
+
+def test_fixture_mode_never_reads_this_pcs_secrets(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # its responses are exported into the repo; a real pairing token once ended up there
+    monkeypatch.setattr("clipper.api.routes.get_secret", lambda _name: "real-secret-from-this-pc")
+    body = client.get("/api/settings").json()
+    assert body["pairing_token"] is None
+    assert not any(body["secrets_present"].values())
+    assert "real-secret-from-this-pc" not in json.dumps(body)
+
+
+def test_browser_probe_runs_read_only_steps_only(client: TestClient) -> None:
+    steps = [
+        {"action": "navigate", "url": "https://app.vyro.com/campaigns"},
+        {"action": "outline", "selector": "h3", "text": "mrbeast", "up": 3},
+    ]
+    r = client.post("/api/browser/profiles/main/probe", json={"steps": steps})
+    assert r.status_code == 200, r.text
+    assert [(s["action"], s["ok"]) for s in r.json()] == [("navigate", True), ("outline", True)]
+    for refused in ({"action": "click", "selector": "#post"}, {"action": "outline", "up": 99}):
+        assert client.post("/api/browser/profiles/main/probe", json={"steps": [refused]}).status_code == 422

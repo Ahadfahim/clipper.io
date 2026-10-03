@@ -59,6 +59,21 @@ def _pinned_disk_space() -> Generator[None]:
         views.disk_free_gb = real
 
 
+def _secrets_on_this_pc() -> dict[str, str]:
+    """This PC's real secrets, only to make sure none of them ends up in the export."""
+    from clipper.secrets import SECRET_NAMES, get_secret
+
+    found: dict[str, str] = {}
+    for name in SECRET_NAMES:
+        try:
+            value = get_secret(name)
+        except Exception:  # no credential store (CI): nothing to leak
+            continue
+        if value and len(value) >= 8:
+            found[name] = value
+    return found
+
+
 def export_fixtures(out_dir: Path) -> dict[str, Any]:
     from fastapi.testclient import TestClient
 
@@ -121,14 +136,19 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
     if out_dir.exists():
         shutil.rmtree(out_dir)
     (out_dir / "files").mkdir(parents=True)
+    secrets = _secrets_on_this_pc()
     with _pinned_disk_space(), TestClient(app) as client:
         for path in paths:
             res = client.get(path)
             res.raise_for_status()
             target = out_dir / _name(path)
             target.parent.mkdir(parents=True, exist_ok=True)
-            data = _scrub(res.json(), replacements)
-            target.write_text(json.dumps(data, indent=1, sort_keys=True) + "\n", encoding="utf-8")
+            text = json.dumps(_scrub(res.json(), replacements), indent=1, sort_keys=True) + "\n"
+            # these files are committed: never write one of this PC's secrets into them
+            leaked = [name for name, value in secrets.items() if value in text]
+            if leaked:
+                raise RuntimeError(f"{path} contains this PC's {', '.join(leaked)}: not exported")
+            target.write_text(text, encoding="utf-8", newline="\n")
         files: dict[str, str] = {}
         for cid in ids["clips"]:
             for kind, ext in (("thumb", "jpg"), ("preview", "mp4")):
@@ -150,7 +170,7 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
         "files": files,
     }
     (out_dir / "manifest.json").write_text(
-        json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
     )
     core.close()
     shutil.rmtree(tmp, ignore_errors=True)

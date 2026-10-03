@@ -60,7 +60,7 @@ async function settledChallenge(driver: TabDriver): Promise<Challenge | null> {
 
 // what chrome.tabs.sendMessage throws when the page navigated while the content script was working
 const NAVIGATED = /message channel closed|receiving end does not exist|back\/forward cache|no frame with id|frame .* removed/i;
-const READ_ONLY: ReadonlySet<Step["action"]> = new Set(["wait_for", "query", "read_text"]);
+const READ_ONLY: ReadonlySet<Step["action"]> = new Set(["wait_for", "query", "read_text", "outline"]);
 
 /** Runs a step; if the page navigates underneath it (a redirect to a login wall, an SPA reload),
  * reports the wall, retries a read-only step once on the new page, and never repeats a click/type. */
@@ -124,7 +124,7 @@ export async function runRecipe(
     const raw = recipe.steps[i]!;
     if (raw.when && !params[raw.when]) continue;
     if (raw.final && dryRun) {
-      return { ok: true, data: { ...output, dry_run: true, stopped_before_step: i } };
+      return { ok: true, data: { ...output, dry_run: true, stopped_before_step: i, page_url: await driver.currentUrl() } };
     }
     const step = templated(raw, params);
     const res = await runOne(driver, step, i, dryRun);
@@ -133,5 +133,6 @@ export async function runRecipe(
     if (i < recipe.steps.length - 1) await driver.sleep(delayFor(params, rand)); // pacing: one person, one tab
   }
   for (const key of recipe.returns) if (output[key] === undefined || output[key] === null) return { ok: false, data: output, error: `finished but ${key} was not found`, step: recipe.steps.length - 1, screenshot: await driver.screenshot().catch(() => null), dom: await driver.dom().catch(() => null) };
-  return { ok: true, data: output };
+  // where the run ended: the campaign's own URL after opening its card, the post after publishing
+  return { ok: true, data: { ...output, page_url: await driver.currentUrl() } };
 }

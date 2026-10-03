@@ -127,6 +127,12 @@ class OkOut(M):
     detail: str | None = None
 
 
+class RecipeTestIn(BaseModel):
+    """Params for a dry-run recipe test (e.g. a campaign id). The run is always a dry run."""
+
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
 class RecipeTestOut(OkOut):
     """A dry-run recipe test: what the recipe returned, or where it stopped and what the page showed."""
 
@@ -136,7 +142,7 @@ class RecipeTestOut(OkOut):
     dom: str | None = None
 
 
-ProbeAction = Literal["navigate", "wait_for", "query", "read_text", "snapshot"]
+ProbeAction = Literal["navigate", "wait_for", "query", "read_text", "snapshot", "outline"]
 
 
 class ProbeStep(BaseModel):
@@ -148,8 +154,9 @@ class ProbeStep(BaseModel):
     regex: str | None = None
     all: bool = False
     exists: bool = False
-    fields: dict[str, dict[str, str]] | None = None
+    fields: dict[str, dict[str, str | bool]] | None = None
     timeout_ms: int | None = Field(default=None, ge=0, le=60_000)
+    up: int | None = Field(default=None, ge=0, le=12, description="outline: climb this many parents")
 
 
 class ProbeIn(BaseModel):

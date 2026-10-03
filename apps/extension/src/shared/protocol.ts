@@ -29,7 +29,7 @@ export type Ping = { type: "ping" };
 export type ReloadMsg = { type: "reload" }; // reload the extension (after the core rebuilt it)
 export type Incoming = Welcome | RunMsg | ActionMsg | Ping | ReloadMsg;
 
-export type ActionKind = "navigate" | "wait_for" | "query" | "click" | "type" | "attach_file" | "read_text" | "screenshot" | "snapshot";
+export type ActionKind = "navigate" | "wait_for" | "query" | "click" | "type" | "attach_file" | "read_text" | "screenshot" | "snapshot" | "outline";
 
 /** One recipe step (also used for single `action` requests from the browser tools). */
 export type Step = {
@@ -47,6 +47,8 @@ export type Step = {
   fields?: Record<string, FieldSpec>; // query: structured extraction per match
   save_as?: string; // put the result in the recipe output under this key
   regex?: string; // read_text: keep the first capture group
+  up?: number; // outline (probes only): climb this many parents from the match
+  open_each?: OpenEach; // query + all: open each match (click), read its panel and URL, close it
   timeout_ms?: number;
   optional?: boolean; // a missing element skips the step instead of failing
   final?: boolean; // the irreversible click (publish/submit): skipped in dry run
@@ -56,7 +58,18 @@ export type Step = {
   kind?: ActionKind;
 };
 
-export type FieldSpec = { selector?: string; attr?: string; regex?: string; text?: boolean };
+export type FieldSpec = { selector?: string; attr?: string; regex?: string; text?: boolean; all?: boolean };
+
+/** query + all + open_each: for lists whose items open a panel instead of linking somewhere. */
+export type OpenEach = {
+  click?: string; // what to click inside each match (default: the match)
+  wait_for: string; // what shows once it's open
+  fields?: Record<string, FieldSpec>; // read from the page while it's open
+  url_fields?: Record<string, string>; // name -> regex on the URL while it's open (first group)
+  close?: string; // a close button; default: press Escape
+  settle_ms?: number;
+  timeout_ms?: number;
+};
 
 export type StepOutcome = {
   ok: boolean;

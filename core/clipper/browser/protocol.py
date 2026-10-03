@@ -80,7 +80,16 @@ class RecipeResult(_M):
 
 
 ActionKind = Literal[
-    "navigate", "wait_for", "query", "click", "type", "attach_file", "read_text", "screenshot", "snapshot"
+    "navigate",
+    "wait_for",
+    "query",
+    "click",
+    "type",
+    "attach_file",
+    "read_text",
+    "screenshot",
+    "snapshot",
+    "outline",
 ]
 
 

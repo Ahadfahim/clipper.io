@@ -92,7 +92,9 @@ def _cmd_openapi(args: argparse.Namespace) -> int:
     from clipper.api.app import create_app
 
     app = create_app(fixture_mode=True, start_background=False)
-    Path(args.path).write_text(json.dumps(app.openapi(), indent=1, sort_keys=True) + "\n", encoding="utf-8")
+    Path(args.path).write_text(
+        json.dumps(app.openapi(), indent=1, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
     print(f"wrote {args.path}")
     return 0
 

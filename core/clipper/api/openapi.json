@@ -3002,7 +3002,8 @@
        "wait_for",
        "query",
        "read_text",
-       "snapshot"
+       "snapshot",
+       "outline"
       ],
       "title": "Action",
       "type": "string"
@@ -3033,7 +3034,14 @@
        {
         "additionalProperties": {
          "additionalProperties": {
-          "type": "string"
+          "anyOf": [
+           {
+            "type": "string"
+           },
+           {
+            "type": "boolean"
+           }
+          ]
          },
          "type": "object"
         },
@@ -3090,6 +3098,20 @@
        }
       ],
       "title": "Timeout Ms"
+     },
+     "up": {
+      "anyOf": [
+       {
+        "maximum": 12.0,
+        "minimum": 0.0,
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "description": "outline: climb this many parents",
+      "title": "Up"
      },
      "url": {
       "anyOf": [
@@ -3385,6 +3407,18 @@
      "failures_7d"
     ],
     "title": "RecipeHealth",
+    "type": "object"
+   },
+   "RecipeTestIn": {
+    "description": "Params for a dry-run recipe test (e.g. a campaign id). The run is always a dry run.",
+    "properties": {
+     "params": {
+      "additionalProperties": true,
+      "title": "Params",
+      "type": "object"
+     }
+    },
+    "title": "RecipeTestIn",
     "type": "object"
    },
    "RecipeTestOut": {
@@ -7213,6 +7247,7 @@
   },
   "/api/publishing/recipes/{name}/test": {
    "post": {
+    "description": "Run a recipe in dry run (the final publish/submit click is skipped), with optional params.",
     "operationId": "recipe_test_api_publishing_recipes__name__test_post",
     "parameters": [
      {
@@ -7235,6 +7270,23 @@
       }
      }
     ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/RecipeTestIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
     "responses": {
      "200": {
       "content": {

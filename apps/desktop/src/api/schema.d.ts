@@ -944,7 +944,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Recipe Test */
+        /**
+         * Recipe Test
+         * @description Run a recipe in dry run (the final publish/submit click is skipped), with optional params.
+         */
         post: operations["recipe_test_api_publishing_recipes__name__test_post"];
         delete?: never;
         options?: never;
@@ -2328,7 +2331,7 @@ export interface components {
              * Action
              * @enum {string}
              */
-            action: "navigate" | "wait_for" | "query" | "read_text" | "snapshot";
+            action: "navigate" | "wait_for" | "query" | "read_text" | "snapshot" | "outline";
             /**
              * All
              * @default false
@@ -2344,7 +2347,7 @@ export interface components {
             /** Fields */
             fields?: {
                 [key: string]: {
-                    [key: string]: string;
+                    [key: string]: string | boolean;
                 };
             } | null;
             /** Regex */
@@ -2355,6 +2358,11 @@ export interface components {
             text?: string | null;
             /** Timeout Ms */
             timeout_ms?: number | null;
+            /**
+             * Up
+             * @description outline: climb this many parents
+             */
+            up?: number | null;
             /** Url */
             url?: string | null;
         };
@@ -2441,6 +2449,16 @@ export interface components {
             runs_7d: number;
             /** Screenshot Url */
             screenshot_url: string | null;
+        };
+        /**
+         * RecipeTestIn
+         * @description Params for a dry-run recipe test (e.g. a campaign id). The run is always a dry run.
+         */
+        RecipeTestIn: {
+            /** Params */
+            params?: {
+                [key: string]: unknown;
+            };
         };
         /**
          * RecipeTestOut
@@ -4634,7 +4652,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RecipeTestIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

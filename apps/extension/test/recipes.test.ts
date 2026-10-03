@@ -27,6 +27,25 @@ describe("shipped recipes", () => {
     }
   });
 
+  it.each(files)("%s: every selector is valid CSS", (f) => {
+    // an invalid selector (e.g. [data-size=3xl]: unquoted values can't start with a digit) throws
+    // in the page, mid-run
+    const selectors: string[] = [];
+    const walk = (v: unknown, key = ""): void => {
+      if (typeof v === "string" && ["selector", "wait_for", "click", "close"].includes(key) && !v.includes("{{")) selectors.push(v);
+      else if (Array.isArray(v)) v.forEach((x) => walk(x));
+      else if (v && typeof v === "object") for (const [k, x] of Object.entries(v)) walk(x, k);
+    };
+    walk(JSON.parse(readFileSync(resolve(dir, f), "utf-8")));
+    for (const s of selectors) {
+      expect(() => document.querySelector(s), s).not.toThrow();
+      // jsdom is lenient here, Chrome isn't: an unquoted attribute value must be a CSS identifier
+      for (const m of s.matchAll(/\[[\w-]+\s*[~|^$*]?=\s*([^'"\]\s][^\]\s]*)\s*\]/g)) {
+        expect(m[1], `${s}: quote ${m[1]}`).toMatch(/^-?[_a-zA-Z][\w-]*$/);
+      }
+    }
+  });
+
   it("upload recipes accept the params the core sends and mark the publish click final", () => {
     for (const name of ["youtube.upload_short", "tiktok.upload", "instagram.upload_reel"]) {
       const r = RECIPES[name]!;

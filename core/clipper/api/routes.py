@@ -13,6 +13,7 @@ from sqlmodel import col, select
 
 from clipper.api import schemas as S  # noqa: N812
 from clipper.api import views
+from clipper.browser.protocol import RecipeResult
 from clipper.core import Core
 from clipper.db.engine import WriteTx
 from clipper.db.models import (
@@ -758,8 +759,15 @@ def recipes(core: CoreDep) -> list[S.RecipeHealth]:
 
 
 @publishing.post("/recipes/{name}/test", response_model=S.RecipeTestOut)
-async def recipe_test(core: CoreDep, name: str, profile: str = "main") -> S.RecipeTestOut:
-    res = await core.adapters.browser.run_recipe(profile, name, {"test": True}, dry_run=True)
+async def recipe_test(
+    core: CoreDep, name: str, profile: str = "main", body: S.RecipeTestIn | None = None
+) -> S.RecipeTestOut:
+    """Run a recipe in dry run (the final publish/submit click is skipped), with optional params."""
+    params = {**(body.params if body else {}), "test": True}
+    try:
+        res = await core.adapters.browser.run_recipe(profile, name, params, dry_run=True)
+    except Exception as exc:  # not connected, timed out
+        res = RecipeResult(ok=False, error=str(exc))
     core.db.write(lambda tx: tx.add(RecipeRun(recipe=name, ok=res.ok, dry_run=True, error=res.error)))
     return S.RecipeTestOut(
         ok=res.ok, detail=res.error, data=res.data, step=res.step, challenge=res.challenge, dom=res.dom
@@ -783,7 +791,13 @@ def settings_get(core: CoreDep, request: Request) -> S.SettingsOut:
     if request.app.state.fixture_mode:
         from clipper.settings import Settings
 
-        shown = Settings().with_data_dir(Path(r"D:\Clipper.io\data"))
+        # Fixture mode never reads this PC's Credential Manager: its responses are exported into the
+        # repo (apps/desktop/public/fixtures) and shown in screenshots.
+        return S.SettingsOut(
+            settings=json.loads(Settings().with_data_dir(Path(r"D:\Clipper.io\data")).model_dump_json()),
+            secrets_present=dict.fromkeys(SECRET_NAMES, False),
+            pairing_token=None,
+        )
     return S.SettingsOut(
         settings=json.loads(shown.model_dump_json()),
         secrets_present={n: get_secret(n) is not None for n in SECRET_NAMES},

@@ -33,7 +33,22 @@
     "field": {
       "type": "object",
       "additionalProperties": false,
-      "properties": { "selector": { "type": "string" }, "attr": { "type": "string" }, "regex": { "type": "string" }, "text": { "type": "boolean" } }
+      "properties": { "selector": { "type": "string" }, "attr": { "type": "string", "description": "read this attribute instead of the text; innerText reads the rendered text" }, "regex": { "type": "string" }, "text": { "type": "boolean" }, "all": { "type": "boolean", "description": "every match: with a regex, every capture (comma-joined); without, the texts joined with ' | '" } }
+    },
+    "open_each": {
+      "type": "object",
+      "required": ["wait_for"],
+      "additionalProperties": false,
+      "description": "query + all: open each match (click), read its panel and the URL, close it (Escape or close). For lists whose items open a panel instead of linking somewhere.",
+      "properties": {
+        "click": { "type": "string", "description": "what to click inside each match (default: the match)" },
+        "wait_for": { "type": "string", "description": "what shows once it's open" },
+        "fields": { "type": "object", "additionalProperties": { "$ref": "#/$defs/field" } },
+        "url_fields": { "type": "object", "additionalProperties": { "type": "string" }, "description": "name -> regex on the URL while it's open (first group)" },
+        "close": { "type": "string", "description": "a close button; default: press Escape" },
+        "settle_ms": { "type": "integer", "minimum": 0 },
+        "timeout_ms": { "type": "integer", "minimum": 0 }
+      }
     },
     "step": {
       "type": "object",
@@ -58,7 +73,8 @@
         "optional": { "type": "boolean" },
         "final": { "type": "boolean", "description": "the irreversible click (publish/submit); dry runs stop before it" },
         "when": { "type": "string", "description": "run only if this param is set" },
-        "note": { "type": "string" }
+        "note": { "type": "string" },
+        "open_each": { "$ref": "#/$defs/open_each" }
       }
     }
   }

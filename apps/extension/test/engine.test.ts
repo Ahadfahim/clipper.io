@@ -107,3 +107,77 @@ describe("simplified DOM", () => {
     expect(dom).not.toContain("prose");
   });
 });
+
+describe("outline (probes)", () => {
+  it("shows a card's structure from a heading, climbing to the card", async () => {
+    document.body.innerHTML = `<div class="grid"><div class="card rounded p-4" data-id="c42"><img alt="logo" src="/a.png"><h3>MrBeast</h3><span class="rate">$3.00 / 1K</span><script>var x = 1</script></div></div>`;
+    const out = await runStep(document, { action: "outline", selector: "h3", text: "mrbeast", up: 1 });
+    expect(out.ok).toBe(true);
+    expect(out.dom).toContain(`div.card.rounded.p-4[data-id=c42]`);
+    expect(out.dom).toContain(`  h3 "mrbeast"`);
+    expect(out.dom).toContain(`  span.rate "$3.00 / 1k"`);
+    expect(out.dom).not.toContain("var x");
+    expect((await runStep(document, { action: "outline", selector: "h3", text: "nobody" })).ok).toBe(false);
+  });
+});
+
+describe("query + open_each (lists whose items open a panel)", () => {
+  it("opens each card, reads the panel and the URL, closes it again", async () => {
+    document.body.innerHTML = `<div class="card"><h3>Kevin</h3><p hidden>5 Guys</p><p>5 Guys</p></div><div class="card"><h3>MrBeast</h3><p>Grocery</p></div>`;
+    const slugs = ["5-guys-abc", "grocery-xyz"];
+    const openPanel = (i: number) => {
+      history.pushState({}, "", `?c=${slugs[i]}`);
+      const d = document.createElement("div");
+      d.setAttribute("role", "dialog");
+      d.innerHTML = `<h2>${i ? "Grocery" : "5 Guys"}</h2><button aria-label="rate">Payout $${i + 1}.50 CPM</button><h4>TikTok content: videos</h4><h4>YouTube content: shorts</h4><h4>Instagram content: not allowed</h4>`;
+      document.body.append(d);
+    };
+    document.querySelectorAll(".card").forEach((card, i) => card.addEventListener("click", () => openPanel(i)));
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      document.querySelector("[role=dialog]")?.remove();
+      history.pushState({}, "", location.pathname);
+    };
+    document.addEventListener("keydown", onKey);
+    openPanel(1); // the site restored the last panel on load: it gets closed first
+    const out = await runStep(document, {
+      action: "query",
+      selector: ".card",
+      all: true,
+      fields: { creator: { selector: "h3" } },
+      open_each: {
+        click: "p",
+        wait_for: "[role=dialog] h2",
+        url_fields: { id: "[?&]c=([^&#]+)" },
+        settle_ms: 0,
+        fields: {
+          title: { selector: "[role=dialog] h2" },
+          cpm: { selector: "[role=dialog] button", all: true, regex: "\\$([\\d.]+)\\s*cpm" },
+          platforms: { selector: "[role=dialog] h4", all: true, regex: "\\b(tiktok|youtube|instagram) content: (?!not allowed)" },
+        },
+      },
+    });
+    document.removeEventListener("keydown", onKey);
+    expect(out.ok).toBe(true);
+    expect(out.data?.["value"]).toEqual([
+      { creator: "Kevin", opened_url: expect.stringContaining("c=5-guys-abc"), id: "5-guys-abc", title: "5 Guys", cpm: "1.50", platforms: "TikTok, YouTube" },
+      { creator: "MrBeast", opened_url: expect.stringContaining("c=grocery-xyz"), id: "grocery-xyz", title: "Grocery", cpm: "2.50", platforms: "TikTok, YouTube" },
+    ]);
+    expect(document.querySelector("[role=dialog]")).toBeNull();
+  });
+
+  it("says which item didn't open", async () => {
+    document.body.innerHTML = `<div class="card"><p>Dead card</p></div>`;
+    const out = await runStep(document, { action: "query", selector: ".card", all: true, open_each: { click: "p", wait_for: "[role=dialog]", timeout_ms: 200 } });
+    expect(out).toMatchObject({ ok: false, error: expect.stringMatching(/item 1 didn't open: clicked p "dead card"/) });
+  });
+});
+
+describe("content script", () => {
+  it("answers even when a step throws", async () => {
+    const { handle } = await import("../src/content/content");
+    document.body.innerHTML = `<div class="x"></div>`;
+    const reply = await new Promise((resolve) => handle({ type: "clipper.step", step: { action: "query", selector: ".x", fields: { a: { selector: "!!!" } } } }, resolve));
+    expect(reply).toMatchObject({ ok: false });
+  });
+});

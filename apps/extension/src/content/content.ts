@@ -41,10 +41,14 @@ export function handle(msg: Msg, respond: (r: StepOutcome) => void): boolean {
       return false;
     case "clipper.step": {
       const file = msg.fileId ? toFile(msg.fileId) : undefined;
-      void runStep(document, msg.step, file).then((out) => {
-        respond(out.ok ? out : { ...out, dom: out.dom ?? simplifiedDom(document) });
-        if (msg.fileId) files.delete(msg.fileId);
-      });
+      void runStep(document, msg.step, file)
+        // a thrown error (e.g. an invalid selector in a recipe) must still answer, or the service
+        // worker only hears "message channel closed" once Chrome gives up on the reply
+        .catch((e: unknown): StepOutcome => ({ ok: false, error: `${msg.step.action} failed: ${e instanceof Error ? e.message : String(e)}` }))
+        .then((out) => {
+          respond(out.ok ? out : { ...out, dom: out.dom ?? simplifiedDom(document) });
+          if (msg.fileId) files.delete(msg.fileId);
+        });
       return true; // async response
     }
   }

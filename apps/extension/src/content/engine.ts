@@ -3,7 +3,7 @@
 // Boundaries (PLAN §5): this only does what a person could do by hand in their own logged-in
 // tab. On a CAPTCHA, "verify it's you" or login screen it stops and reports the challenge;
 // it never tries to solve or bypass one.
-import type { Challenge, FieldSpec, Step, StepOutcome } from "../shared/protocol";
+import type { Challenge, FieldSpec, OpenEach, Step, StepOutcome } from "../shared/protocol";
 
 const norm = (s: string | null | undefined) => (s ?? "").replace(/\s+/g, " ").trim().toLowerCase();
 
@@ -101,8 +101,16 @@ export function attachFile(el: Element, file: File): void {
   }
 }
 
+/** The text of an element: the value of a field, an attribute, or "innerText" (rendered text with
+ * line breaks, no script/style; jsdom has no innerText, so it falls back to textContent there). */
+function rawValue(el: Element, attr?: string): string | null {
+  if (attr === "innerText") return (el as HTMLElement).innerText ?? el.textContent;
+  if (attr) return el.getAttribute(attr);
+  return (el as HTMLInputElement).value !== undefined && el.matches("input, textarea") ? (el as HTMLInputElement).value : el.textContent;
+}
+
 function readValue(el: Element, spec: { attr?: string; regex?: string }): string | null {
-  let v = spec.attr ? el.getAttribute(spec.attr) : (el as HTMLInputElement).value !== undefined && el.matches("input, textarea") ? (el as HTMLInputElement).value : el.textContent;
+  let v = rawValue(el, spec.attr);
   if (spec.attr === "href" && v) {
     try {
       v = new URL(v, el.ownerDocument.location?.href ?? undefined).href;
@@ -112,19 +120,89 @@ function readValue(el: Element, spec: { attr?: string; regex?: string }): string
   }
   v = (v ?? "").replace(/\s+/g, " ").trim();
   if (spec.regex) {
-    const m = new RegExp(spec.regex).exec(v);
+    const m = new RegExp(spec.regex, "i").exec(v);
     return m ? (m[1] ?? m[0]) : null;
   }
   return v;
 }
 
-function extract(el: Element, fields: Record<string, FieldSpec>): Record<string, string | null> {
+/** `all`: every match. With a regex, every capture across them ("tiktok, youtube"); without, their
+ * texts joined with " | ". */
+function readAll(els: Element[], f: FieldSpec): string | null {
+  const texts = els.map((e) => readValue(e, { attr: f.attr })).filter((t): t is string => Boolean(t));
+  if (!f.regex) return texts.length ? texts.join(" | ") : null;
+  const re = new RegExp(f.regex, "gi");
+  const hits = texts.flatMap((t) => [...t.matchAll(re)].map((m) => m[1] ?? m[0]));
+  return hits.length ? [...new Set(hits)].join(", ") : null;
+}
+
+function extract(el: Element | Document, fields: Record<string, FieldSpec>): Record<string, string | null> {
   const out: Record<string, string | null> = {};
   for (const [key, f] of Object.entries(fields)) {
-    const target = f.selector ? el.querySelector(f.selector) : el;
+    if (f.all) {
+      out[key] = readAll(f.selector ? [...el.querySelectorAll(f.selector)] : [], f);
+      continue;
+    }
+    const target = f.selector ? el.querySelector(f.selector) : el instanceof Element ? el : null;
     out[key] = target ? readValue(target, f) : null;
   }
   return out;
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function until(test: () => boolean, timeoutMs: number, pollMs = 100): Promise<boolean> {
+  for (const end = Date.now() + timeoutMs; Date.now() < end; await sleep(pollMs)) if (test()) return true;
+  return test();
+}
+
+/** query + open_each: for each match, open it (click), wait for its panel, read the panel and the
+ * URL, close it again (Escape, or a close button), then move on. For lists whose items aren't links
+ * (Vyro's campaign cards open a dialog and put the campaign id in the URL). Read-only: it only opens
+ * and closes detail views. */
+async function openEach(doc: Document, selector: string, rows: Record<string, unknown>[], spec: OpenEach): Promise<string | null> {
+  const timeout = spec.timeout_ms ?? 10_000;
+  const shown = () => findAll(doc, spec.wait_for).length > 0;
+  for (let i = 0; i < rows.length; i++) {
+    // a panel can already be open: sites restore the last one (Vyro keeps ?c= across reloads)
+    if (shown() && !(await closePanel())) return `a panel was already open and didn't close`;
+    const before = doc.location?.href ?? "";
+    const opened = () => shown() && (doc.location?.href ?? "") !== before;
+    let target: Element | null = null;
+    // A page can render its list before its scripts attach the click handlers (hydration), and a
+    // click in that window does nothing: try again while nothing has opened.
+    for (let attempt = 0; attempt < 3 && !opened(); attempt++) {
+      if (!shown()) {
+        // nothing open yet (a panel that's showing but hasn't updated the URL is just slow: wait)
+        const item = findAll(doc, selector)[i]; // fresh: the list may have re-rendered
+        if (!item) return `item ${i + 1} is gone (the list changed while reading it)`;
+        // responsive layouts render some text twice and hide one copy: click the visible one
+        target = spec.click ? ([...item.querySelectorAll(spec.click)].find(isVisible) ?? item) : item;
+        click(target);
+      }
+      await until(opened, attempt < 2 ? Math.min(4000, timeout) : timeout);
+    }
+    if (!opened()) {
+      const what = target ? `${target.tagName.toLowerCase()} "${norm(target.textContent).slice(0, 40)}"` : "nothing";
+      return `item ${i + 1} didn't open: clicked ${what}; ${shown() ? "panel shown" : `no ${spec.wait_for}`}; url ${doc.location?.href ?? "?"}`;
+    }
+    await sleep(spec.settle_ms ?? 300); // let the panel finish rendering its details
+    const row = rows[i]!;
+    const url = doc.location?.href ?? "";
+    row["opened_url"] = url;
+    for (const [key, re] of Object.entries(spec.url_fields ?? {})) row[key] = new RegExp(re, "i").exec(url)?.[1] ?? null;
+    Object.assign(row, extract(doc, spec.fields ?? {}));
+    if (!(await closePanel())) return `item ${i + 1} didn't close`;
+    await sleep(250 + Math.round(Math.random() * 500)); // one person clicking through a list
+  }
+  return null;
+
+  async function closePanel(): Promise<boolean> {
+    const closer = spec.close ? findElement(doc, { selector: spec.close }) : null;
+    if (closer) click(closer);
+    else (doc.activeElement ?? doc.body).dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true, cancelable: true }));
+    return until(() => !shown(), timeout);
+  }
 }
 
 // ---------------------------------------------------------------- challenges
@@ -226,6 +304,33 @@ export function simplifiedDom(doc: Document, max = 6000): string {
   return out.length > max ? `${out.slice(0, max)}\n…` : out;
 }
 
+const OUTLINE_ATTRS = new Set(["id", "href", "role", "type", "name", "src", "datetime", "title", "alt", "placeholder"]);
+
+/** One element's subtree as tags, a few classes, ids, data-/aria- attributes and own text. Probes
+ * use it to write selectors for cards and forms the simplified DOM leaves out. */
+export function outline(root: Element, max = 12_000): string {
+  const lines: string[] = [];
+  let size = 0;
+  const walk = (el: Element, depth: number) => {
+    if (size > max) return;
+    const bits = [el.tagName.toLowerCase()];
+    const cls = (el.getAttribute("class") ?? "").trim().split(/\s+/).filter(Boolean);
+    if (cls.length) bits.push(`.${cls.slice(0, 4).join(".")}${cls.length > 4 ? "…" : ""}`);
+    for (const a of el.attributes) {
+      if (OUTLINE_ATTRS.has(a.name) || a.name.startsWith("data-") || a.name.startsWith("aria-")) bits.push(`[${a.name}=${a.value.slice(0, 70)}]`);
+    }
+    const skip = NO_TEXT.has(el.tagName.toUpperCase());
+    const own = skip ? "" : norm([...el.childNodes].filter((c) => c.nodeType === Node.TEXT_NODE).map((c) => c.nodeValue).join(" ")).slice(0, 80);
+    const line = `${"  ".repeat(Math.min(depth, 12))}${bits.join("")}${own ? ` "${own}"` : ""}`;
+    lines.push(line);
+    size += line.length + 1;
+    if (skip) return;
+    for (const child of el.children) walk(child, depth + 1);
+  };
+  walk(root, 0);
+  return size > max ? `${lines.join("\n").slice(0, max)}\n…` : lines.join("\n");
+}
+
 // ---------------------------------------------------------------- steps
 
 /** Runs one already-templated step. `file` is set for attach_file (sent over by the service worker). */
@@ -268,7 +373,14 @@ export async function runStep(doc: Document, step: Step, file?: File): Promise<S
     case "query": {
       if (step.all) {
         await waitFor(doc, target, timeout);
-        const items = findAll(doc, step.selector ?? "*").map((el) => (step.fields ? extract(el, step.fields) : readValue(el, step)));
+        const els = findAll(doc, step.selector ?? "*");
+        if (step.open_each) {
+          const rows: Record<string, unknown>[] = els.map((el) => extract(el, step.fields ?? {}));
+          const problem = await openEach(doc, step.selector ?? "*", rows, step.open_each);
+          if (problem) return { ok: false, error: `open_each: ${problem}` };
+          return { ok: true, data: { value: rows, count: rows.length } };
+        }
+        const items = els.map((el) => (step.fields ? extract(el, step.fields) : readValue(el, step)));
         return { ok: true, data: { value: items, count: items.length } };
       }
       const el = findElement(doc, target);
@@ -277,6 +389,14 @@ export async function runStep(doc: Document, step: Step, file?: File): Promise<S
     }
     case "snapshot":
       return { ok: true, data: { url: doc.location?.href ?? null }, dom: simplifiedDom(doc) };
+    case "outline": {
+      const pool = findAll(doc, step.selector ?? "body");
+      const want = norm(step.text);
+      let el = (want ? pool.find((e) => norm(e.textContent).includes(want)) : pool[0]) ?? null;
+      if (!el) return { ok: false, error: `nothing to outline: ${step.selector ?? ""} ${step.text ?? ""}`.trim() };
+      for (let i = 0; i < (step.up ?? 0) && el.parentElement; i++) el = el.parentElement;
+      return { ok: true, data: { count: pool.length }, dom: outline(el) };
+    }
     default:
       return { ok: false, error: `${step.action} runs in the service worker` };
   }
