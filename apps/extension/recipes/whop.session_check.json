@@ -1,14 +1,15 @@
 {
   "$schema": "./schema.json",
   "name": "whop.session_check",
-  "version": 1,
+  "version": 2,
   "site": "whop",
-  "status": "UNVERIFIED",
-  "description": "Whop: is this Chrome profile logged in? A login page ends the run as a 'login' challenge. UNVERIFIED selectors.",
+  "status": "verified",
+  "description": "Whop: is this Chrome profile logged in? whop.com/home sends a logged-out visitor to the login page, which ends the run as a 'login' challenge.",
   "params": { "step_delay_ms": { "type": "array" } },
   "steps": [
-    { "action": "navigate", "url": "https://whop.com/hub/" },
-    { "action": "query", "selector": "[data-testid=user-avatar], [aria-label*='profile' i], img[alt*='avatar' i]", "exists": true, "save_as": "logged_in" }
+    { "action": "navigate", "url": "https://whop.com/home/" },
+    { "action": "wait_for", "selector": "a[aria-label=Personal], a[href='/home/']", "timeout_ms": 30000 },
+    { "action": "query", "selector": "button[aria-label=Menu] img, a[aria-label=Personal]", "exists": true, "save_as": "logged_in" }
   ],
   "returns": ["logged_in"]
 }

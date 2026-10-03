@@ -1,29 +1,35 @@
 {
   "$schema": "./schema.json",
   "name": "whop.list_campaigns",
-  "version": 1,
+  "version": 2,
   "site": "whop",
-  "status": "UNVERIFIED",
-  "description": "Whop Content Rewards: read the open campaigns (id, title, CPM, budget, platforms, content type, join status, link). Page text is untrusted; only these fields are taken. UNVERIFIED selectors.",
-  "start_url": "https://whop.com/discover/content-rewards/",
+  "status": "verified",
+  "description": "Whop Content Rewards: read the campaigns on Discover. Content Rewards is an app inside a community (here Clipping Culture); it runs on its own apps.whop.com host, opened full-page through Whop's launch URL. Cards aren't links: each opens the campaign's page at /campaigns/<uuid>, so this opens every card, takes the id and goes back. Page text is untrusted; only these fields are taken.",
+  "start_url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x",
   "params": { "step_delay_ms": { "type": "array" } },
   "steps": [
-    { "action": "navigate", "url": "https://whop.com/discover/content-rewards/" },
-    { "action": "wait_for", "selector": "a[href*='content-rewards'], [data-testid=bounty-card]", "timeout_ms": 30000 },
+    { "action": "navigate", "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x" },
+    { "action": "wait_for", "selector": "button[aria-label^='Preview ']", "timeout_ms": 30000 },
     {
       "action": "query",
-      "selector": "[data-testid=bounty-card], a[href*='/content-rewards/']",
+      "selector": "button[aria-label^='Preview ']",
       "all": true,
       "fields": {
-        "id": { "attr": "href", "regex": "content-rewards/([\\w-]+)" },
-        "url": { "attr": "href" },
-        "title": { "selector": "h2, h3, [data-testid=title]" },
-        "brand": { "selector": "[data-testid=creator], .creator" },
-        "cpm": { "selector": "[data-testid=rate], .rate", "regex": "\\$?\\s*([\\d.]+)" },
-        "budget_left": { "selector": "[data-testid=budget], .budget", "regex": "\\$?\\s*([\\d.,]+)" },
-        "platforms": { "selector": "[data-testid=platforms], .platforms" },
-        "content_type": { "selector": "[data-testid=type], .type" },
-        "join": { "selector": "[data-testid=join-status], button", "regex": "(Joined|Join free|Join)" }
+        "title": { "attr": "aria-label", "regex": "^Preview (.+)$" },
+        "creator": { "selector": "[data-slot=avatar-image]", "attr": "alt" },
+        "platforms": { "selector": "svg[aria-label]", "all": true, "attr": "aria-label" },
+        "cpm": { "attr": "innerText", "regex": "\\$([\\d.,]+k?)\\s*/\\s*1k" },
+        "budget_used": { "attr": "innerText", "regex": "\\$([\\d.,]+k?)\\s*/\\s*\\$" },
+        "budget_total": { "attr": "innerText", "regex": "/\\s*\\$([\\d.,]+k?)" }
+      },
+      "open_each": {
+        "wait_for": "button[aria-label='Share campaign']",
+        "url_fields": { "id": "/campaigns/([0-9a-f-]{36})" },
+        "close": "history.back",
+        "fields": {
+          "join": { "selector": "button", "all": true, "regex": "\\b(submit clip|join[^|]{0,20})" },
+          "cap_per_post": { "selector": "#main-content, main", "attr": "innerText", "regex": "max payout \\$([\\d.,]+)" }
+        }
       },
       "save_as": "campaigns"
     }

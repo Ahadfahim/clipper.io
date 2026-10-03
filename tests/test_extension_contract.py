@@ -8,9 +8,12 @@ import re
 from datetime import UTC, datetime
 from pathlib import Path
 
+import pytest
+
 from clipper.browser.bridge import FakeBrowserBridge
 from clipper.browser.protocol import PROTOCOL_VERSION, RecipeResult, decode_screenshot
 from clipper.marketplaces.browser import RecipeMarketplace, card_from_row
+from clipper.marketplaces.docs import fetch_doc_text
 from clipper.publishing.base import RECIPES
 
 EXT = Path(__file__).resolve().parents[1] / "apps" / "extension"
@@ -39,7 +42,7 @@ def test_every_recipe_the_core_calls_ships_with_the_extension() -> None:
     missing = [n for n in needed if n not in have]
     assert not missing, missing
     for name, r in have.items():
-        assert r["status"] == "UNVERIFIED", name  # nothing has been run against the real sites yet
+        assert r["status"] in ("UNVERIFIED", "verified"), name  # verified = run against the real site
 
 
 def test_upload_recipes_take_the_params_the_publisher_sends() -> None:
@@ -122,6 +125,65 @@ async def test_vyro_campaign_detail_drops_vyros_own_links() -> None:
     assert detail.sources == ["https://f.io/abc"]
     assert detail.card.external_id == "cinematic-edits-njQgl-gP" and detail.card.cpm_usd == 1.5
     assert detail.card.url == "https://app.vyro.com/campaigns?c=cinematic-edits-njQgl-gP"
+
+
+def test_whop_rows_as_the_real_site_gives_them() -> None:
+    # what whop.list_campaigns read in Content Rewards (2026-10-03)
+    card = card_from_row(
+        "whop",
+        {
+            "id": "abe41f6d-61e4-497d-b2d1-ee64c3bd1713",
+            "title": "bbno$ - Minecraft Concert Clips",
+            "creator": "Clipping Culture",
+            "platforms": "Instagram | TikTok",
+            "cpm": "1.50",
+            "budget_used": "671.68",
+            "budget_total": "1k",
+            "cap_per_post": "100.00",
+            "join": "Submit clip",
+        },
+    )
+    assert card.allowed_platforms == ["instagram", "tiktok"]
+    assert card.budget_total == 1000 and card.budget_left == pytest.approx(328.32)
+    assert card.cap_per_post == 100 and card.cpm_usd == 1.5 and card.join == "joined"
+
+
+async def test_whop_campaign_detail_reads_the_linked_rules_doc() -> None:
+    doc = "https://docs.google.com/document/d/1F2slKMDX7pYrXgXNcH_U-KncgjukrBdZ75vCmR5GZqg/edit"
+    bridge = FakeBrowserBridge(
+        recipes={
+            "whop.get_campaign": RecipeResult(
+                ok=True,
+                data={
+                    "campaign": {"title": "bbno$ - Minecraft Concert Clips", "budget_left": "328"},
+                    "rules_text": "Please refer to Google Doc for requirements.",
+                    "rules_doc": doc,
+                    "sources": [doc, "https://whop.com/clippingculture/"],
+                },
+            )
+        }
+    )
+    fetched: list[str] = []
+
+    async def fake_fetch(url: str) -> str | None:
+        fetched.append(url)
+        return "Content file: https://f.io/TjTVviUl"
+
+    detail = await RecipeMarketplace("whop", bridge, fetch_text=fake_fetch).get_campaign("abe41f6d")
+    assert fetched == [doc]
+    assert "Content file: https://f.io/TjTVviUl" in detail.rules_raw
+    assert detail.sources == []  # the doc is the rules, whop.com is the marketplace itself
+
+    async def private(_url: str) -> str | None:
+        return None
+
+    detail = await RecipeMarketplace("whop", bridge, fetch_text=private).get_campaign("abe41f6d")
+    assert "couldn't be read here" in detail.rules_raw
+
+
+async def test_only_google_docs_are_fetched() -> None:
+    assert await fetch_doc_text("https://example.com/rules") is None
+    assert await fetch_doc_text("https://docs.google.com/spreadsheets/d/abc") is None
 
 
 def test_screenshots_decode_as_jpeg_or_png() -> None:

@@ -66,7 +66,7 @@ export type OpenEach = {
   wait_for: string; // what shows once it's open
   fields?: Record<string, FieldSpec>; // read from the page while it's open
   url_fields?: Record<string, string>; // name -> regex on the URL while it's open (first group)
-  close?: string; // a close button; default: press Escape
+  close?: string; // a close button, or "history.back" when the item opened a page; default: press Escape
   settle_ms?: number;
   timeout_ms?: number;
 };

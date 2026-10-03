@@ -47,13 +47,16 @@ export const SETTLE_CHECKS_MS = [0, 700, 1500, 3000];
 
 /** Single-page apps redirect to a login wall or render it after "load" (TikTok, Instagram), so look
  * again while the page settles instead of only once. */
-async function settledChallenge(driver: TabDriver): Promise<Challenge | null> {
+async function settledChallenge(driver: TabDriver): Promise<{ challenge: Challenge; what: string } | null> {
   let waited = 0;
   for (const at of SETTLE_CHECKS_MS) {
     if (at > waited) await driver.sleep(at - waited);
     waited = at;
     const check = await driver.check().catch(() => null); // the page may still be swapping documents
-    if (check?.challenge) return check.challenge;
+    if (check?.challenge) {
+      const reason = check.data?.["reason"];
+      return { challenge: check.challenge, what: `${check.challenge} screen${typeof reason === "string" ? ` (${reason})` : ""}` };
+    }
   }
   return null;
 }
@@ -70,8 +73,8 @@ async function stepThroughNavigation(driver: TabDriver, step: Step, fileId?: str
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     if (!NAVIGATED.test(message)) throw e;
-    const challenge = await settledChallenge(driver);
-    if (challenge) return { ok: false, challenge, error: `${challenge} screen: the page redirected to it` };
+    const hit = await settledChallenge(driver);
+    if (hit) return { ok: false, challenge: hit.challenge, error: `${hit.what}: the page redirected to it` };
     if (!READ_ONLY.has(step.action)) return { ok: false, error: `the page navigated away during ${step.action}; not repeating it` };
     return driver.step(step, fileId);
   }
@@ -83,8 +86,8 @@ export async function runOne(driver: TabDriver, step: Step, index: number, dryRu
   if (step.action === "navigate") {
     if (!step.url || !hostAllowed(step.url)) return failure(driver, index, `not allowed: ${step.url} is not on the site allowlist`);
     await driver.navigate(step.url);
-    const challenge = await settledChallenge(driver);
-    if (challenge) return failure(driver, index, `${challenge} screen after opening the page`, challenge);
+    const hit = await settledChallenge(driver);
+    if (hit) return failure(driver, index, `${hit.what} after opening the page`, hit.challenge);
     return { ok: true, data: { url: (await driver.currentUrl()) ?? step.url } };
   }
   const url = await driver.currentUrl();

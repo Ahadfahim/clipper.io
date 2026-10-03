@@ -1,7 +1,7 @@
 // Content script: injected on demand into the Clipper tab by the service worker. Receives one
 // step at a time; files arrive in base64 chunks (the page can't fetch from 127.0.0.1 itself).
 import type { Step, StepOutcome } from "../shared/protocol";
-import { detectChallenge, runStep, simplifiedDom } from "./engine";
+import { findChallenge, runStep, simplifiedDom } from "./engine";
 
 type Msg =
   | { type: "clipper.step"; step: Step; fileId?: string }
@@ -34,7 +34,10 @@ export function handle(msg: Msg, respond: (r: StepOutcome) => void): boolean {
       respond({ ok: true });
       return false;
     case "clipper.check":
-      respond({ ok: true, challenge: detectChallenge(document), data: { url: location.href, title: document.title } });
+      {
+        const hit = findChallenge(document);
+        respond({ ok: true, challenge: hit?.challenge ?? null, data: { url: location.href, title: document.title, reason: hit?.reason ?? null } });
+      }
       return false;
     case "clipper.dom":
       respond({ ok: true, dom: simplifiedDom(document) });

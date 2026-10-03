@@ -11,7 +11,7 @@
     "name": { "type": "string", "pattern": "^[a-z]+\\.[a-z_]+$" },
     "version": { "type": "integer", "minimum": 1 },
     "site": { "enum": ["youtube", "tiktok", "instagram", "x", "vyro", "whop"] },
-    "status": { "enum": ["UNVERIFIED", "verified"], "description": "UNVERIFIED until run against the real site; selectors were written without access to it." },
+    "status": { "enum": ["UNVERIFIED", "verified"], "description": "UNVERIFIED until run against the real site (dry run); verified once it has been." },
     "description": { "type": "string" },
     "start_url": { "type": "string", "format": "uri" },
     "params": {
@@ -45,7 +45,7 @@
         "wait_for": { "type": "string", "description": "what shows once it's open" },
         "fields": { "type": "object", "additionalProperties": { "$ref": "#/$defs/field" } },
         "url_fields": { "type": "object", "additionalProperties": { "type": "string" }, "description": "name -> regex on the URL while it's open (first group)" },
-        "close": { "type": "string", "description": "a close button; default: press Escape" },
+        "close": { "type": "string", "description": "a close button, or history.back when the item opened a page; default: press Escape" },
         "settle_ms": { "type": "integer", "minimum": 0 },
         "timeout_ms": { "type": "integer", "minimum": 0 }
       }

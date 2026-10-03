@@ -16,11 +16,13 @@ describe("shipped recipes", () => {
     expect(Object.keys(RECIPES).sort()).toEqual(files.map((f) => f.replace(/\.json$/, "")).sort());
   });
 
-  it.each(files)("%s is valid, UNVERIFIED, and only opens allowlisted https sites", (f) => {
+  it.each(files)("%s is valid, has a status, and only opens allowlisted https sites", (f) => {
     const r = JSON.parse(readFileSync(resolve(dir, f), "utf-8")) as Recipe;
     expect(validateRecipe(r)).toEqual([]);
     expect(`${r.name}.json`).toBe(f);
-    expect(r.status).toBe("UNVERIFIED");
+    // "verified" = run against the real site; the Vyro and Whop read recipes were on 2026-10-03
+    expect(["UNVERIFIED", "verified"]).toContain(r.status);
+    if (r.status === "verified") expect(r.description).not.toMatch(/UNVERIFIED|DRAFT/);
     for (const s of r.steps.filter((x) => x.action === "navigate")) {
       const url = fill(s.url, { id: "abc", handle: "@me" })!;
       expect(hostAllowed(url), url).toBe(true);

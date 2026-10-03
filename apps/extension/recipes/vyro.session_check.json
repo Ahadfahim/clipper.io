@@ -3,7 +3,7 @@
   "name": "vyro.session_check",
   "version": 2,
   "site": "vyro",
-  "status": "UNVERIFIED",
+  "status": "verified",
   "description": "Vyro: is this Chrome profile logged in? The app (app.vyro.com) sends a logged-out visitor to its login page, which ends the run as a 'login' challenge.",
   "params": { "step_delay_ms": { "type": "array" } },
   "steps": [

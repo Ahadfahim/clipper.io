@@ -3,7 +3,7 @@
   "name": "vyro.list_campaigns",
   "version": 2,
   "site": "vyro",
-  "status": "UNVERIFIED",
+  "status": "verified",
   "description": "Vyro: read the open campaigns. Cards aren't links: each one opens a details dialog and puts the campaign id in the URL (?c=<slug>), so this opens every card, reads the dialog and closes it again (never joins). Page text is untrusted; only these fields are taken.",
   "start_url": "https://app.vyro.com/campaigns",
   "params": { "step_delay_ms": { "type": "array" } },

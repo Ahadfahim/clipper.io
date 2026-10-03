@@ -140,7 +140,7 @@ function extract(el: Element | Document, fields: Record<string, FieldSpec>): Rec
   const out: Record<string, string | null> = {};
   for (const [key, f] of Object.entries(fields)) {
     if (f.all) {
-      out[key] = readAll(f.selector ? [...el.querySelectorAll(f.selector)] : [], f);
+      out[key] = readAll(f.selector ? [...el.querySelectorAll(f.selector)] : el instanceof Element ? [el] : [], f);
       continue;
     }
     const target = f.selector ? el.querySelector(f.selector) : el instanceof Element ? el : null;
@@ -157,15 +157,17 @@ async function until(test: () => boolean, timeoutMs: number, pollMs = 100): Prom
 }
 
 /** query + open_each: for each match, open it (click), wait for its panel, read the panel and the
- * URL, close it again (Escape, or a close button), then move on. For lists whose items aren't links
- * (Vyro's campaign cards open a dialog and put the campaign id in the URL). Read-only: it only opens
- * and closes detail views. */
+ * URL, close it again (Escape, a close button, or "history.back" for items that open a page), then
+ * move on. For lists whose items aren't links: Vyro's cards open a dialog and put the campaign id in
+ * the URL; Whop's open the campaign's page. Read-only: it only opens and closes detail views. */
 async function openEach(doc: Document, selector: string, rows: Record<string, unknown>[], spec: OpenEach): Promise<string | null> {
   const timeout = spec.timeout_ms ?? 10_000;
   const shown = () => findAll(doc, spec.wait_for).length > 0;
   for (let i = 0; i < rows.length; i++) {
     // a panel can already be open: sites restore the last one (Vyro keeps ?c= across reloads)
     if (shown() && !(await closePanel())) return `a panel was already open and didn't close`;
+    // after going back, the list renders again before it can be clicked
+    if (!(await until(() => findAll(doc, selector).length > i, timeout))) return `item ${i + 1} is gone (the list changed while reading it)`;
     const before = doc.location?.href ?? "";
     const opened = () => shown() && (doc.location?.href ?? "") !== before;
     let target: Element | null = null;
@@ -198,6 +200,10 @@ async function openEach(doc: Document, selector: string, rows: Record<string, un
   return null;
 
   async function closePanel(): Promise<boolean> {
+    if (spec.close === "history.back") {
+      doc.defaultView?.history.back();
+      return until(() => !shown(), timeout);
+    }
     const closer = spec.close ? findElement(doc, { selector: spec.close }) : null;
     if (closer) click(closer);
     else (doc.activeElement ?? doc.body).dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", bubbles: true, cancelable: true }));
@@ -257,11 +263,29 @@ export function pageText(doc: Document, max = 20_000): string {
   return norm(out).slice(0, max);
 }
 
-/** Detects a CAPTCHA, "verify it's you" or login wall. Never interacts with it. */
-export function detectChallenge(doc: Document, url: string = doc.location?.href ?? ""): Challenge | null {
-  const frames = [...doc.querySelectorAll("iframe")].map((f) => (f.getAttribute("src") ?? "").toLowerCase());
-  if (frames.some((src) => CAPTCHA_FRAMES.some((k) => src.includes(k)))) return "captcha";
-  if (CAPTCHA_SELECTORS.some((s) => findAll(doc, s).length > 0)) return "captcha";
+/** A CAPTCHA widget someone has to deal with: visible and widget-sized. Sites load invisible
+ * Turnstile/reCAPTCHA frames and show reCAPTCHA's "protected by" badge on ordinary pages; those
+ * aren't challenges, and treating them as one pauses the account for nothing. */
+function captchaWidget(el: Element): boolean {
+  if (!isVisible(el) || el.closest(".grecaptcha-badge")) return false;
+  const cs = el.ownerDocument.defaultView?.getComputedStyle(el);
+  const w = parseFloat(cs?.width ?? ""),
+    h = parseFloat(cs?.height ?? "");
+  return !(w < 30 || h < 30); // NaN (no layout to measure) counts as a widget
+}
+
+export type ChallengeHit = { challenge: Challenge; reason: string };
+
+/** Detects a CAPTCHA, "verify it's you" or login wall, and says what gave it away. Never interacts with it. */
+export function findChallenge(doc: Document, url: string = doc.location?.href ?? ""): ChallengeHit | null {
+  for (const f of doc.querySelectorAll("iframe")) {
+    const src = (f.getAttribute("src") ?? "").toLowerCase();
+    const kind = CAPTCHA_FRAMES.find((k) => src.includes(k));
+    if (kind && !src.includes("size=invisible") && captchaWidget(f)) return { challenge: "captcha", reason: `${kind} frame` };
+  }
+  for (const s of CAPTCHA_SELECTORS) {
+    if (findAll(doc, s).some(captchaWidget)) return { challenge: "captcha", reason: s };
+  }
   const text = pageText(doc);
   let path = "";
   try {
@@ -269,10 +293,16 @@ export function detectChallenge(doc: Document, url: string = doc.location?.href 
   } catch {
     /* about:blank */
   }
-  if (CHALLENGE_URL.test(path) || VERIFY_TEXT.some((t) => text.includes(t))) return "verification";
-  const password = findAll(doc, "input[type=password]").length > 0;
-  if (LOGIN_URL.test(path) || (password && /log in|sign in|password/.test(text))) return "login";
+  if (CHALLENGE_URL.test(path)) return { challenge: "verification", reason: `address ${path}` };
+  const said = VERIFY_TEXT.find((t) => text.includes(t));
+  if (said) return { challenge: "verification", reason: `"${said}" on the page` };
+  if (LOGIN_URL.test(path)) return { challenge: "login", reason: `address ${path}` };
+  if (findAll(doc, "input[type=password]").length > 0 && /log in|sign in|password/.test(text)) return { challenge: "login", reason: "a password field" };
   return null;
+}
+
+export function detectChallenge(doc: Document, url?: string): Challenge | null {
+  return findChallenge(doc, url)?.challenge ?? null;
 }
 
 // ---------------------------------------------------------------- simplified DOM (for failures)
@@ -335,8 +365,8 @@ export function outline(root: Element, max = 12_000): string {
 
 /** Runs one already-templated step. `file` is set for attach_file (sent over by the service worker). */
 export async function runStep(doc: Document, step: Step, file?: File): Promise<StepOutcome> {
-  const challenge = detectChallenge(doc);
-  if (challenge) return { ok: false, challenge, error: `${challenge} screen: stopped (handle it by hand, then resume the account)` };
+  const hit = findChallenge(doc);
+  if (hit) return { ok: false, challenge: hit.challenge, error: `${hit.challenge} screen (${hit.reason}): stopped (handle it by hand, then resume the account)` };
   const timeout = step.timeout_ms ?? 15_000;
   const target = { selector: step.selector, text: step.text };
   switch (step.action) {

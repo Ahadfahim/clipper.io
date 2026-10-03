@@ -8,6 +8,7 @@ rules text goes to the brief-reader subagent, never straight into an agent with 
 from __future__ import annotations
 
 import re
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any, Literal
 from urllib.parse import urlsplit
@@ -24,6 +25,7 @@ from clipper.marketplaces.base import (
     SubmissionState,
     SubmitResult,
 )
+from clipper.marketplaces.docs import fetch_doc_text
 
 
 def _num(v: Any) -> float | None:
@@ -93,6 +95,11 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
         if isinstance(p, str) and p.strip()
     ]
     content = str(row.get("content_type") or "clipping").lower()
+    total = _num(row.get("budget_total"))
+    left = _num(row.get("budget_left"))
+    used = _num(row.get("budget_used"))  # Whop's cards show "$2.3k / $10.5k" (paid out / total)
+    if left is None and total is not None and used is not None:
+        left = max(total - used, 0.0)
     return CampaignCard(
         marketplace=market,
         external_id=str(row["id"]),
@@ -101,8 +108,8 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
         brand=row.get("brand"),
         creator=row.get("creator") or row.get("brand"),
         url=row.get("url") or row.get("opened_url"),
-        budget_total=_num(row.get("budget_total")),
-        budget_left=_num(row.get("budget_left")),
+        budget_total=total,
+        budget_left=left,
         cap_per_post=_num(row.get("cap_per_post")),
         min_views_to_pay=int(_num(row.get("min_views")) or 0) or None,
         allowed_platforms=[p for p in platforms if p in ("youtube", "tiktok", "instagram", "x")],
@@ -117,10 +124,17 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
 class RecipeMarketplace:
     """Generic recipe-backed adapter; Vyro and Whop differ only in recipe names and profile."""
 
-    def __init__(self, name: str, bridge: BrowserBridge, profile: str = "main") -> None:
+    def __init__(
+        self,
+        name: str,
+        bridge: BrowserBridge,
+        profile: str = "main",
+        fetch_text: Callable[[str], Awaitable[str | None]] = fetch_doc_text,
+    ) -> None:
         self.name = name
         self.bridge = bridge
         self.profile = profile
+        self.fetch_text = fetch_text  # linked rule documents (Whop's Google Docs)
 
     async def _run(self, recipe: str, params: dict[str, Any] | None = None) -> RecipeResult:
         res = await self.bridge.run_recipe(self.profile, f"{self.name}.{recipe}", params or {})
@@ -146,11 +160,18 @@ class RecipeMarketplace:
         row = dict(res.data.get("campaign") or {})
         row.setdefault("id", external_id)
         row.setdefault("url", res.data.get("page_url"))
+        rules = str(res.data.get("rules_text", ""))[:20_000]
+        doc = res.data.get("rules_doc")
+        if isinstance(doc, str) and doc.startswith("https://"):
+            text = await self.fetch_text(doc)
+            rules += f"\n\n--- Linked requirements ({doc}) ---\n" + (
+                text or "(couldn't be read here: it may be private. Open it to check the rules.)"
+            )
         links: list[Any] = list(res.data.get("sources") or [])
         return CampaignDetail(
             card_from_row(self.name, row),
-            str(res.data.get("rules_text", ""))[:20_000],
-            [u for u in links if isinstance(u, str) and not self._own_page(u)],
+            rules,
+            [u for u in links if isinstance(u, str) and u != doc and not self._own_page(u)],
         )
 
     def _own_page(self, url: str) -> bool:

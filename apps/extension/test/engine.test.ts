@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { attachFile, click, detectChallenge, findElement, runStep, simplifiedDom, typeInto } from "../src/content/engine";
+import { attachFile, click, detectChallenge, findChallenge, findElement, runStep, simplifiedDom, typeInto } from "../src/content/engine";
 
 beforeEach(() => {
   document.body.innerHTML = "";
@@ -78,6 +78,15 @@ describe("challenge detection (never solved)", () => {
     expect(detectChallenge(document, "https://studio.youtube.com/")).toBe(want);
   });
 
+  it("ignores invisible CAPTCHA frames and the reCAPTCHA badge, and says what it found", () => {
+    // ordinary pages (Whop) load an invisible Turnstile frame and show reCAPTCHA's badge
+    document.body.innerHTML = `<main><h1>Content rewards</h1></main>
+      <iframe src="https://challenges.cloudflare.com/cdn-cgi/challenge-platform/turnstile" style="width:0;height:0;border:0"></iframe>
+      <div class="grecaptcha-badge"><iframe src="https://www.google.com/recaptcha/api2/anchor?size=invisible"></iframe></div>`;
+    expect(findChallenge(document, "https://whop.com/clippingculture/")).toBeNull();
+    document.body.insertAdjacentHTML("beforeend", `<iframe src="https://newassets.hcaptcha.com/captcha/v1/x" style="width:300px;height:80px"></iframe>`);
+    expect(findChallenge(document, "https://whop.com/clippingculture/")).toEqual({ challenge: "captcha", reason: "hcaptcha frame" });
+  });
   it("reads the page's text, not inline script payloads", () => {
     // Instagram inlines megabytes of JSON before the login form; it also mentions two_factor/"two-factor"
     const state = `<script type="application/json">${JSON.stringify({ blob: "x".repeat(30_000), flow: "two-factor" })}</script>`;
@@ -179,5 +188,12 @@ describe("content script", () => {
     document.body.innerHTML = `<div class="x"></div>`;
     const reply = await new Promise((resolve) => handle({ type: "clipper.step", step: { action: "query", selector: ".x", fields: { a: { selector: "!!!" } } } }, resolve));
     expect(reply).toMatchObject({ ok: false });
+  });
+});
+describe("fields", () => {
+  it("`all` without a selector collects every regex capture in the element's own text", async () => {
+    document.body.innerHTML = `<main>TikTok Per 1K views $1.50 Max payout $100 Instagram Per 1K views $1.00</main>`;
+    const out = await runStep(document, { action: "query", selector: "main", fields: { platforms: { all: true, regex: "\\b(TikTok|Instagram|YouTube) Per 1K views" }, cpm: { regex: "per 1k views \\$([\\d.]+)" } } });
+    expect(out.data?.["value"]).toEqual({ platforms: "TikTok, Instagram", cpm: "1.50" });
   });
 });
