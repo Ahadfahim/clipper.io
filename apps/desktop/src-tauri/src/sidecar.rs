@@ -31,7 +31,9 @@ pub fn start(app: &AppHandle) {
             tauri::async_runtime::spawn(async move {
                 while let Some(event) = rx.recv().await {
                     match event {
-                        CommandEvent::Stderr(line) => log::info!("core: {}", String::from_utf8_lossy(&line)),
+                        CommandEvent::Stderr(line) => {
+                            log::info!("core: {}", String::from_utf8_lossy(&line))
+                        }
                         CommandEvent::Terminated(status) => {
                             log::warn!("core exited: {:?}", status.code);
                             break;

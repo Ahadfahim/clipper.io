@@ -17,12 +17,21 @@ pub struct TrayState(pub Mutex<Option<TrayItems>>);
 pub fn build(app: &AppHandle) -> tauri::Result<()> {
     let open = MenuItem::with_id(app, "tray.open", "Open Clipper", true, None::<&str>)?;
     let pause = MenuItem::with_id(app, "agents.pause", "Pause all", true, None::<&str>)?;
-    let dry_run = CheckMenuItem::with_id(app, "agents.dryrun", "Dry run", true, true, None::<&str>)?;
+    let dry_run =
+        CheckMenuItem::with_id(app, "agents.dryrun", "Dry run", true, true, None::<&str>)?;
     let today = MenuItem::with_id(app, "tray.today", "Today: —", false, None::<&str>)?;
     let quit = MenuItem::with_id(app, "app.quit", "Quit", true, None::<&str>)?;
     let menu = Menu::with_items(
         app,
-        &[&open, &PredefinedMenuItem::separator(app)?, &pause, &dry_run, &today, &PredefinedMenuItem::separator(app)?, &quit],
+        &[
+            &open,
+            &PredefinedMenuItem::separator(app)?,
+            &pause,
+            &dry_run,
+            &today,
+            &PredefinedMenuItem::separator(app)?,
+            &quit,
+        ],
     )?;
     let mut builder = TrayIconBuilder::with_id("clipper")
         .tooltip("Clipper")
@@ -38,7 +47,12 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
             }
         })
         .on_tray_icon_event(|tray, event| {
-            if let TrayIconEvent::Click { button: MouseButton::Left, button_state: MouseButtonState::Up, .. } = event {
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } = event
+            {
                 crate::show_main(tray.app_handle());
             }
         });
@@ -46,7 +60,11 @@ pub fn build(app: &AppHandle) -> tauri::Result<()> {
         builder = builder.icon(icon.clone());
     }
     builder.build(app)?;
-    app.manage(TrayState(Mutex::new(Some(TrayItems { pause, dry_run, today }))));
+    app.manage(TrayState(Mutex::new(Some(TrayItems {
+        pause,
+        dry_run,
+        today,
+    }))));
     Ok(())
 }
 
@@ -54,12 +72,18 @@ pub fn sync(app: &AppHandle, paused: bool, dry_run: bool, today: &str) -> tauri:
     let state = app.state::<TrayState>();
     let guard = state.0.lock().expect("tray state poisoned");
     if let Some(items) = guard.as_ref() {
-        items.pause.set_text(if paused { "Resume" } else { "Pause all" })?;
+        items
+            .pause
+            .set_text(if paused { "Resume" } else { "Pause all" })?;
         items.dry_run.set_checked(dry_run)?;
         items.today.set_text(format!("Today: {today}"))?;
     }
     if let Some(tray) = app.tray_by_id("clipper") {
-        let tip = format!("Clipper · {}{} · {today}", if paused { "paused" } else { "running" }, if dry_run { " · dry run" } else { "" });
+        let tip = format!(
+            "Clipper · {}{} · {today}",
+            if paused { "paused" } else { "running" },
+            if dry_run { " · dry run" } else { "" }
+        );
         tray.set_tooltip(Some(tip))?;
     }
     Ok(())

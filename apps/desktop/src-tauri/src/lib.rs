@@ -14,13 +14,29 @@ use tauri::{Emitter, Manager, WindowEvent};
 
 pub const MAIN: &str = "main";
 
+/// Pop-outs are labelled per batch/clip (`review-12`); they share one remembered size and position,
+/// so the Review window keeps opening on the portrait monitor.
+fn window_state_key(label: &str) -> &str {
+    if label.starts_with("review-") {
+        "review-popout"
+    } else if label.starts_with("edit-") {
+        "edit-popout"
+    } else {
+        label
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         // a second launch focuses the running window instead of starting another core
         .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
             show_main(app);
         }))
-        .plugin(tauri_plugin_window_state::Builder::default().build())
+        .plugin(
+            tauri_plugin_window_state::Builder::default()
+                .map_label(window_state_key)
+                .build(),
+        )
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,

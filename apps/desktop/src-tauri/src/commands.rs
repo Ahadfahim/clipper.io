@@ -40,8 +40,16 @@ pub async fn pop_out(app: AppHandle, kind: String, id: u32, path: String) -> Res
         let _ = w.set_focus();
         return Ok(());
     }
-    let (w, h) = if kind == "review" { (1080.0, 1880.0) } else { (1440.0, 900.0) };
-    let title = if kind == "review" { format!("Clipper — Review batch {id}") } else { format!("Clipper — Edit clip {id}") };
+    let (w, h) = if kind == "review" {
+        (1080.0, 1880.0)
+    } else {
+        (1440.0, 900.0)
+    };
+    let title = if kind == "review" {
+        format!("Clipper — Review batch {id}")
+    } else {
+        format!("Clipper — Edit clip {id}")
+    };
     WebviewWindowBuilder::new(&app, label, WebviewUrl::App(path.into()))
         .title(title)
         .inner_size(w, h)
@@ -54,7 +62,12 @@ pub async fn pop_out(app: AppHandle, kind: String, id: u32, path: String) -> Res
 /// Windows toast ("12 clips ready for review", "TikTok account needs you").
 #[tauri::command]
 pub fn notify(app: AppHandle, title: String, body: String) -> Result<(), String> {
-    app.notification().builder().title(title).body(body).show().map_err(|e| e.to_string())
+    app.notification()
+        .builder()
+        .title(title)
+        .body(body)
+        .show()
+        .map_err(|e| e.to_string())
 }
 
 /// External links open in the default browser, never inside the app.
@@ -63,7 +76,9 @@ pub fn open_url(app: AppHandle, url: String) -> Result<(), String> {
     if !(url.starts_with("https://") || url.starts_with("http://")) {
         return Err("only http(s) links".into());
     }
-    app.opener().open_url(url, None::<&str>).map_err(|e| e.to_string())
+    app.opener()
+        .open_url(url, None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 /// Opens a folder in Explorer (data folder, logs). Only absolute paths.
@@ -72,7 +87,9 @@ pub fn open_path(app: AppHandle, path: String) -> Result<(), String> {
     if !std::path::Path::new(&path).is_absolute() {
         return Err("absolute paths only".into());
     }
-    app.opener().open_path(path, None::<&str>).map_err(|e| e.to_string())
+    app.opener()
+        .open_path(path, None::<&str>)
+        .map_err(|e| e.to_string())
 }
 
 /// Keeps the tray menu's checkmarks and today's stats in sync with the core.
@@ -90,7 +107,12 @@ pub fn autostart_get(app: AppHandle) -> Result<bool, String> {
 #[tauri::command]
 pub fn autostart_set(app: AppHandle, enabled: bool) -> Result<(), String> {
     let launcher = app.autolaunch();
-    if enabled { launcher.enable() } else { launcher.disable() }.map_err(|e| e.to_string())
+    if enabled {
+        launcher.enable()
+    } else {
+        launcher.disable()
+    }
+    .map_err(|e| e.to_string())
 }
 
 /// Quit for real (the web layer confirms first when uploads are running).

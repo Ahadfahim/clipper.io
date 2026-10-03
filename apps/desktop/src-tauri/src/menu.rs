@@ -4,7 +4,12 @@
 use tauri::menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{AppHandle, Wry};
 
-fn item(app: &AppHandle, id: &str, text: &str, accel: Option<&str>) -> tauri::Result<MenuItem<Wry>> {
+fn item(
+    app: &AppHandle,
+    id: &str,
+    text: &str,
+    accel: Option<&str>,
+) -> tauri::Result<MenuItem<Wry>> {
     MenuItem::with_id(app, id, text, true, accel)
 }
 
@@ -60,8 +65,20 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         "&Agents",
         true,
         &[
-            &item(app, "agents.pause", "&Pause all / Resume", Some("Ctrl+Shift+P"))?,
-            &CheckMenuItem::with_id(app, "agents.dryrun", "&Dry run", true, true, Some("Ctrl+Shift+D"))?,
+            &item(
+                app,
+                "agents.pause",
+                "&Pause all / Resume",
+                Some("Ctrl+Shift+P"),
+            )?,
+            &CheckMenuItem::with_id(
+                app,
+                "agents.dryrun",
+                "&Dry run",
+                true,
+                true,
+                Some("Ctrl+Shift+D"),
+            )?,
             &item(app, "agents.director", "Message the &Director…", None)?,
             &sep()?,
             &item(app, "agents.slots.2", "Slot count: 2", None)?,
@@ -101,5 +118,8 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
             &item(app, "file.gallery", "Component &gallery", None)?,
         ],
     )?;
-    Menu::with_items(app, &[&file, &edit, &view, &agents, &campaigns, &tools, &help])
+    Menu::with_items(
+        app,
+        &[&file, &edit, &view, &agents, &campaigns, &tools, &help],
+    )
 }
