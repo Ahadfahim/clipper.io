@@ -126,8 +126,16 @@ export async function runRecipe(
   for (let i = 0; i < recipe.steps.length; i++) {
     const raw = recipe.steps[i]!;
     if (raw.when && !params[raw.when]) continue;
+    if (raw.unless && params[raw.unless]) continue;
     if (raw.final && dryRun) {
       return { ok: true, data: { ...output, dry_run: true, stopped_before_step: i, page_url: await driver.currentUrl() } };
+    }
+    if (raw.action === "attach_file" && dryRun) {
+      // Handing the site the file starts the upload (YouTube makes a draft at once), so a dry run
+      // ends here, once it has checked the file input is where the recipe expects it.
+      const there = await stepThroughNavigation(driver, { action: "attach_file", selector: raw.selector, check_only: true, timeout_ms: raw.timeout_ms });
+      if (!there.ok) return failure(driver, i, `dry run: ${there.error ?? "no file input"}`, there.challenge ?? null, there.dom);
+      return { ok: true, data: { ...output, dry_run: true, stopped_before_step: i, reason: "attaching the file starts the upload", page_url: await driver.currentUrl() } };
     }
     const step = templated(raw, params);
     const res = await runOne(driver, step, i, dryRun);

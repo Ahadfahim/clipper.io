@@ -86,20 +86,36 @@ describe("runRecipe", () => {
     expect(d.steps).toEqual([]); // nothing on the page was touched
   });
 
-  it("dry run stops before the publish click and never fetches or attaches the clip", async () => {
+  it("dry run stops at the file (attaching starts the upload) once the file input is there", async () => {
     const d = new FakeDriver();
     const res = await runRecipe(d, RECIPES["youtube.upload_short"]!, params, true);
-    expect(res).toMatchObject({ ok: true, data: { dry_run: true } });
+    expect(res).toMatchObject({ ok: true, data: { dry_run: true, stopped_before_step: 3, reason: "attaching the file starts the upload" } });
+    // Create, Upload videos, then only a check that the file input is there
+    expect(d.steps.map((s) => [s.action, s.check_only ?? false])).toEqual([["click", false], ["click", false], ["attach_file", true]]);
     expect(d.steps.some((s) => s.final)).toBe(false);
     expect(d.fetched).toEqual([]);
     expect(d.files).toEqual([]);
+
+    const missing = new FakeDriver();
+    missing.respond = (s) => (s.action === "attach_file" ? { ok: false, error: "no file input: input[type=file][name=Filedata]" } : { ok: true });
+    expect(await runRecipe(missing, RECIPES["youtube.upload_short"]!, params, true)).toMatchObject({ ok: false, step: 3, error: expect.stringMatching(/no file input/) });
+  });
+
+  it("`unless` skips a step when its param is set (Private instead of Public)", async () => {
+    const visibility = async (extra: Record<string, unknown>) => {
+      const d = new FakeDriver();
+      await runRecipe(d, RECIPES["youtube.upload_short"]!, { ...params, ...extra }, false);
+      return d.steps.filter((s) => /name=(PUBLIC|PRIVATE)/.test(s.selector ?? "")).map((s) => s.selector);
+    };
+    expect(await visibility({})).toEqual(["tp-yt-paper-radio-button[name=PUBLIC]"]);
+    expect(await visibility({ private: true })).toEqual(["tp-yt-paper-radio-button[name=PRIVATE]"]);
   });
 
   it("a failing step returns its index, a screenshot and the simplified DOM", async () => {
     const d = new FakeDriver();
-    d.respond = (s) => (s.action === "click" && s.selector === "#create-icon" ? { ok: false, error: "nothing to click: #create-icon", dom: "<header/>" } : { ok: true });
+    d.respond = (s) => (s.action === "click" && s.selector?.includes("aria-label=Create") ? { ok: false, error: "nothing to click: Create", dom: "<header/>" } : { ok: true });
     const res = await runRecipe(d, RECIPES["youtube.upload_short"]!, params, false);
-    expect(res).toMatchObject({ ok: false, step: 1, error: "nothing to click: #create-icon", screenshot: "data:image/png;base64,AAAA", dom: "<header/>" });
+    expect(res).toMatchObject({ ok: false, step: 1, error: "nothing to click: Create", screenshot: "data:image/png;base64,AAAA", dom: "<header/>" });
   });
 
   it("stops on a challenge and reports it (the core pauses the account)", async () => {

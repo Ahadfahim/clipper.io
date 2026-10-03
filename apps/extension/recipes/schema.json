@@ -73,6 +73,8 @@
         "optional": { "type": "boolean" },
         "final": { "type": "boolean", "description": "the irreversible click (publish/submit); dry runs stop before it" },
         "when": { "type": "string", "description": "run only if this param is set" },
+        "unless": { "type": "string", "description": "skip if this param is set" },
+        "check_only": { "type": "boolean", "description": "attach_file: only check the file input is there (set by dry runs)" },
         "note": { "type": "string" },
         "open_each": { "$ref": "#/$defs/open_each" }
       }

@@ -40,6 +40,7 @@ export function validateRecipe(r: unknown): string[] {
     for (const ref of templateRefs(JSON.stringify(s))) if (!(ref in params)) errs.push(`step ${i}: unknown param {{${ref}}}`);
     for (const f of templateFilters(JSON.stringify(s))) if (!KNOWN_FILTERS.includes(f)) errs.push(`step ${i}: unknown filter |${f}`);
     if (s.when && !(s.when in params)) errs.push(`step ${i}: when refers to unknown param ${s.when}`);
+    if (s.unless && !(s.unless in params)) errs.push(`step ${i}: unless refers to unknown param ${s.unless}`);
   });
   const saved = new Set((x.steps ?? []).map((s) => s.save_as).filter(Boolean));
   for (const key of x.returns ?? []) if (!saved.has(key)) errs.push(`returns ${key} but no step saves it`);

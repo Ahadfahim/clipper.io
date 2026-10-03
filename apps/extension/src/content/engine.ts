@@ -387,9 +387,10 @@ export async function runStep(doc: Document, step: Step, file?: File): Promise<S
       return { ok: true };
     }
     case "attach_file": {
-      if (!file) return { ok: false, error: "no file was sent for attach_file" };
       // file inputs are usually hidden behind a styled button: don't require visibility
       const el = doc.querySelector(step.selector ?? "input[type=file]");
+      if (step.check_only) return el ? { ok: true, data: { file_input: true } } : { ok: false, error: `no file input: ${step.selector}` };
+      if (!file) return { ok: false, error: "no file was sent for attach_file" };
       if (!el) return { ok: false, error: `no file input: ${step.selector}` };
       attachFile(el, file);
       return { ok: true, data: { attached: file.name, bytes: file.size } };

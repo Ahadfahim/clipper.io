@@ -53,6 +53,8 @@ export type Step = {
   optional?: boolean; // a missing element skips the step instead of failing
   final?: boolean; // the irreversible click (publish/submit): skipped in dry run
   when?: string; // run only if this param is truthy
+  unless?: string; // skip if this param is truthy
+  check_only?: boolean; // attach_file in a dry run: only check the file input is there
   note?: string;
   // single actions from the core's browser tools use these names
   kind?: ActionKind;
