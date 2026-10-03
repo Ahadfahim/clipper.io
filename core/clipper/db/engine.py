@@ -46,7 +46,10 @@ def _apply_pragmas(dbapi_conn: Any, _record: Any) -> None:
     cur.close()
 
 
-def make_engine(path: Path) -> Engine:
+def make_engine(path: Path, *, immediate: bool = False) -> Engine:
+    """``immediate=True`` (the writer): every transaction starts with BEGIN IMMEDIATE, so a
+    read-check-write job holds the write lock from its first read. That keeps cap checks atomic even
+    against another process (a stdio MCP server) writing to the same file."""
     path.parent.mkdir(parents=True, exist_ok=True)
     engine = create_engine(
         _sqlite_url(path),
@@ -54,6 +57,16 @@ def make_engine(path: Path) -> Engine:
         poolclass=NullPool,
     )
     event.listen(engine, "connect", _apply_pragmas)
+    if immediate:
+
+        def _no_driver_begin(dbapi_conn: Any, _record: Any) -> None:
+            dbapi_conn.isolation_level = None  # let us emit BEGIN ourselves
+
+        def _begin_immediate(conn: Any) -> None:
+            conn.exec_driver_sql("BEGIN IMMEDIATE")
+
+        event.listen(engine, "connect", _no_driver_begin)
+        event.listen(engine, "begin", _begin_immediate)
     return engine
 
 
@@ -174,12 +187,13 @@ class Database:
 
     def __init__(self, path: Path, *, create: bool = False) -> None:
         self.path = path
-        self.engine = make_engine(path)
         if create:
             from clipper.db.migrate import upgrade_to_head
 
             upgrade_to_head(path)
-        self.writer = WriterQueue(self.engine)
+        self.engine = make_engine(path)
+        self.write_engine = make_engine(path, immediate=True)
+        self.writer = WriterQueue(self.write_engine)
 
     @contextmanager
     def read(self) -> Generator[Session]:
@@ -199,3 +213,4 @@ class Database:
     def close(self) -> None:
         self.writer.close()
         self.engine.dispose()
+        self.write_engine.dispose()

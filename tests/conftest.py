@@ -4,6 +4,7 @@ import os
 import shutil
 from collections.abc import Iterator
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -13,6 +14,10 @@ from clipper.db.engine import Database
 from clipper.events.bus import EventBus
 from clipper.secrets import use_memory_backend
 from clipper.settings import Settings, load_settings
+
+if TYPE_CHECKING:
+    from clipper.core import Core
+    from clipper.tools.base import CallResult, ToolContext
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -68,3 +73,28 @@ def bus(db: Database) -> EventBus:
 @pytest.fixture
 def clock() -> FakeClock:
     return FakeClock()
+
+
+@pytest.fixture
+def core(settings: Settings) -> Iterator[Core]:
+    from clipper.core import Core
+
+    c = Core.create(settings, fakes=True)
+    yield c
+    c.close()
+
+
+def tool_ctx(core: Core, role: str = "developer", **kw: object) -> ToolContext:
+    from clipper.tools.base import ToolContext
+
+    skip = frozenset({"access", "max_turns"}) if role == "developer" else frozenset()
+    return ToolContext(core, role=role, skip_rules=skip, **kw)  # type: ignore[arg-type]
+
+
+async def call(
+    core: Core, server: str, name: str, args: dict[str, object], role: str = "developer", **kw: object
+) -> CallResult:
+    from clipper.tools.base import REGISTRY, call_tool, ensure_loaded
+
+    ensure_loaded()
+    return await call_tool(tool_ctx(core, role, **kw), REGISTRY[server][name], dict(args))

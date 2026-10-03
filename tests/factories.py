@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from clipper.db.engine import Database, WriteTx
@@ -20,6 +20,8 @@ def make_campaign(db: Database, **kw: Any) -> Campaign:
             status=kw.pop("status", "active"),
             **kw,
         )
+        if c.status == "active" and c.taken_at is None:
+            c.taken_at = datetime.now(UTC)
         tx.add(c)
         tx.flush()
         return c

@@ -7,7 +7,7 @@
   - WP0 ✅ Repo scaffold: uv + pnpm workspaces, ruff/pyright(strict core)/pytest, eslint/tsc/vitest/Playwright, settings example, justfile, CI
   - WP1 ✅ Data layer: 30 SQLModel tables (PLAN §9 + additions), Alembic 0001, WAL, single writer queue, typed event bus, leases, atomic cap check
   - WP2 ✅ Guardrails: 15 pure PreToolUse rules + SDK hook adapters, 71 table-driven cases, DB context, blocked calls logged
-  - WP3 ❌ MCP tool servers
+  - WP3 ✅ MCP tools: 13 servers + `clipper` umbrella (93 tools), typed args, readOnlyHint, guard in every call path, adapters with fakes (marketplace, publish, browser bridge, transcriber, encoder, downloader, faces, OCR, trends), durable job queue, stdio entry
   - WP4 ✅ EDL engine: schema, 13 pure ops, renderer (eased crop/split/fit/zoom/progress bar/two-pass loudnorm), ASS captions with safe zones + face avoidance, QA checks, EdlService (edit_op log, undo by replay, locks, variants), golden renders
   - WP5 ❌ Supervisor and agent runtime
   - WP6 ❌ API
@@ -15,7 +15,7 @@
   - WP8 ❌ Discord bot
   - WP9 ❌ Companion extension
 - Test status:
-  - `uv run pytest -q` → 150 passed (golden renders need ffmpeg on PATH)
+  - `uv run pytest -q` → 206 passed (golden renders need ffmpeg on PATH)
   - `uv run ruff check . && uv run pyright` → clean
   - `pnpm -r run lint && pnpm -r run typecheck && pnpm -r run test` → clean, 2 passed
   - `just screenshots` → 4 passed (placeholder shell)
@@ -56,6 +56,16 @@ just test
 - `core/clipper/agents/guard_context.py`: `DbGuardContext` (facts from SQLite) and `make_block_logger()` (agent_event `blocked` + `agent.event`).
 - `core/clipper/rules/urls.py` (YouTube/TikTok canonical ids, lookalike-safe domain matching), `core/clipper/rules/spec.py` (`ClipSpec`).
 
+### WP3
+- `core/clipper/core.py`: `Core` (settings, DB, bus, guard, adapters, services, jobs). `Core.create(settings, fakes=True)` for tests/fixtures; `Adapters.real(settings)` wires the Windows adapters (LOCAL-VERIFY).
+- `core/clipper/tools/base.py`: `@tool(server, name, description, ArgsModel)`, `ToolContext`, `call_tool()` (validate -> guard -> handler -> small JSON result, images for frames -> `agent_event`), `sdk_server()` (in-process Agent SDK server with `readOnlyHint`), `ToolOutput`.
+- Servers in `core/clipper/tools/`: `state`, `market` (server name `marketplace`), `media`, `review`, `publish`, `browser`, `supervisor`, `notify`, `memory`, `trends`, `insights`, `edit` (generated from the EDL op registry), `agenda`, `clipper_server` (umbrella `clipper`). Catalog + access matrix: `core/clipper/agents/access.py`.
+- `core/clipper/tools/stdio.py`: `clipper mcp <server>` (umbrella for Claude Desktop/Code; dev servers for calling tools by hand). Set `CLIPPER_FAKES=1` to run against fakes.
+- Services (`core/clipper/services/`): campaigns (upsert, take/skip, spec, budget run-out prediction), media (sources, paged transcript, signals, frames, contact sheet, OCR, moments, renders), review (batches, decisions, approve-all >= N, reject rest, ship, re-cut, captions, auto-approve offer), publishing (schedule under the cap lock, due-post runner, challenge -> pause account + alert, metrics), market (adapters, fenced untrusted pages, joins, submissions, earnings), toggles (PLAN §15.2 effects + switch-on checks), notify (alerts, ask_user, answers, ntfy), memory, agenda + notes, wakeups, usage, insights (read-only), trends.
+- Adapters: `marketplaces/{base,fake,browser}.py`, `publishing/{base,fake,browser}.py`, `browser/{protocol,bridge}.py` (`CompanionBridge` WS server: pairing token, origin check, one action per profile, timeouts), `media/{transcribe,download,faces,ocr}.py` (+ `media/gpu_scripts/whisperx_transcribe.py`), `trends/source.py`.
+- `core/clipper/worker/{jobs,handlers}.py`: durable job queue (`job` table, recover on start, per-resource limits) and handlers `download`, `analyze`, `render_preview` (review preview + QA + Discord size fit), `render_final`.
+- Writes use `BEGIN IMMEDIATE`, so cap checks stay atomic across processes (tested with two writers on one file).
+
 ### WP4 (built before WP3: the `edit` tools sit on it)
 - `core/clipper/media/edl/schema.py`: `Edl` (segments/camera/captions in source time, overlays in output time), `new_edl()`.
 - `core/clipper/media/edl/ops.py`: pure ops `trim`, `split`, `delete_range`, `remove_silences`, `remove_fillers`, `set_layout`, `set_camera_keyframes`, `set_caption_style`, `edit_caption_words`, `emphasize`, `set_hook` (cold open teaser / hook text / none), `add_overlay`, `set_audio`; `apply_op()`, `replay()`, `OPS` registry.
@@ -76,6 +86,12 @@ just test
 - Everything from WP1 on.
 
 ## 6. Decisions and deviations from PLAN.md / UI.md
+- Job queue: a durable `job` table + in-process worker threads instead of Huey. Heavy work already runs in subprocesses (ffmpeg, yt-dlp, WhisperX in its own CUDA env), and an in-process queue lets `job.done` reach the supervisor's event bus without cross-process plumbing. Same limits as PLAN §17.3 (1 transcribe, 3 encodes, 2 downloads).
+- Subagents: the PLAN's *editor* is split into **editor** (picks moments; PLAN §3 job, §16.3 editor row) and **cutter** (EDL edits; the "editor gets all edit ops except render_final + agenda" paragraph), and a **browser-fixer** subagent holds the browser fallback tools. Reason: the 25-tool limit (the Campaign agent alone would need 55) and prompt-injection isolation (browser pages are untrusted; the agent that reads them has no publish/submit tools).
+- Analyst web access goes through the *research* subagent (Agent tool) to stay at 25 tools.
+- `state` gained `get_learning_examples` (PLAN §4) and `set_tuning` (Analyst weights); `clipper` umbrella exposes `set_switch`/`set_paused` to the Director ("read + controls").
+- Added tables: `review_batch`, `kv` (dry run/pause/kill switch/slots), `discord_ref` (bot message ids), `recipe_run` (Recipes tab). Toggle change log = `toggles.changed` events.
+- WhisperX runs in a separate CUDA env as a subprocess (keeps torch out of the core env; matches the verified `C:\ClipperData\envs\gpucheck` setup).
 - Python package lives at `core/clipper/` (import name `clipper`) instead of directly in `core/`, so the import name works with uv/hatch editable installs and pyright on Windows without symlinks.
 
 ## 7. Interfaces the local side must implement or finish

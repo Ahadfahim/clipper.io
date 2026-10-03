@@ -166,3 +166,41 @@ def test_cap_race_two_agents_cannot_take_the_last_slot(db: Database, settings: S
     with db.read() as s:
         rows = s.exec(select(Post).where(col(Post.account_id) == acct_id)).all()
     assert len(rows) == 3
+
+
+def test_cap_race_across_two_writer_processes(db: Database, settings: Settings) -> None:
+    """Two Database objects on one file stand in for two processes (e.g. a stdio MCP server)."""
+    camp = make_campaign(db)
+    assert camp.id is not None
+    src = make_source(db, camp.id)
+    assert src.id is not None
+    clip = make_clip(db, camp.id, src.id)
+    acct = make_account(db, daily_cap=3, min_gap_min=0)
+    assert clip.id is not None and acct.id is not None
+    clip_id, acct_id = clip.id, acct.id
+    other = Database(db.path)
+    results: list[Post | CapDecision] = []
+    lock = threading.Lock()
+    start = threading.Barrier(16)
+
+    def agent(i: int) -> None:
+        target = db if i % 2 else other
+        at = NOON + timedelta(minutes=i)
+        start.wait()
+        res = target.write(
+            lambda tx: schedule_post_tx(
+                tx, clip_id=clip_id, account_id=acct_id, scheduled_at=at, settings=settings
+            )
+        )
+        with lock:
+            results.append(res)
+
+    try:
+        threads = [threading.Thread(target=agent, args=(i,)) for i in range(16)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+    finally:
+        other.close()
+    assert sum(isinstance(r, Post) for r in results) == 3

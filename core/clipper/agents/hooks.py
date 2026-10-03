@@ -514,9 +514,11 @@ class Guard:
         self.ctx = ctx
         self.on_block = on_block
 
-    def evaluate(self, call: ToolCall) -> Verdict:
-        """Pure decision (no logging)."""
-        for _name, rule in RULES:
+    def evaluate(self, call: ToolCall, skip: frozenset[str] = frozenset()) -> Verdict:
+        """Pure decision (no logging). ``skip`` names rules already enforced elsewhere for this call path."""
+        for name, rule in RULES:
+            if name in skip:
+                continue
             verdict = rule(call, self.ctx)
             if verdict is not None and not verdict.allowed:
                 return verdict
@@ -526,8 +528,8 @@ class Guard:
             )
         return ALLOW
 
-    def check(self, call: ToolCall) -> Verdict:
-        verdict = self.evaluate(call)
+    def check(self, call: ToolCall, skip: frozenset[str] = frozenset()) -> Verdict:
+        verdict = self.evaluate(call, skip)
         if not verdict.allowed and self.on_block is not None:
             try:
                 self.on_block(call, verdict)

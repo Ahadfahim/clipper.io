@@ -71,6 +71,18 @@ class CampaignUpdated(EventPayload):
     ENTITY_FIELD = "campaign_id"
     campaign_id: int
     fields: list[str] = Field(default_factory=list)
+    budget_left: float | None = None  # sampled every scout run, for the run-out prediction
+
+
+class CampaignCardRequested(EventPayload):
+    """The Scout wants a Take/Skip card in #campaigns (and the dashboard's Needs you)."""
+
+    TYPE = "review.campaign_card"
+    ENTITY = "campaign"
+    ENTITY_FIELD = "campaign_id"
+    campaign_id: int
+    score: float | None
+    reasoning: str
 
 
 class CampaignEnding(EventPayload):
@@ -151,7 +163,7 @@ class ReviewDecided(EventPayload):
     ENTITY_FIELD = "clip_id"
     clip_id: int
     batch_id: int | None
-    decision: Literal["approved", "rejected", "pending"]
+    decision: str  # approved | rejected | pending
     reason: str | None = None
     via: str
     reviewer: str | None = None
@@ -179,6 +191,17 @@ class RecutRequested(EventPayload):
     layout: str | None = None
     note: str | None = None
     via: str = "dashboard"
+
+
+class PreviewReplaced(EventPayload):
+    """A re-rendered clip: Discord swaps the preview in place, the dashboard reloads it."""
+
+    TYPE = "review.preview_replaced"
+    ENTITY = "clip"
+    ENTITY_FIELD = "clip_id"
+    clip_id: int
+    batch_id: int | None
+    preview_path: str | None
 
 
 class CaptionEdited(EventPayload):
@@ -322,6 +345,17 @@ class AgentEventLogged(EventPayload):
     kind: str
     tool: str | None = None
     summary: str = ""
+
+
+class AgentLog(EventPayload):
+    """``state.log_note``: the Campaign agent's running notes, so a fresh session can take over."""
+
+    TYPE = "agent.log"
+    ENTITY = "campaign"
+    ENTITY_FIELD = "campaign_id"
+    campaign_id: int | None
+    session_id: int | None
+    text: str
 
 
 class AgentSessionChanged(EventPayload):

@@ -38,6 +38,7 @@ ignore = [
   "N815",    # camelCase wire fields in protocol models
   "PT018",   # compound asserts are fine
   "ASYNC109", # timeout parameters on small queue helpers are intentional
+  "N818",    # exception names describe the condition (ToolFailure, ProfileNotConnected)
 ]
 
 [tool.ruff.lint.per-file-ignores]

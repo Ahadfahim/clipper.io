@@ -8,7 +8,7 @@ from typing import Literal, Protocol
 
 from clipper.settings import MediaSettings
 
-ProfileName = Literal["proxy", "final"]
+ProfileName = Literal["proxy", "review", "final"]
 
 
 @dataclass(frozen=True)
@@ -27,6 +27,12 @@ def proxy_profile(media: MediaSettings) -> RenderProfile:
     return RenderProfile("proxy", width, height, media.fps, audio_bitrate="96k")
 
 
+def review_profile(media: MediaSettings) -> RenderProfile:
+    """Review preview for Discord and the Review page (720x1280, sized to fit Discord's limit)."""
+    width = round(1280 * media.final_width / media.final_height / 2) * 2
+    return RenderProfile("review", width, 1280, media.fps, audio_bitrate="128k")
+
+
 def final_profile(media: MediaSettings) -> RenderProfile:
     return RenderProfile("final", media.final_width, media.final_height, media.fps, two_pass_loudnorm=True)
 
@@ -43,6 +49,21 @@ class X264Encoder:
     name = "x264"
 
     def video_args(self, profile: RenderProfile) -> list[str]:
+        if profile.name == "review":
+            return [
+                "-c:v",
+                "libx264",
+                "-preset",
+                "veryfast",
+                "-crf",
+                "23",
+                "-pix_fmt",
+                "yuv420p",
+                "-maxrate",
+                "6M",
+                "-bufsize",
+                "12M",
+            ]
         if profile.name == "proxy":
             return [
                 "-c:v",
@@ -72,6 +93,23 @@ class NvencEncoder:
         self.bitrate = bitrate
 
     def video_args(self, profile: RenderProfile) -> list[str]:  # LOCAL-VERIFY
+        if profile.name == "review":
+            return [
+                "-c:v",
+                "h264_nvenc",
+                "-preset",
+                "p3",
+                "-rc",
+                "vbr",
+                "-cq",
+                "23",
+                "-maxrate",
+                "6M",
+                "-bufsize",
+                "12M",
+                "-pix_fmt",
+                "yuv420p",
+            ]
         if profile.name == "proxy":
             return ["-c:v", "h264_nvenc", "-preset", "p1", "-rc", "vbr", "-cq", "32", "-pix_fmt", "yuv420p"]
         return [
