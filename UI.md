@@ -70,7 +70,7 @@ Prototypes: [Clipper.io theme prototypes](https://claude.ai/artifact/DdWqpUC3FyG
 - **Context menus everywhere:** right-click a clip → Approve, Reject, Edit, Re-cut, Open source at timestamp, Copy link. Right-click a campaign → Pause, Open brief, Open in browser, Skip.
 - **Notifications:** Windows toast notifications ("12 clips ready for review", "TikTok account needs you", "Usage limit reached, resuming at 16:10"). No in-app toast clutter.
 - **Tray icon:** Open · Pause all / Resume · Dry run · today's stats · Quit (warns if uploads are in progress). Closing the window minimizes to tray; the agents keep running.
-- **Multiple windows:** Review and Edit can be **popped out into their own windows** (e.g. Review on a second monitor).
+- **Multiple windows:** Review and Edit can be **popped out into their own windows**. The user's setup is a 3440×1440 ultrawide plus a **1080×1920 portrait monitor**: the main window is laid out for the ultrawide (wide grids, panes side by side), and the pop-out Review window has a **portrait layout** (full-height 9:16 player on top, clip list and properties below) that fills the portrait monitor. Windows remember which monitor they were on.
 
 ---
 

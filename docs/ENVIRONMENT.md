@@ -9,7 +9,9 @@ Clipper.io runs on one Windows PC. Code written elsewhere (e.g. a Linux cloud se
 | RAM | 32 GB |
 | GPU | NVIDIA GeForce RTX 5080, 16 GB VRAM (Blackwell; **PyTorch needs CUDA 12.8+ / `cu128` wheels**). Driver 616.56 |
 | NVENC | Yes (RTX 5080). Plan for up to 3 concurrent encode sessions |
-| Project path | `D:\Clipper.io` (data folder `D:\Clipper.io\data`, ~400 GB free on D:) |
+| Project path | `D:\Clipper.io` |
+| Disks | **D: 125 GB (~79 GB free)**, C: 1.6 TB NTFS (~330 GB free), G: 1.6 TB **FAT32** (4 GB file limit, not for media). The data folder must be configurable; default `D:\Clipper.io\data`, but large source videos likely belong on C: (e.g. `C:\ClipperData`). Retention/cleanup matters: a 1h 1080p source ≈ 1–3 GB |
+| Displays | **3440×1440 ultrawide** (main, 240 Hz) + **1080×1920 portrait** (second). Design the main window for the ultrawide; the pop-out **Review window should fit the portrait monitor** (9:16 clips) |
 | Python | 3.13 installed via Miniconda; project pins **3.12** through **uv** (uv 0.12.x installed) |
 | Node | 24.x, npm 11.x (pnpm via corepack) |
 | Rust | cargo 1.96 (for Tauri v2) |
