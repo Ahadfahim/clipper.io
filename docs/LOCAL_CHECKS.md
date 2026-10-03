@@ -40,3 +40,7 @@ uv pip install whisperx torch torchaudio --extra-index-url https://download.pyto
 3. **pyannote diarization models are gated**: the user needs a Hugging Face account, must accept the model terms, and must provide a read token (stored in Windows Credential Manager). This is a setup-wizard step.
 4. `uv python install` couldn't create its version-link junction from the agent sandbox; using the interpreter's full path worked. Probably sandbox-only, but `clipper doctor` should check for it.
 5. Models and environments live on **C:** (`C:\ClipperData`), because D: has only ~79 GB free.
+
+## yt-dlp needs Deno (2026-10-03)
+yt-dlp 2026.x needs a JavaScript runtime for YouTube extraction (Deno by default). Installed with `winget install DenoLand.Deno` (2.9.7); it goes on the user PATH, so start Clipper from a new terminal after installing. `clipper doctor` warns when `deno` isn't found.
+

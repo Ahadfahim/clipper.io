@@ -152,7 +152,15 @@ def check_yt_dlp(settings: Settings) -> CheckResult:
     code, out = _run([settings.paths.yt_dlp, "--version"])
     if code != 0:
         return CheckResult("yt-dlp", "fail", "yt-dlp not found", "Install yt-dlp and keep it updated.")
-    return CheckResult("yt-dlp", "ok", out.strip())
+    # YouTube extraction needs a JavaScript runtime; yt-dlp uses Deno by default
+    if shutil.which("deno") is None:
+        return CheckResult(
+            "yt-dlp",
+            "warn",
+            f"{out.strip()} · no JavaScript runtime: YouTube downloads will fail",
+            "winget install DenoLand.Deno (then restart Clipper so it's on PATH).",
+        )
+    return CheckResult("yt-dlp", "ok", f"{out.strip()} · deno found")
 
 
 def check_gpu_env(settings: Settings) -> CheckResult:
