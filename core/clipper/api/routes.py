@@ -36,6 +36,7 @@ from clipper.rules.spec import ClipSpec
 from clipper.secrets import SECRET_NAMES, get_secret, set_secret
 from clipper.services.base import ServiceError
 from clipper.services.control import set_control
+from clipper.services.recipe_check import CLIP_NAME, run_check_upload
 
 
 def get_core(request: Request) -> Core:
@@ -774,6 +775,21 @@ async def recipe_test(
     )
 
 
+@publishing.post("/recipes/{name}/check-upload", response_model=S.RecipeTestOut)
+async def recipe_check_upload(
+    core: CoreDep, name: str, body: S.CheckUploadIn, profile: str = "main"
+) -> S.RecipeTestOut:
+    """One real upload of a synthetic test clip, always Private, to check an upload recipe past the
+    point a dry run can reach. Only when you ask for it (confirm); see services/recipe_check.py."""
+    try:
+        res = await run_check_upload(core, name, profile)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.RecipeTestOut(
+        ok=res.ok, detail=res.error, data=res.data, step=res.step, challenge=res.challenge, dom=res.dom
+    )
+
+
 # ---------------------------------------------------------------- earnings
 
 
@@ -938,6 +954,14 @@ def upload_file(core: CoreDep, post_id: int) -> FileResponse:
     return FileResponse(
         _allowed_file(core, clip.path if clip else None), filename=f"clip_{post.clip_id if post else 0}.mp4"
     )
+
+
+@files.get("/recipe-check/{name}")
+def recipe_check_file(core: CoreDep, name: str) -> FileResponse:
+    """The synthetic test clip for a recipe check upload (nothing else is served from here)."""
+    if name != CLIP_NAME:
+        raise HTTPException(404, "no such file")
+    return FileResponse(_allowed_file(core, str(core.dir("recipe_checks") / CLIP_NAME)), filename=CLIP_NAME)
 
 
 @files.get("/screenshot/{run_id}")

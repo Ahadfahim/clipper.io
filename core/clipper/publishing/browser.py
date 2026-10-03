@@ -16,12 +16,14 @@ class BrowserPublisher:
     def __init__(self, bridge: BrowserBridge, settings: Settings, file_url: str) -> None:
         self.bridge = bridge
         self.settings = settings
-        self.file_url = file_url  # e.g. http://127.0.0.1:8765/api/files/clip/{clip_id}/final
+        self.file_url = file_url  # http://127.0.0.1:8765/api/files/upload/{post_id}
 
     async def upload(self, req: UploadRequest) -> UploadResult:  # LOCAL-VERIFY
         recipe = RECIPES[req.platform]
+        if req.post_id is None:
+            return UploadResult(ok=False, error="upload request without a post id: no clip to send")
         params: dict[str, Any] = {
-            "file_url": self.file_url,
+            "file_url": self.file_url.format(post_id=req.post_id),
             "file_name": req.video.name,
             "title": req.title,
             "caption": req.caption,

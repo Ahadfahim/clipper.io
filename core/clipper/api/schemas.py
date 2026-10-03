@@ -133,6 +133,12 @@ class RecipeTestIn(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
+class CheckUploadIn(BaseModel):
+    """A real upload of a synthetic test clip, as Private, to check an upload recipe end to end."""
+
+    confirm: Literal[True]
+
+
 class RecipeTestOut(OkOut):
     """A dry-run recipe test: what the recipe returned, or where it stopped and what the page showed."""
 

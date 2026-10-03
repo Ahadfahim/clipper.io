@@ -197,6 +197,7 @@ class PublishingService(Service):
             title=copy.get("title", ""),
             caption=copy.get("caption", ""),
             hashtags=[t for t in copy.get("hashtags", "").split() if t.startswith("#")],
+            post_id=post.id,
         )
         try:
             res = await self.core.adapters.publisher.upload(req)

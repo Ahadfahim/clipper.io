@@ -20,6 +20,7 @@ class UploadRequest:
     hashtags: list[str] = field(default_factory=lambda: [])
     schedule_at: datetime | None = None  # None = publish now
     dry_run: bool = False
+    post_id: int | None = None  # the extension fetches the clip from /api/files/upload/<post_id>
 
 
 @dataclass(frozen=True)

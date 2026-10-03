@@ -692,6 +692,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/files/recipe-check/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recipe Check File
+         * @description The synthetic test clip for a recipe check upload (nothing else is served from here).
+         */
+        get: operations["recipe_check_file_api_files_recipe_check__name__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/files/screenshot/{run_id}": {
         parameters: {
             query?: never;
@@ -929,6 +949,27 @@ export interface paths {
         get: operations["recipes_api_publishing_recipes_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/publishing/recipes/{name}/check-upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Recipe Check Upload
+         * @description One real upload of a synthetic test clip, always Private, to check an upload recipe past the
+         *     point a dry run can reach. Only when you ask for it (confirm); see services/recipe_check.py.
+         */
+        post: operations["recipe_check_upload_api_publishing_recipes__name__check_upload_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1715,6 +1756,17 @@ export interface components {
              * @enum {string}
              */
             via: "dashboard" | "discord" | "ctrl+k";
+        };
+        /**
+         * CheckUploadIn
+         * @description A real upload of a synthetic test clip, as Private, to check an upload recipe end to end.
+         */
+        CheckUploadIn: {
+            /**
+             * Confirm
+             * @constant
+             */
+            confirm: true;
         };
         /** ClipDetail */
         ClipDetail: {
@@ -4173,6 +4225,37 @@ export interface operations {
             };
         };
     };
+    recipe_check_file_api_files_recipe_check__name__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     screenshot_api_files_screenshot__run_id__get: {
         parameters: {
             query?: never;
@@ -4637,6 +4720,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecipeHealth"][];
+                };
+            };
+        };
+    };
+    recipe_check_upload_api_publishing_recipes__name__check_upload_post: {
+        parameters: {
+            query?: {
+                profile?: string;
+            };
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CheckUploadIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeTestOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

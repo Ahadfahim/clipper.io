@@ -62,7 +62,7 @@ describe("runRecipe", () => {
     const res = await runRecipe(d, RECIPES["youtube.upload_short"]!, params, false, () => 0.5);
     expect(res.ok).toBe(true);
     expect(res.data["post_url"]).toBe("https://youtube.com/shorts/Abc123def45");
-    expect(res.data["recipe_status"]).toBe("UNVERIFIED");
+    expect(res.data["recipe_status"]).toBe("verified"); // checked with a real private upload
     expect(d.navigations).toEqual(["https://studio.youtube.com/"]);
     expect(d.fetched).toEqual(["http://127.0.0.1:8765/api/files/clip/7/final"]);
     expect(d.files[0]).toMatchObject({ name: "clip_7.mp4", size: 1234 });

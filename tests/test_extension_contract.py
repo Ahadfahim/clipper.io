@@ -14,7 +14,9 @@ from clipper.browser.bridge import FakeBrowserBridge
 from clipper.browser.protocol import PROTOCOL_VERSION, RecipeResult, decode_screenshot
 from clipper.marketplaces.browser import RecipeMarketplace, card_from_row
 from clipper.marketplaces.docs import fetch_doc_text
-from clipper.publishing.base import RECIPES
+from clipper.publishing.base import RECIPES, UploadRequest
+from clipper.publishing.browser import BrowserPublisher
+from clipper.settings import Settings
 
 EXT = Path(__file__).resolve().parents[1] / "apps" / "extension"
 
@@ -184,6 +186,27 @@ async def test_whop_campaign_detail_reads_the_linked_rules_doc() -> None:
 async def test_only_google_docs_are_fetched() -> None:
     assert await fetch_doc_text("https://example.com/rules") is None
     assert await fetch_doc_text("https://docs.google.com/spreadsheets/d/abc") is None
+
+
+async def test_the_publisher_sends_the_posts_own_clip_url(settings: Settings) -> None:
+    bridge = FakeBrowserBridge(
+        recipes={
+            "youtube.upload_short": RecipeResult(ok=True, data={"post_url": "https://youtube.com/shorts/abc"})
+        }
+    )
+    pub = BrowserPublisher(bridge, settings, file_url="http://127.0.0.1:8765/api/files/upload/{post_id}")
+    req = UploadRequest(
+        platform="youtube",
+        account_id=1,
+        handle="@me",
+        chrome_profile="main",
+        video=Path("clip_7.mp4"),
+        post_id=42,
+    )
+    assert (await pub.upload(req)).url == "https://youtube.com/shorts/abc"
+    assert bridge.calls[-1][2]["file_url"] == "http://127.0.0.1:8765/api/files/upload/42"
+    missing = await pub.upload(UploadRequest("youtube", 1, "@me", "main", Path("x.mp4")))
+    assert not missing.ok and "post id" in (missing.error or "")
 
 
 def test_screenshots_decode_as_jpeg_or_png() -> None:

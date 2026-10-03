@@ -1210,6 +1210,21 @@
     "title": "ChatIn",
     "type": "object"
    },
+   "CheckUploadIn": {
+    "description": "A real upload of a synthetic test clip, as Private, to check an upload recipe end to end.",
+    "properties": {
+     "confirm": {
+      "const": true,
+      "title": "Confirm",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "confirm"
+    ],
+    "title": "CheckUploadIn",
+    "type": "object"
+   },
    "ClipDetail": {
     "properties": {
      "clip": {
@@ -6584,6 +6599,47 @@
     ]
    }
   },
+  "/api/files/recipe-check/{name}": {
+   "get": {
+    "description": "The synthetic test clip for a recipe check upload (nothing else is served from here).",
+    "operationId": "recipe_check_file_api_files_recipe_check__name__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {}
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Recipe Check File",
+    "tags": [
+     "files"
+    ]
+   }
+  },
   "/api/files/screenshot/{run_id}": {
    "get": {
     "operationId": "screenshot_api_files_screenshot__run_id__get",
@@ -7240,6 +7296,69 @@
      }
     },
     "summary": "Recipes",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/recipes/{name}/check-upload": {
+   "post": {
+    "description": "One real upload of a synthetic test clip, always Private, to check an upload recipe past the\npoint a dry run can reach. Only when you ask for it (confirm); see services/recipe_check.py.",
+    "operationId": "recipe_check_upload_api_publishing_recipes__name__check_upload_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "name",
+      "required": true,
+      "schema": {
+       "title": "Name",
+       "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "profile",
+      "required": false,
+      "schema": {
+       "default": "main",
+       "title": "Profile",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/CheckUploadIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RecipeTestOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Recipe Check Upload",
     "tags": [
      "publishing"
     ]
