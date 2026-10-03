@@ -14,8 +14,9 @@ use tauri::{Emitter, Manager, WindowEvent};
 
 pub const MAIN: &str = "main";
 
-/// Pop-outs are labelled per batch/clip (`review-12`); they share one remembered size and position,
-/// so the Review window keeps opening on the portrait monitor.
+/// Pop-outs are labelled per batch/clip (`review-12`); they share one remembered size and position.
+/// Review pop-outs are then placed on the portrait monitor explicitly (`commands::place_popout`),
+/// because the plugin didn't restore their position on Windows.
 fn window_state_key(label: &str) -> &str {
     if label.starts_with("review-") {
         "review-popout"

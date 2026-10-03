@@ -1,6 +1,9 @@
 //! Commands the web layer calls through `invoke` (src/lib/tauri.ts). Each is a no-op in a browser.
 
-use tauri::{AppHandle, Manager, WebviewUrl, WebviewWindowBuilder};
+use tauri::{
+    AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder,
+};
 use tauri_plugin_autostart::ManagerExt as _;
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_opener::OpenerExt;
@@ -24,8 +27,8 @@ fn accent_impl() -> Option<String> {
     None
 }
 
-/// Pop Review or Edit out into its own window. Review opens in a portrait layout sized for the
-/// 1080×1920 monitor; the window remembers its monitor and size (window-state plugin).
+/// Pop Review or Edit out into its own window. Review opens on the portrait monitor when there is
+/// one (`place_popout`); Edit keeps its remembered size (window-state plugin), kept on screen.
 #[tauri::command]
 pub async fn pop_out(app: AppHandle, kind: String, id: u32, path: String) -> Result<(), String> {
     if kind != "review" && kind != "edit" {
@@ -50,13 +53,45 @@ pub async fn pop_out(app: AppHandle, kind: String, id: u32, path: String) -> Res
     } else {
         format!("Clipper — Edit clip {id}")
     };
-    WebviewWindowBuilder::new(&app, label, WebviewUrl::App(path.into()))
+    let win = WebviewWindowBuilder::new(&app, label, WebviewUrl::App(path.into()))
         .title(title)
         .inner_size(w, h)
         .min_inner_size(720.0, 760.0)
+        .visible(false)
         .build()
-        .map(|_| ())
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    place_popout(&win, &kind);
+    win.show().map_err(|e| e.to_string())?;
+    win.set_focus().map_err(|e| e.to_string())
+}
+
+/// Review is a 9:16 workspace, so it fills a portrait monitor when one is attached (UI.md §2: the
+/// user's second screen is 1080×1920). Any other pop-out is kept fully on the monitor it opened on;
+/// a 1880 px tall Review window used to run off a 1440 px tall screen.
+fn place_popout(win: &WebviewWindow, kind: &str) {
+    if kind == "review" {
+        if let Ok(monitors) = win.available_monitors() {
+            if let Some(m) = monitors.iter().find(|m| m.size().height > m.size().width) {
+                let _ = win.set_position(m.work_area().position);
+                let _ = win.maximize();
+                return;
+            }
+        }
+    }
+    let (Ok(Some(m)), Ok(inner), Ok(outer)) =
+        (win.current_monitor(), win.inner_size(), win.outer_size())
+    else {
+        return;
+    };
+    let area = m.work_area();
+    let frame_w = outer.width.saturating_sub(inner.width);
+    let frame_h = outer.height.saturating_sub(inner.height);
+    let w = inner.width.min(area.size.width.saturating_sub(frame_w));
+    let h = inner.height.min(area.size.height.saturating_sub(frame_h));
+    let x = area.position.x + (area.size.width.saturating_sub(w + frame_w) / 2) as i32;
+    let y = area.position.y + (area.size.height.saturating_sub(h + frame_h) / 2) as i32;
+    let _ = win.set_size(PhysicalSize::new(w, h));
+    let _ = win.set_position(PhysicalPosition::new(x, y));
 }
 
 /// Windows toast ("12 clips ready for review", "TikTok account needs you").
