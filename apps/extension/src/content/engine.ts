@@ -159,13 +159,32 @@ const VERIFY_TEXT = [
 ];
 const LOGIN_URL = /\/(login|signin|sign-in|accounts\/login|i\/flow\/login|ServiceLogin)\b/i;
 const CHALLENGE_URL = /\/(challenge|checkpoint|captcha)\b/i;
+const NO_TEXT = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "SVG"]);
+
+/** The page's readable text, without inline script/style payloads. `body.textContent` includes
+ * those, and on sites that inline their state as JSON (Instagram) the real text starts past any
+ * sensible cut-off, while words like "two-factor" inside the JSON look like a verification screen. */
+export function pageText(doc: Document, max = 20_000): string {
+  if (!doc.body) return "";
+  const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, {
+    acceptNode: (n) =>
+      n.nodeType === Node.ELEMENT_NODE && (NO_TEXT.has((n as Element).tagName.toUpperCase()) || (n as HTMLElement).hidden)
+        ? NodeFilter.FILTER_REJECT
+        : NodeFilter.FILTER_ACCEPT,
+  });
+  let out = "";
+  for (let n = walker.nextNode(); n && out.length < max; n = walker.nextNode()) {
+    if (n.nodeType === Node.TEXT_NODE) out += ` ${n.nodeValue ?? ""}`;
+  }
+  return norm(out).slice(0, max);
+}
 
 /** Detects a CAPTCHA, "verify it's you" or login wall. Never interacts with it. */
 export function detectChallenge(doc: Document, url: string = doc.location?.href ?? ""): Challenge | null {
   const frames = [...doc.querySelectorAll("iframe")].map((f) => (f.getAttribute("src") ?? "").toLowerCase());
   if (frames.some((src) => CAPTCHA_FRAMES.some((k) => src.includes(k)))) return "captcha";
   if (CAPTCHA_SELECTORS.some((s) => findAll(doc, s).length > 0)) return "captcha";
-  const text = norm(doc.body?.textContent).slice(0, 20_000);
+  const text = pageText(doc);
   let path = "";
   try {
     path = new URL(url).pathname;

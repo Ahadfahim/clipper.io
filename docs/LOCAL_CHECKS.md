@@ -44,3 +44,10 @@ uv pip install whisperx torch torchaudio --extra-index-url https://download.pyto
 ## yt-dlp needs Deno (2026-10-03)
 yt-dlp 2026.x needs a JavaScript runtime for YouTube extraction (Deno by default). Installed with `winget install DenoLand.Deno` (2.9.7); it goes on the user PATH, so start Clipper from a new terminal after installing. `clipper doctor` warns when `deno` isn't found.
 
+
+## Companion extension: Chrome keeps a stale service worker (2026-10-03)
+Chrome kept running an old build of the Companion's service worker across rebuilds **and** browser restarts (it serves it from `<profile>\Default\Service Worker\ScriptCache`). Restarting Chrome didn't refresh it, and neither did a manifest version change. The content script did update, because it's injected from disk each time, which made this confusing.
+- Normal flow: `just build` in `apps/extension`, then `POST /api/browser/profiles/main/extension/reload`. The extension calls `chrome.runtime.reload()`, which re-registers the worker from disk. Each build has its own version (`0.1.<day>.<slot>`, from `build.mjs`), and the core log prints it on connect (`Companion main connected (extension 0.1.275.35140)`): check it after every reload.
+- If the log still shows the old build (only possible with a build older than the reload handler): close the Clipper Chrome, rename `C:\ClipperData\chrome\main\Default\Service Worker` aside, and let Clipper relaunch Chrome. Logins (cookies) are untouched. Or click ↻ on Clipper Companion in `chrome://extensions`.
+- Clipper's Chrome ignores a plain close request (`taskkill` without `/F`) while its windows are hidden. Show it first.
+- Two Companions connected as the same profile replace each other on every retry (core log: `disconnected (code 4409 ...)` every 2 s), and each replacement drops the running request. The worker now starts one bridge only, and a replaced bridge stops retrying.

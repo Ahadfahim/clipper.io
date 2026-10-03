@@ -154,3 +154,43 @@ describe("runRecipe", () => {
     expect((await runRecipe(d, recipe, {}, false)).ok).toBe(true);
   });
 });
+
+describe("a page that navigates in the middle of a step", () => {
+  const gone = () => {
+    throw new Error("A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received");
+  };
+
+  it("reports the login wall it redirected to", async () => {
+    const d = new FakeDriver();
+    d.url = "https://www.tiktok.com/tiktokstudio/upload";
+    d.respond = gone;
+    d.challengeAfterNavigate = "login";
+    const res = await runOne(d, { action: "wait_for", selector: "input[type=file]" }, 0, false);
+    expect(res).toMatchObject({ ok: false, challenge: "login" });
+    expect(d.steps).toHaveLength(1);
+  });
+
+  it("retries a read-only step once on the new page", async () => {
+    const d = new FakeDriver();
+    let calls = 0;
+    d.respond = () => (++calls === 1 ? gone() : { ok: true });
+    expect((await runOne(d, { action: "wait_for", selector: "main" }, 0, false)).ok).toBe(true);
+    expect(d.steps).toHaveLength(2);
+  });
+
+  it("never repeats a click", async () => {
+    const d = new FakeDriver();
+    d.respond = gone;
+    const res = await runOne(d, { action: "click", selector: "#post" }, 0, false);
+    expect(res).toMatchObject({ ok: false, error: expect.stringMatching(/not repeating it/) });
+    expect(d.steps).toHaveLength(1);
+  });
+
+  it("still surfaces other errors", async () => {
+    const d = new FakeDriver();
+    d.respond = () => {
+      throw new Error("Cannot access contents of the page");
+    };
+    await expect(runOne(d, { action: "query", selector: "a" }, 0, false)).rejects.toThrow(/Cannot access/);
+  });
+});

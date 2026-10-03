@@ -7,7 +7,7 @@ import json
 import re
 from pathlib import Path
 
-from clipper.browser.protocol import PROTOCOL_VERSION
+from clipper.browser.protocol import PROTOCOL_VERSION, decode_screenshot
 from clipper.marketplaces.browser import card_from_row
 from clipper.publishing.base import RECIPES
 
@@ -70,7 +70,23 @@ def test_scraped_rows_are_normalized() -> None:
     assert card.allowed_platforms == ["youtube", "tiktok", "instagram"]
     assert card.join == "free" and card.cpm_usd == 2.5
     assert card_from_row("whop", {"id": "x", "join": "Joined"}).join == "joined"
-    assert card_from_row("whop", {"id": "x", "join": "Join · $29"}).join == "paid"
+    assert card_from_row("whop", {"id": "x", "join": "Join Â· $29"}).join == "paid"
     assert card_from_row("vyro", {"id": "x", "platforms": ["youtube", "myspace"]}).allowed_platforms == [
         "youtube"
     ]
+
+
+def test_screenshots_decode_as_jpeg_or_png() -> None:
+    import base64
+
+    jpeg = b"\xff\xd8\xff\xe0jpeg"
+    assert decode_screenshot("data:image/jpeg;base64," + base64.b64encode(jpeg).decode()) == (jpeg, ".jpg")
+    assert decode_screenshot("data:image/png;base64," + base64.b64encode(b"png").decode()) == (b"png", ".png")
+    for bad in (
+        None,
+        "",
+        "data:image/png;base64,",
+        "data:text/html;base64,PGI+",
+        "data:image/png;base64,***",
+    ):
+        assert decode_screenshot(bad) is None

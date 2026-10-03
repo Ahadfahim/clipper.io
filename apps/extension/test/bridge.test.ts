@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CompanionBridge, type SocketLike } from "../src/background/bridge";
+import { CompanionBridge, RELOAD_GRACE_MS, type SocketLike } from "../src/background/bridge";
 import type { TabDriver } from "../src/background/runner";
 import { RECIPES } from "../src/background/recipes";
 import { PROTOCOL_VERSION } from "../src/shared/protocol";
@@ -120,6 +120,59 @@ describe("CompanionBridge", () => {
     sockets[2]!.close(4401, "bad pairing token");
     expect(b.state).toBe("bad-token");
     expect(sockets).toHaveLength(3);
+  });
+
+  it("doesn't take the link back after another Chrome with the same profile replaced it", () => {
+    const sockets: FakeSocket[] = [];
+    const b = new CompanionBridge({
+      url: "ws://127.0.0.1:8766",
+      profile: "main",
+      token: "t",
+      recipes: RECIPES,
+      driver: driver([]),
+      makeSocket: (u) => {
+        const s = new FakeSocket(u);
+        sockets.push(s);
+        return s;
+      },
+      schedule: (fn) => fn(),
+    });
+    b.start();
+    sockets[0]!.close(4409, "replaced by a new connection");
+    expect(b.state).toBe("replaced");
+    expect(sockets).toHaveLength(1);
+  });
+
+  it("reloads after the running action, or after a grace period if it hangs", async () => {
+    const sockets: FakeSocket[] = [];
+    const timers: [() => void, number][] = [];
+    let reloads = 0;
+    const stuck = driver([]);
+    stuck.step = () => new Promise(() => undefined); // never answers
+    const b = new CompanionBridge({
+      url: "ws://127.0.0.1:8766",
+      profile: "main",
+      token: "t",
+      recipes: RECIPES,
+      driver: stuck,
+      makeSocket: (u) => {
+        const s = new FakeSocket(u);
+        sockets.push(s);
+        return s;
+      },
+      onReload: () => void reloads++,
+      schedule: (fn, ms) => void timers.push([fn, ms]),
+    });
+    b.start();
+    sockets[0]!.open();
+    sockets[0]!.receive({ type: "action", id: "a1", action: { kind: "click", selector: "#x" } });
+    sockets[0]!.receive({ type: "reload" });
+    await settle();
+    expect(reloads).toBe(0);
+    const grace = timers.find(([, ms]) => ms === RELOAD_GRACE_MS)!;
+    grace[0]();
+    await settle();
+    expect(reloads).toBe(1);
   });
 
   it("only ever connects to the local core", () => {

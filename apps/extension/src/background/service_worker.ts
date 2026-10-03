@@ -10,6 +10,7 @@ type Config = { profile: string; token: string; port: number };
 
 let bridge: CompanionBridge | null = null;
 let state: { state: BridgeState; detail?: string } = { state: "idle" };
+let generation = 0;
 
 async function loadConfig(): Promise<Config | null> {
   const c = (await chrome.storage.local.get(["profile", "token", "port"])) as Partial<Config>;
@@ -18,9 +19,14 @@ async function loadConfig(): Promise<Config | null> {
 }
 
 async function start(): Promise<void> {
+  // start() runs from several places at once (worker boot, onStartup, the keepalive alarm). Only the
+  // latest call may connect: two bridges for one profile make the core replace one with the other on
+  // every retry, and each replacement drops whatever request was running.
+  const mine = ++generation;
+  const cfg = await loadConfig();
+  if (mine !== generation) return;
   bridge?.stop();
   bridge = null;
-  const cfg = await loadConfig();
   if (!cfg) {
     state = { state: "idle", detail: "Not paired yet: open the Companion options and paste the token." };
     return;

@@ -30,6 +30,7 @@ export type BridgeOptions = {
 };
 
 const OPEN = 1;
+export const RELOAD_GRACE_MS = 15_000;
 
 export class CompanionBridge {
   private socket: SocketLike | null = null;
@@ -80,8 +81,10 @@ export class CompanionBridge {
       this.socket = null;
       if (ev.code === 4401) return this.set("bad-token", "The pairing token was refused. Paste the token from Clipper → Settings → Accounts and browser.");
       if (ev.code === 4426) return this.set("protocol", ev.reason);
-      if (ev.code === 4409) this.set("replaced", "Another window of this profile connected.");
-      else this.set("idle");
+      // replaced = another Chrome uses this profile name and is connected now; reconnecting would
+      // just take the link back from it, so both would keep dropping each other's requests
+      if (ev.code === 4409) return this.set("replaced", "Another Chrome with this profile name connected. Give each Chrome its own profile name.");
+      this.set("idle");
       this.retry();
     };
     ws.onerror = () => undefined;
@@ -115,10 +118,14 @@ export class CompanionBridge {
         // one action at a time per profile: queue behind whatever is running
         this.chain = this.chain.then(() => this.execute(msg)).catch(() => undefined);
         return;
-      case "reload":
-        // the core rebuilt the extension (new recipes): reload once the running action is done
-        this.chain = this.chain.then(() => this.o.onReload?.()).catch(() => undefined);
+      case "reload": {
+        // the core rebuilt the extension (new recipes): reload once the running action is done, or
+        // after a grace period if it hangs (a stuck action is one reason to reload)
+        const done = this.chain.catch(() => undefined);
+        const grace = new Promise<void>((r) => (this.o.schedule ?? setTimeout)(r, RELOAD_GRACE_MS));
+        void Promise.race([done, grace]).then(() => this.o.onReload?.());
         return;
+      }
     }
   }
 

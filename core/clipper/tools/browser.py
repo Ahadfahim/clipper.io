@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from clipper.browser.protocol import decode_screenshot
 from clipper.services.control import read_control
 from clipper.tools.base import ToolContext, ToolFailure, ToolOutput, tool
 
@@ -45,11 +46,11 @@ async def snapshot(ctx: ToolContext, a: Profile) -> ToolOutput:
     res = await ctx.core.adapters.browser.action(a.profile, {"kind": "snapshot"})
     data = {"url": res.data.get("url"), "dom": (res.dom or "")[:6000], "note": UNTRUSTED}
     images: list[Path] = []
-    if res.screenshot and res.screenshot.startswith("data:image/png;base64,") and len(res.screenshot) > 40:
-        import base64
-
-        path = ctx.core.dir("screenshots") / f"snapshot_{a.profile}.png"
-        path.write_bytes(base64.b64decode(res.screenshot.split(",", 1)[1]))
+    shot = decode_screenshot(res.screenshot)
+    if shot is not None:
+        raw, suffix = shot
+        path = ctx.core.dir("screenshots") / f"snapshot_{a.profile}{suffix}"
+        path.write_bytes(raw)
         images.append(path)
     return ToolOutput(data, images)
 

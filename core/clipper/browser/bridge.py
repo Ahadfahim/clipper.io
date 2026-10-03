@@ -112,6 +112,8 @@ class _Peer:
 
 
 EXTENSION_ORIGIN = re.compile(r"chrome-extension://[a-p]{32}")
+# a result carries a screenshot (JPEG, normally well under 1 MB) and a simplified DOM
+MAX_MESSAGE_BYTES = 64 * 2**20
 
 
 class CompanionBridge:
@@ -145,7 +147,7 @@ class CompanionBridge:
             self.host,
             self.port,
             origins=[EXTENSION_ORIGIN, None],
-            max_size=16 * 2**20,
+            max_size=MAX_MESSAGE_BYTES,
         )
         sock = next(iter(self._server.sockets))
         self.port = int(sock.getsockname()[1])
@@ -187,6 +189,7 @@ class CompanionBridge:
                 await old.conn.close(code=4409, reason="replaced by a new connection")
         peer = _Peer(hello.profile, conn, hello.url)
         self._peers[hello.profile] = peer
+        log.info("Companion %s connected (extension %s)", hello.profile, hello.version)
         await conn.send(
             json.dumps({"type": "welcome", "profile": hello.profile, "protocol": PROTOCOL_VERSION})
         )
@@ -196,6 +199,12 @@ class CompanionBridge:
         except ConnectionClosed:
             pass
         finally:
+            log.info(
+                "Companion %s disconnected (code %s %s)",
+                hello.profile,
+                conn.close_code,
+                conn.close_reason or "",
+            )
             if self._peers.get(hello.profile) is peer:
                 del self._peers[hello.profile]
             for fut in peer.pending.values():

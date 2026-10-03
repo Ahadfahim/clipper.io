@@ -78,6 +78,15 @@ describe("challenge detection (never solved)", () => {
     expect(detectChallenge(document, "https://studio.youtube.com/")).toBe(want);
   });
 
+  it("reads the page's text, not inline script payloads", () => {
+    // Instagram inlines megabytes of JSON before the login form; it also mentions two_factor/"two-factor"
+    const state = `<script type="application/json">${JSON.stringify({ blob: "x".repeat(30_000), flow: "two-factor" })}</script>`;
+    document.body.innerHTML = `${state}<form><input type="password" name="pass"><div role="button">Log in</div></form>`;
+    expect(detectChallenge(document, "https://www.instagram.com/")).toBe("login");
+    document.body.innerHTML = `${state}<main><h1>Home</h1></main><template><p>Verify it's you</p></template>`;
+    expect(detectChallenge(document, "https://www.instagram.com/")).toBeNull();
+  });
+
   it("uses the URL too, and a step refuses to run on a challenge page", async () => {
     document.body.innerHTML = `<main>Hi</main>`;
     expect(detectChallenge(document, "https://www.instagram.com/challenge/abc/")).toBe("verification");

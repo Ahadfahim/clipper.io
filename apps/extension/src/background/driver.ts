@@ -53,18 +53,22 @@ export class ChromeTabDriver implements TabDriver {
 
   async navigate(url: string): Promise<void> {
     const tabId = await this.tab();
-    const before = (await chrome.tabs.get(tabId)).url ?? "";
-    await new Promise<void>((resolve) => {
-      const timer = setTimeout(done, 60_000);
+    // Park the tab on a blank page first. A late redirect of the previous page (TikTok sending the
+    // tab to its login after load) fires "complete" too, and used to be taken for the new page.
+    await this.load(tabId, "about:blank", (t) => t.url === "about:blank", 5_000);
+    await this.load(tabId, url, (t) => t.url !== "about:blank", 60_000);
+  }
+
+  private load(tabId: number, url: string, arrived: (tab: chrome.tabs.Tab) => boolean, timeoutMs: number): Promise<void> {
+    return new Promise<void>((resolve) => {
+      const timer = setTimeout(done, timeoutMs);
       function done() {
         clearTimeout(timer);
         chrome.tabs.onUpdated.removeListener(listener);
         resolve();
       }
-      // A late redirect of the *previous* page also fires "complete"; only count a load once the tab
-      // has left that page (any new URL: the target, or wherever the site redirected it).
       function listener(id: number, info: chrome.tabs.OnUpdatedInfo, tab: chrome.tabs.Tab) {
-        if (id === tabId && info.status === "complete" && (tab.url !== before || before === url)) done();
+        if (id === tabId && info.status === "complete" && arrived(tab)) done();
       }
       chrome.tabs.onUpdated.addListener(listener);
       void chrome.tabs.update(tabId, { url, active: true });
@@ -91,7 +95,9 @@ export class ChromeTabDriver implements TabDriver {
   async screenshot(): Promise<string | null> {
     const t = await chrome.tabs.get(await this.tab());
     try {
-      return await chrome.tabs.captureVisibleTab(t.windowId, { format: "png" });
+      // JPEG: a PNG of a busy page on a big window runs to many MB, and the result travels back to the
+      // core in one WebSocket message
+      return await chrome.tabs.captureVisibleTab(t.windowId, { format: "jpeg", quality: 60 });
     } catch {
       return null; // window minimized or another tab in front
     }

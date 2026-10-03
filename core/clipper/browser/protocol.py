@@ -5,7 +5,7 @@ Mirrored in ``apps/extension/src/shared/protocol.ts``; keep both in sync (PROTOC
 extension -> core
   {"type": "hello", "profile": "main", "token": "<pairing token>", "version": "0.1.0", "protocol": 1, "url": "..."}
   {"type": "result", "id": "<request id>", "ok": true, "data": {...}}
-  {"type": "result", "id": "...", "ok": false, "error": "...", "step": 3, "screenshot": "data:image/png;base64,...",
+  {"type": "result", "id": "...", "ok": false, "error": "...", "step": 3, "screenshot": "data:image/jpeg;base64,...",
    "dom": "<simplified DOM>", "challenge": null | "login" | "captcha" | "verification"}
   {"type": "status", "url": "https://...", "title": "..."}          (active tab changed)
   {"type": "pong"}
@@ -82,3 +82,24 @@ class RecipeResult(_M):
 ActionKind = Literal[
     "navigate", "wait_for", "query", "click", "type", "attach_file", "read_text", "screenshot", "snapshot"
 ]
+
+
+IMAGE_SUFFIX = {"image/png": ".png", "image/jpeg": ".jpg"}
+
+
+def decode_screenshot(data_url: str | None) -> tuple[bytes, str] | None:
+    """``data:image/jpeg;base64,...`` (or png) -> (bytes, ".jpg"); None for anything else or empty."""
+    import base64
+    import binascii
+
+    if not data_url or not data_url.startswith("data:") or ";base64," not in data_url:
+        return None
+    mime, b64 = data_url[5:].split(";base64,", 1)
+    suffix = IMAGE_SUFFIX.get(mime)
+    if suffix is None:
+        return None
+    try:
+        raw = base64.b64decode(b64, validate=True)
+    except (binascii.Error, ValueError):
+        return None
+    return (raw, suffix) if raw else None

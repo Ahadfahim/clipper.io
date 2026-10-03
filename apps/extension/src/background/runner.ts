@@ -45,21 +45,46 @@ async function failure(driver: TabDriver, step: number, error: string, challenge
 /** When to check a freshly opened page for a login/CAPTCHA/verification screen (ms after load). */
 export const SETTLE_CHECKS_MS = [0, 700, 1500, 3000];
 
+/** Single-page apps redirect to a login wall or render it after "load" (TikTok, Instagram), so look
+ * again while the page settles instead of only once. */
+async function settledChallenge(driver: TabDriver): Promise<Challenge | null> {
+  let waited = 0;
+  for (const at of SETTLE_CHECKS_MS) {
+    if (at > waited) await driver.sleep(at - waited);
+    waited = at;
+    const check = await driver.check().catch(() => null); // the page may still be swapping documents
+    if (check?.challenge) return check.challenge;
+  }
+  return null;
+}
+
+// what chrome.tabs.sendMessage throws when the page navigated while the content script was working
+const NAVIGATED = /message channel closed|receiving end does not exist|back\/forward cache|no frame with id|frame .* removed/i;
+const READ_ONLY: ReadonlySet<Step["action"]> = new Set(["wait_for", "query", "read_text"]);
+
+/** Runs a step; if the page navigates underneath it (a redirect to a login wall, an SPA reload),
+ * reports the wall, retries a read-only step once on the new page, and never repeats a click/type. */
+async function stepThroughNavigation(driver: TabDriver, step: Step, fileId?: string): Promise<StepOutcome> {
+  try {
+    return await driver.step(step, fileId);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    if (!NAVIGATED.test(message)) throw e;
+    const challenge = await settledChallenge(driver);
+    if (challenge) return { ok: false, challenge, error: `${challenge} screen: the page redirected to it` };
+    if (!READ_ONLY.has(step.action)) return { ok: false, error: `the page navigated away during ${step.action}; not repeating it` };
+    return driver.step(step, fileId);
+  }
+}
+
 /** Runs one step (recipe or a single `action` from the core's browser tools). */
 export async function runOne(driver: TabDriver, step: Step, index: number, dryRun: boolean): Promise<RunResult & { saved?: unknown }> {
   if (step.final && dryRun) return { ok: true, data: { dry_run: true, stopped_before: step.selector ?? step.text ?? step.action }, step: index };
   if (step.action === "navigate") {
     if (!step.url || !hostAllowed(step.url)) return failure(driver, index, `not allowed: ${step.url} is not on the site allowlist`);
     await driver.navigate(step.url);
-    // Single-page apps redirect to a login wall or render it after "load" (TikTok, Instagram), so
-    // look again while the page settles instead of only once.
-    let waited = 0;
-    for (const at of SETTLE_CHECKS_MS) {
-      if (at > waited) await driver.sleep(at - waited);
-      waited = at;
-      const check = await driver.check();
-      if (check.challenge) return failure(driver, index, `${check.challenge} screen after opening the page`, check.challenge);
-    }
+    const challenge = await settledChallenge(driver);
+    if (challenge) return failure(driver, index, `${challenge} screen after opening the page`, challenge);
     return { ok: true, data: { url: (await driver.currentUrl()) ?? step.url } };
   }
   const url = await driver.currentUrl();
@@ -76,7 +101,7 @@ export async function runOne(driver: TabDriver, step: Step, index: number, dryRu
     fileId = `f${Date.now().toString(36)}${index}`;
     await driver.sendFile(fileId, bytes, step.name || "clip.mp4", mime || "video/mp4");
   }
-  const out = await driver.step(step, fileId);
+  const out = await stepThroughNavigation(driver, step, fileId);
   if (out.challenge) return failure(driver, index, out.error ?? `${out.challenge} screen`, out.challenge, out.dom);
   if (!out.ok) {
     if (step.optional) return { ok: true, data: { skipped: true } };

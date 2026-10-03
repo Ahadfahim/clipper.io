@@ -13,6 +13,7 @@ from typing import Any
 from sqlmodel import col, select
 
 from clipper.agents.hooks import parse_when
+from clipper.browser.protocol import decode_screenshot
 from clipper.db.engine import WriteTx
 from clipper.db.models import Account, Clip, Metric, Post, RecipeRun, Review
 from clipper.db.types import CAP_COUNTED_POST_STATUSES, AccountStatus, ClipStatus, PostStatus
@@ -225,14 +226,11 @@ class PublishingService(Service):
             )
 
     def _save_screenshot(self, data_url: str, name: str) -> str | None:
-        import base64
-
-        if not data_url.startswith("data:image/") or "," not in data_url:
+        shot = decode_screenshot(data_url)
+        if shot is None:
             return None
-        raw = base64.b64decode(data_url.split(",", 1)[1] or "")
-        if not raw:
-            return None
-        path = self.core.dir("screenshots") / f"{name}_{int(self.now().timestamp())}.png"
+        raw, suffix = shot
+        path = self.core.dir("screenshots") / f"{name}_{int(self.now().timestamp())}{suffix}"
         path.write_bytes(raw)
         return str(path)
 
