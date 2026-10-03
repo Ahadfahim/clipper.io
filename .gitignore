@@ -1,0 +1,51 @@
+# data and media
+data/
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.m4a
+!tests/fixtures/**/*.mp4
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# node
+node_modules/
+.pnpm-store/
+apps/*/dist/
+apps/*/.vite/
+playwright-report/
+test-results/
+
+# tauri / rust
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
+
+# local config and secrets
+.env
+.env.*
+!.env.example
+config/settings.toml
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+
+# os / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# claude local
+.claude/settings.local.json
