@@ -967,6 +967,7 @@ def clip_detail(core: Core, clip_id: int) -> S.ClipDetail | None:
             "captions": review.captions_json,
             "via": review.via,
             "reviewer": review.reviewer,
+            "batch_id": review.batch_id,
         }
         if review
         else None,

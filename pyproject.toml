@@ -54,7 +54,7 @@ markers = [
   "ffmpeg: needs ffmpeg/ffprobe on PATH",
   "slow: longer-running media tests",
 ]
-filterwarnings = ["ignore::DeprecationWarning:huey.*"]
+filterwarnings = ["ignore:.audioop. is deprecated:DeprecationWarning"]  # discord.py imports audioop (voice), unused here
 
 [tool.pyright]
 include = ["core/clipper", "apps/bot/clipper_bot", "tests"]

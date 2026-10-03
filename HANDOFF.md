@@ -12,10 +12,10 @@
   - WP5 ✅ Supervisor + agents: slot pool (P0-P3, P0 reserve, usage shrink, rate-limit pause/auto-resume, daily cap), event -> resume routing with merging, wakeups, watchdog, triggers, kill switch; agent definitions (setting_sources=[], dontAsk, per-role effort/max_turns, claude-opus-5-5); real prompts; SdkAgentRunner + FakeAgentRunner; end-to-end dry-run test
   - WP6 ✅ API: FastAPI REST (70 paths) + WebSocket `/api/ws` on 127.0.0.1 (Host/Origin checks), fixture mode with a seeded demo DB, OpenAPI → typed TS client, static fixture export for the UI
   - WP7 ✅ Desktop UI: utility-style shell (menu bar, toolbar with switch checkboxes, tree, resizable panes, docked output panel, status bar, Ctrl+K with `>` Director), all screens + Settings dialog + setup wizard + /dev/gallery on fixture data, live WebSocket updates, 26 vitest + 10 Playwright flows, 70 screenshots in docs/screenshots; Tauri v2 shell (native menu, tray, toasts, autostart, single instance, pop-outs, Mica, sidecar) `cargo check`ed for Linux and Windows
-  - WP8 ❌ Discord bot
+  - WP8 ✅ Discord bot: persistent DynamicItem components (stable custom_ids), campaign cards, forum review batches with pinned summary, reason picker, caption and re-cut modals, platform select, ask_user buttons, `/clipper toggle|status`, #control → Director threads, core event relay, first-run channel setup; 19 tests against the real core API with mocked interactions
   - WP9 ❌ Companion extension
 - Test status:
-  - `uv run pytest -q` → 291 passed (golden renders and the fixture-export check need ffmpeg on PATH)
+  - `uv run pytest -q` → 310 passed (golden renders and the fixture-export check need ffmpeg on PATH)
   - `uv run ruff check . && uv run pyright` → clean
   - `pnpm -r run lint && pnpm -r run typecheck && pnpm -r run test` → clean; desktop 26 passed, extension 1 passed
   - `pnpm --filter @clipper/desktop exec playwright test --project=e2e` → 10 passed (fixture build, no Python)
@@ -35,6 +35,7 @@ just dev-ui-fixtures               # UI on http://127.0.0.1:1420 reading the sta
 just gen-api                       # after changing an API route: openapi.json + UI fixtures + TS client
 just dev-api                       # the real core on 127.0.0.1:8765 (agents, workers, Companion bridge)
 pnpm --filter @clipper/desktop tauri dev   # the desktop app (LOCAL-VERIFY: first Windows run)
+just dev-bot                       # the Discord bot (needs the core running and a token in Settings → Discord)
 just screenshots                   # Playwright screenshots of every screen into docs/screenshots
 ```
 
@@ -100,6 +101,11 @@ just screenshots                   # Playwright screenshots of every screen into
 - Tauri (`apps/desktop/src-tauri/`): `tauri.conf.json` (native decorations, Mica via `windowEffects`, min 1200×760, CSP limited to 127.0.0.1:8765, MSI + NSIS, sidecar `binaries/clipper-core`), `src/lib.rs` (plugins: single-instance, window-state, notification, autostart, opener, shell; close → hide to tray), `menu.rs` (native menu with the web command ids), `tray.rs` (Open · Pause/Resume · Dry run · today · Quit, synced from the UI), `commands.rs` (`accent_color` via WinRT UISettings, `pop_out`, `notify`, `open_url`, `open_path`, `sync_tray`, `autostart_get/set`, `quit`), `sidecar.rs` (starts `clipper-core api` in release builds).
 - Core additions for the UI: `GET /api/events?latest=true`, `POST /api/agents/trigger/{scout|analyst}`, `POST /api/agents/events/{id}/replay` (re-checks today's guard rules; executes read-only tools only), `POST /api/browser/profiles/{name}/open` (`core/clipper/browser/launch.py`), your own messages in `GET /api/agents/director/messages`, honest earnings units (median find → post computed; payout delay unknown until payouts are tracked).
 
+### WP8
+- `apps/bot/clipper_bot/`: `config.py` (bot settings come from the core's `GET /api/settings`; token from Credential Manager `clipper.io/discord_bot_token`, or `CLIPPER_DISCORD_TOKEN` for development), `core_client.py` (async httpx client for the internal API, every write with `via="discord"`; WebSocket event stream with reconnect/resume), `ids.py` (stable `clipper:<scope>:<action>:<id>[:<extra>]` ids + templates), `actions.py` (role check by reviewer role id, else name; take/skip, approve, reject with reason, platforms, captions, re-cut with ±5 s validation, approve all ≥ threshold, reject rest, ship, answer, toggle, chat), `render.py` (embeds and component rows), `components.py` (one `DynamicItem` per button/select so clicks work after restarts; caption and re-cut modals), `relay.py` (core events → Discord: campaign cards, forum post per batch with one message per clip + pinned summary + tags pending/in review/shipped, re-render on any decision including dashboard ones, preview replacement, questions, alerts, publish log, Director replies into the #control thread), `gateway.py` (discord.py calls + first-run channel/forum creation saved back to settings), `bot.py` (`ClipperBot`: dynamic items, `/clipper toggle` and `/clipper status`, #control relay, heartbeat every 60 s), `run.py`.
+- Core: the clip detail's `review` now includes `batch_id` (the relay finds the batch to re-render).
+- Tests: `tests/bot/` (actions against the real core API in-process via `httpx.ASGITransport`, components with mocked interactions incl. role refusal and modals, relay with a fake gateway, #control relay).
+
 ### WP4 (built before WP3: the `edit` tools sit on it)
 - `core/clipper/media/edl/schema.py`: `Edl` (segments/camera/captions in source time, overlays in output time), `new_edl()`.
 - `core/clipper/media/edl/ops.py`: pure ops `trim`, `split`, `delete_range`, `remove_silences`, `remove_fillers`, `set_layout`, `set_camera_keyframes`, `set_caption_style`, `edit_caption_words`, `emphasize`, `set_hook` (cold open teaser / hook text / none), `add_overlay`, `set_audio`; `apply_op()`, `replay()`, `OPS` registry.
@@ -134,6 +140,7 @@ just screenshots                   # Playwright screenshots of every screen into
 - "Replay in dry-run" re-checks a recorded call against today's guard rules and re-runs it only if the tool is read-only; state-changing tools are never executed from the replay button.
 - Each Clipper Chrome profile is its own `--user-data-dir` under `paths.chrome_profiles_dir` (plain Chrome, no automation or fingerprint flags).
 - Earnings: payout delay shows "—" until payout dates are tracked (it was a hard-coded guess before).
+- Discord: persistent components use discord.py `DynamicItem` templates on stable custom_ids instead of storing views; the bot keeps no state (message ids live in the core's `discord_ref` table). Switching something off from Discord uses the gentle defaults (finish active campaigns, keep scheduled posts); the app's dialog offers the other choices.
 - Fixture mode for the UI is a static export (`clipper fixtures-export`) instead of a running fixture core, so Playwright and `dev:fixtures` need no Python.
 
 ## 7. Interfaces the local side must implement or finish
