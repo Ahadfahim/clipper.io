@@ -7,6 +7,7 @@ import subprocess
 from collections import defaultdict
 from collections.abc import Iterable
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from sqlmodel import Session, col, func, select
@@ -587,13 +588,18 @@ def health(core: Core) -> list[S.HealthItem]:
         )
     )
     try:
-        free = shutil.disk_usage(core.settings.paths.data_dir).free / 1e9
+        free = disk_free_gb(core.settings.paths.data_dir)
         out.append(
             S.HealthItem(name="Disk", status="ok" if free > 30 else "warn", detail=f"{free:.0f} GB free")
         )
     except OSError:
         pass
     return out
+
+
+def disk_free_gb(path: Path) -> float:
+    """Free space on the data drive (the fixture export pins this so its output is machine-independent)."""
+    return shutil.disk_usage(path).free / 1e9
 
 
 def status_light(core: Core) -> dict[str, Any]:

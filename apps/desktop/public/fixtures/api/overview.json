@@ -163,10 +163,10 @@
    "status": "ok"
   },
   {
-   "detail": "25 GB free",
+   "detail": "79 GB free",
    "fix": "",
    "name": "Disk",
-   "status": "warn"
+   "status": "ok"
   }
  ],
  "kpis": [

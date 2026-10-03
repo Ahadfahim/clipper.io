@@ -30,7 +30,12 @@ def test_fixture_export_is_current(tmp_path: Path) -> None:
     committed = sorted(p.relative_to(FIXTURES).as_posix() for p in (FIXTURES / "api").rglob("*.json"))
     assert fresh == committed, f"fixture response set changed: {REGEN}"
     # files/ holds ffmpeg output, which differs between ffmpeg builds; compare the JSON only.
+    # Path separators in display strings depend on the OS the export ran on, so ignore their direction.
     for rel in [*fresh, "manifest.json"]:
-        assert (tmp_path / rel).read_text(encoding="utf-8") == (FIXTURES / rel).read_text(encoding="utf-8"), (
-            f"{rel} is stale: {REGEN}"
-        )
+        assert _slashes((tmp_path / rel).read_text(encoding="utf-8")) == _slashes(
+            (FIXTURES / rel).read_text(encoding="utf-8")
+        ), f"{rel} is stale: {REGEN}"
+
+
+def _slashes(text: str) -> str:
+    return text.replace("\\\\", "/")

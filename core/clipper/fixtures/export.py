@@ -7,8 +7,11 @@ so screens can be developed and screenshotted without Python. Media is copied ne
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import tempfile
+from collections.abc import Generator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -29,13 +32,31 @@ def _scrub(obj: Any, replacements: list[tuple[str, str]]) -> Any:
     """Replace machine-specific absolute paths so the export is identical on every machine."""
     if isinstance(obj, str):
         for old, new in replacements:
-            obj = obj.replace(old, new)
+            # The rest of a rewritten path gets forward slashes too, so Windows and Linux exports match.
+            obj = re.sub(
+                re.escape(old) + r"[^\s\"']*",
+                lambda m, old=old, new=new: new + m.group(0)[len(old) :].replace("\\", "/"),
+                obj,
+            )
         return obj
     if isinstance(obj, list):
         return [_scrub(x, replacements) for x in cast(list[Any], obj)]
     if isinstance(obj, dict):
         return {k: _scrub(v, replacements) for k, v in cast(dict[str, Any], obj).items()}
     return obj
+
+
+@contextmanager
+def _pinned_disk_space() -> Generator[None]:
+    """Free disk space is a live reading of the exporting machine; pin it so the export is identical everywhere."""
+    from clipper.api import views
+
+    real = views.disk_free_gb
+    views.disk_free_gb = lambda _path: 79.0
+    try:
+        yield
+    finally:
+        views.disk_free_gb = real
 
 
 def export_fixtures(out_dir: Path) -> dict[str, Any]:
@@ -100,7 +121,7 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
     if out_dir.exists():
         shutil.rmtree(out_dir)
     (out_dir / "files").mkdir(parents=True)
-    with TestClient(app) as client:
+    with _pinned_disk_space(), TestClient(app) as client:
         for path in paths:
             res = client.get(path)
             res.raise_for_status()
