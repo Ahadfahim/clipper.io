@@ -53,6 +53,7 @@ timeout = 120
 markers = [
   "ffmpeg: needs ffmpeg/ffprobe on PATH",
   "slow: longer-running media tests",
+  "local: needs the user's Windows machine (GPU, Chrome, Credential Manager, Claude login); runs only with CLIPPER_LOCAL=1",
 ]
 filterwarnings = ["ignore:.audioop. is deprecated:DeprecationWarning"]  # discord.py imports audioop (voice), unused here
 

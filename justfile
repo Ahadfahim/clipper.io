@@ -11,7 +11,7 @@ default:
 
 # Install Python (uv) and JS (pnpm) dependencies.
 setup:
-    uv sync --all-packages
+    uv sync --all-packages --all-extras
     pnpm install --frozen-lockfile
 
 # Ruff, pyright, eslint and tsc.
@@ -94,6 +94,12 @@ gpu-setup:
     uv venv '{{gpu_env}}' --python 3.12
     uv pip install --python '{{gpu_env}}\Scripts\python.exe' "torch==2.8.0+cu128" "torchaudio==2.8.0+cu128" "torchvision==0.23.0+cu128" "whisperx==3.8.6" "faster-whisper==1.2.1" "ctranslate2==4.8.2" "pyannote-audio==4.0.7" --extra-index-url https://download.pytorch.org/whl/cu128 --index-strategy unsafe-best-match
     & '{{gpu_env}}\Scripts\python.exe' -c "import torch; print(torch.__version__, torch.cuda.is_available(), torch.cuda.get_device_name(0))"
+
+# LOCAL-VERIFY checks on this machine (HANDOFF.md §4): NVENC, WhisperX, OCR, faces, Chrome,
+# Credential Manager, one real Director turn. Point CLIPPER_SPEECH_SAMPLE at a short speech clip first.
+[windows]
+local-verify:
+    $env:CLIPPER_LOCAL = "1"; uv run pytest -m local -v -p no:cacheprovider
 
 # Regenerate the synthetic test media in tests/fixtures (needs ffmpeg).
 fixtures:

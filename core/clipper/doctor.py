@@ -155,6 +155,21 @@ def check_gpu_env(settings: Settings) -> CheckResult:
     )
 
 
+def check_face_model(settings: Settings) -> CheckResult:
+    import importlib.util
+
+    from clipper.media.faces import FACE_MODEL, FACE_MODEL_URL
+
+    if importlib.util.find_spec("mediapipe") is None:
+        return CheckResult(
+            "faces", "warn", "mediapipe not installed", "Run `just setup` (the `faces` extra)."
+        )
+    model = settings.paths.models_dir / FACE_MODEL
+    if not model.exists():
+        return CheckResult("faces", "warn", f"{model} missing", f"Download {FACE_MODEL_URL} to {model}.")
+    return CheckResult("faces", "ok", str(model))
+
+
 def check_data_dir(settings: Settings) -> CheckResult:
     data = settings.paths.data_dir
     try:
@@ -198,6 +213,7 @@ def run_checks(settings: Settings, *, include_slow: bool = True) -> list[CheckRe
         lambda: check_database(settings),
         lambda: check_ffmpeg(settings),
         lambda: check_yt_dlp(settings),
+        lambda: check_face_model(settings),
         check_secrets,
     ]
     if include_slow:

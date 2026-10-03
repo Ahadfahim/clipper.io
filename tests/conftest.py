@@ -26,6 +26,11 @@ os.environ.pop("CLIPPER_SETTINGS", None)
 
 
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    if os.environ.get("CLIPPER_LOCAL") != "1":
+        local = pytest.mark.skip(reason="LOCAL-VERIFY check: set CLIPPER_LOCAL=1 on the Windows machine")
+        for item in items:
+            if "local" in item.keywords:
+                item.add_marker(local)
     if shutil.which("ffmpeg") and shutil.which("ffprobe"):
         return
     skip = pytest.mark.skip(reason="ffmpeg/ffprobe not on PATH")

@@ -20,6 +20,9 @@ dependencies = [
   "tomli-w>=1.1",
 ]
 
+[project.optional-dependencies]
+faces = ["mediapipe>=1.0.1,<2"]  # MediaPipeFaceDetector (Windows; needs the BlazeFace model, see media/faces.py)
+
 [project.scripts]
 clipper = "clipper.cli:main"
 
