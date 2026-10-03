@@ -244,3 +244,19 @@ async def test_campaign_card_question_alert_publish_and_director(core_env: CoreE
         )
     )
     assert len(gw.sent) == n  # only the Director talks in #control
+
+
+async def test_catch_up_after_restart_posts_waiting_work_once(core_env: CoreEnv, cfg: BotConfig) -> None:
+    gw = FakeGateway()
+    relay = Relay(core_env.client, gw, cfg)
+    await relay.catch_up()
+    assert len(gw.posts) == 1  # the open review batch
+    cards = [s for s in gw.sent if s.channel == cfg.channels.campaigns]
+    suggested = [c for c in await core_env.client.campaigns() if c["status"] in ("suggested", "needs_user")]
+    assert len(cards) == len(suggested) > 0
+    assert any(s.channel == cfg.channels.control for s in gw.sent)  # the open question
+    assert not any(s.channel == cfg.channels.alerts for s in gw.sent)  # old alerts are not replayed
+    before = (len(gw.posts), len(gw.sent))
+    await relay.catch_up()
+    assert (len(gw.posts), len(gw.sent)) == before
+    assert await core_env.client.latest_event_id() > 0

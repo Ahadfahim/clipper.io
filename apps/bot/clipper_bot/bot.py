@@ -129,7 +129,10 @@ class ClipperBot(discord.Client):
 
     async def _events(self) -> None:
         await self.wait_until_ready()
-        async for ev in self.core.events(after=0, types=EVENT_TYPES):
+        # start at the newest event (no replay of old alerts), then post what's still waiting
+        after = await self.core.latest_event_id()
+        await self.relay.catch_up()
+        async for ev in self.core.events(after=after, types=EVENT_TYPES):
             await self.relay.handle(ev)
 
     async def close(self) -> None:

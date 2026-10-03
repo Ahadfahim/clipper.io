@@ -120,6 +120,20 @@ class Relay:
         except CoreError as e:
             log.warning("relay %s failed: %s", t, e.detail)
 
+    async def catch_up(self) -> None:
+        """After a (re)start: post whatever is waiting and isn't in Discord yet. Every post is
+        idempotent (message refs live in the core), so nothing is posted twice and old alerts
+        are not replayed."""
+        for b in await self.core.batches():
+            if b.get("status") != "shipped":
+                await self.batch_posted(int(b["id"]))
+        for c in await self.core.campaigns():
+            if c.get("status") in ("suggested", "needs_user"):
+                await self.campaign_card(int(c["id"]), None)
+        for q in await self.core.questions():
+            if q.get("status") == "open":
+                await self.question(int(q["id"]))
+
     # ------------------------------------------------------------ campaigns
     async def campaign_card(self, campaign_id: int, reasoning: str | None) -> None:
         if not self.cfg.channels.campaigns or await self.core.ref("campaign_card", campaign_id):

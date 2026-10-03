@@ -59,7 +59,7 @@ class CoreClient:
         return await self._req("GET", f"/api/clips/{clip_id}")
 
     async def question(self, question_id: int) -> dict[str, Any] | None:
-        for q in await self._req("GET", "/api/questions"):
+        for q in await self.questions():
             if q["id"] == question_id:
                 return q
         return None
@@ -77,6 +77,19 @@ class CoreClient:
             if e.status == 404:
                 return None
             raise
+
+    async def latest_event_id(self) -> int:
+        events = await self._req("GET", "/api/events", params={"latest": "true", "limit": 1})
+        return int(events[-1]["id"]) if events else 0
+
+    async def batches(self) -> list[dict[str, Any]]:
+        return await self._req("GET", "/api/review/batches")
+
+    async def campaigns(self) -> list[dict[str, Any]]:
+        return await self._req("GET", "/api/campaigns")
+
+    async def questions(self) -> list[dict[str, Any]]:
+        return await self._req("GET", "/api/questions")
 
     # ------------------------------------------------------------ writes (all via="discord")
     async def put_ref(
