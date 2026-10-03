@@ -196,12 +196,18 @@ def check_database(settings: Settings) -> CheckResult:
     return CheckResult("database", "ok", f"{db} at {cur}")
 
 
+SECRETS_FIX = (
+    "Save them in Settings: Discord (bot token), Accounts and browser (pairing token), "
+    "Media and captions (Hugging Face token for speaker labels)."
+)
+
+
 def check_secrets() -> CheckResult:
     from clipper.secrets import SECRET_NAMES, get_secret
 
     missing = [name for name in SECRET_NAMES if get_secret(name) is None]
     if missing:
-        return CheckResult("secrets", "warn", f"missing: {', '.join(missing)}", "Finish the setup wizard.")
+        return CheckResult("secrets", "warn", f"missing: {', '.join(missing)}", SECRETS_FIX)
     return CheckResult("secrets", "ok", "all secrets present in Credential Manager")
 
 

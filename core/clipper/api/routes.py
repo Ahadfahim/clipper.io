@@ -28,6 +28,7 @@ from clipper.db.models import (
     RecipeRun,
     Source,
 )
+from clipper.doctor import SECRETS_FIX
 from clipper.events.types import UserChat
 from clipper.media.edl.ops import EditError
 from clipper.rules.spec import ClipSpec
@@ -124,7 +125,7 @@ FIXTURE_DOCTOR = [
     S.HealthItem(name="ffmpeg", status="ok", detail="nvenc=yes x264=yes libass=yes"),
     S.HealthItem(name="yt-dlp", status="ok", detail="2026.03.17"),
     S.HealthItem(name="gpu-env", status="ok", detail="2.8.0+cu128 True 12.8"),
-    S.HealthItem(name="secrets", status="warn", detail="missing: hf_token", fix="Finish the setup wizard."),
+    S.HealthItem(name="secrets", status="warn", detail="missing: hf_token", fix=SECRETS_FIX),
 ]
 
 

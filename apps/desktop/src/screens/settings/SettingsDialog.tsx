@@ -494,7 +494,26 @@ const STYLE_PREVIEW: Record<string, string> = {
   karaoke: "font-extrabold text-white [text-shadow:0_2px_0_#000]",
 };
 
-function Media({ ctx }: { ctx: Ctx }) {
+function SpeakerLabels({ secrets }: { secrets: Record<string, boolean> }) {
+  const saveSecret = useSaveSecret();
+  const [token, setToken] = useState("");
+  return (
+    <Fieldset legend="Speaker labels">
+      <span className="text-muted">
+        A Hugging Face read token with access to the pyannote models. Stored in Windows Credential Manager.{" "}
+        {secrets["hf_token"] ? "A token is saved." : "No token saved, so transcripts have no speaker labels."}
+      </span>
+      <div className="flex gap-2">
+        <TextField type="password" aria-label="Hugging Face token" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Paste a token" className="w-80" />
+        <Button disabled={!token} onClick={() => (saveSecret.mutate({ name: "hf_token", value: token }), setToken(""))}>
+          Save token
+        </Button>
+      </div>
+    </Fieldset>
+  );
+}
+
+function Media({ ctx, secrets }: { ctx: Ctx; secrets: Record<string, boolean> }) {
   const current = String(val(ctx, "media.default_caption_style"));
   return (
     <>
@@ -535,6 +554,7 @@ function Media({ ctx }: { ctx: Ctx }) {
           <NumField ctx={ctx} k="media.loudness_lufs" label="Loudness (LUFS)" min={-24} max={-9} />
         </div>
       </Fieldset>
+      <SpeakerLabels secrets={secrets} />
     </>
   );
 }
@@ -762,7 +782,7 @@ export function SettingsDialog({ onSwitchOff }: { onSwitchOff: (t: SwitchTarget)
               {sec === "agents" && <Agents ctx={ctx} />}
               {sec === "browser" && <Browser ctx={ctx} secrets={data.data?.secrets_present ?? {}} pairing={data.data?.pairing_token ?? null} />}
               {sec === "discord" && <Discord ctx={ctx} secrets={data.data?.secrets_present ?? {}} />}
-              {sec === "media" && <Media ctx={ctx} />}
+              {sec === "media" && <Media ctx={ctx} secrets={data.data?.secrets_present ?? {}} />}
               {sec === "storage" && <Storage ctx={ctx} />}
               {sec === "tools" && <Tools />}
               {sec === "health" && <Health />}

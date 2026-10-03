@@ -49,7 +49,7 @@
  },
  {
   "detail": "missing: hf_token",
-  "fix": "Finish the setup wizard.",
+  "fix": "Save them in Settings: Discord (bot token), Accounts and browser (pairing token), Media and captions (Hugging Face token for speaker labels).",
   "name": "secrets",
   "status": "warn"
  }
