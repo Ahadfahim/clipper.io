@@ -1,0 +1,67 @@
+[project]
+name = "clipper-workspace"
+version = "0.1.0"
+description = "Clipper.io workspace root (not a package)"
+requires-python = ">=3.12,<3.13"
+dependencies = ["clipper-core", "clipper-bot"]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+clipper-core = { workspace = true }
+clipper-bot = { workspace = true }
+
+[tool.uv.workspace]
+members = ["core", "apps/bot"]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "pytest-timeout>=2.3",
+  "ruff>=0.9",
+  "pyright>=1.1.390",
+  "httpx>=0.28",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+extend-exclude = ["core/clipper/db/migrations/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "ASYNC", "PT", "N"]
+ignore = [
+  "E501",    # line length handled by formatter
+  "RUF001", "RUF002", "RUF003",  # unicode in strings/comments is intentional (UI copy)
+  "N815",    # camelCase wire fields in protocol models
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N802", "N806"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+timeout = 120
+markers = [
+  "ffmpeg: needs ffmpeg/ffprobe on PATH",
+  "slow: longer-running media tests",
+]
+filterwarnings = ["ignore::DeprecationWarning:huey.*"]
+
+[tool.pyright]
+include = ["core/clipper", "apps/bot/clipper_bot", "tests"]
+exclude = ["**/__pycache__", "core/clipper/db/migrations/versions", "core/clipper/media/gpu_scripts"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+strict = ["core/clipper"]
+reportMissingTypeStubs = false
+venvPath = "."
+venv = ".venv"
+extraPaths = ["core", "apps/bot"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["clipper", "clipper_bot", "tests"]
