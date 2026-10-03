@@ -23,6 +23,7 @@ from clipper.agents.hooks import ToolCall
 from clipper.db.engine import WriteTx
 from clipper.db.models import AgentEvent
 from clipper.events.types import AgentEventLogged
+from clipper.marketplaces.base import MarketplaceError
 from clipper.services.base import ServiceError
 
 if TYPE_CHECKING:
@@ -133,7 +134,8 @@ async def call_tool(ctx: ToolContext, spec: ToolSpec, raw: dict[str, Any]) -> Ca
         return CallResult([{"type": "text", "text": f"blocked: {verdict.message}"}], True)
     try:
         out = await spec.handler(ctx, args)
-    except (ToolFailure, ServiceError, ValueError) as exc:
+    # a site saying no (login wall, missing recipe, changed page) is an answer, not a crash
+    except (ToolFailure, ServiceError, ValueError, MarketplaceError) as exc:
         result = CallResult([{"type": "text", "text": f"error: {exc}"}], True)
         _record(ctx, spec, raw, {"error": str(exc)})
         return result

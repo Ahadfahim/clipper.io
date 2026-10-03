@@ -180,7 +180,21 @@ class RecipeMarketplace:
         return host == f"{self.name}.com" or host.endswith(f".{self.name}.com")
 
     async def join_campaign(self, external_id: str) -> JoinResult:  # LOCAL-VERIFY
-        res = await self._run("join_campaign", {"id": external_id})
+        if self.name == "whop":
+            # Content Rewards has no join step: every campaign page offers "Submit clip" directly
+            return JoinResult("already", "Whop Content Rewards has no join step; submit clips directly")
+        res = await self.bridge.run_recipe(self.profile, f"{self.name}.join_campaign", {"id": external_id})
+        if not res.ok and (res.error or "").startswith("unknown recipe"):
+            return JoinResult(
+                "needs_user",
+                f"Clipper can't join on {self.name} yet: the user joins this campaign on the site",
+            )
+        if not res.ok:
+            raise MarketplaceError(
+                f"{self.name}.join_campaign failed: {res.error}",
+                challenge=res.challenge,
+                screenshot=res.screenshot,
+            )
         status = str(res.data.get("status", "needs_user"))
         if status in ("joined", "already"):
             return JoinResult(status)  # type: ignore[arg-type]

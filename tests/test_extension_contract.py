@@ -223,3 +223,13 @@ def test_screenshots_decode_as_jpeg_or_png() -> None:
         "data:image/png;base64,***",
     ):
         assert decode_screenshot(bad) is None
+
+
+async def test_joining_without_a_join_recipe_is_an_answer_not_a_crash() -> None:
+    bridge = FakeBrowserBridge()  # no recipes scripted: "no scripted result" != unknown recipe
+    bridge.recipes["vyro.join_campaign"] = RecipeResult(ok=False, error="unknown recipe vyro.join_campaign")
+    vyro = await RecipeMarketplace("vyro", bridge).join_campaign("abc")
+    assert vyro.status == "needs_user" and "user joins" in vyro.detail
+    whop = await RecipeMarketplace("whop", bridge).join_campaign("abc")
+    assert whop.status == "already"
+    assert not any(c[1] == "whop.join_campaign" for c in bridge.calls)
