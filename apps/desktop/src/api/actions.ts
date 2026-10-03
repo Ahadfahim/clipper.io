@@ -19,6 +19,26 @@ export function useControl() {
   });
 }
 
+/** Show, hide or toggle Clipper's own Chrome for a profile (it runs hidden by default). */
+export function useBrowserWindow() {
+  return useAction({
+    run: (v: { profile: string; action: "show" | "hide" | "toggle" }) =>
+      unwrap(api.POST("/api/browser/profiles/{profile}/{action}", { params: { path: { profile: v.profile, action: v.action } } })),
+    optimistic: (v, qc) =>
+      qc.setQueryData<Schemas["StatusOut"]>(qk.status, (s) =>
+        s
+          ? {
+              ...s,
+              browser: s.browser.map((b) =>
+                b.name === v.profile ? { ...b, running: true, visible: v.action === "toggle" ? !b.visible : v.action === "show" } : b,
+              ),
+            }
+          : s,
+      ),
+    invalidate: () => [qk.status],
+  });
+}
+
 export type SwitchVars = {
   level: "marketplace" | "social" | "account";
   name: string;

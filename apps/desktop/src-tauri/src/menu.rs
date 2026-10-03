@@ -116,6 +116,7 @@ pub fn build(app: &AppHandle) -> tauri::Result<Menu<Wry>> {
         "&Tools",
         true,
         &[
+            &item(app, "tools.browser", "Show / hide &browser", Some("Ctrl+Shift+B"))?,
             &item(app, "tools.doctor", "Clipper &doctor", None)?,
             &item(app, "tools.analyst", "Run &analyst now", None)?,
             &item(app, "tools.memory", "&Memory…", None)?,

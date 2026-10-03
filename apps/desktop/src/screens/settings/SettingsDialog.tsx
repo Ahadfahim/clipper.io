@@ -445,6 +445,38 @@ function Browser({ ctx, secrets, pairing }: { ctx: Ctx; secrets: Record<string, 
           Companion extension connected in: {status?.extension_profiles.join(", ") || "no profiles"}
         </span>
       </Fieldset>
+      <Fieldset legend="Clipper's own browser">
+        <span className="text-muted">
+          Clipper starts its own Chrome for each profile and keeps it hidden while the agents work. Show it from the toolbar, the status bar or Ctrl+Shift+B to watch, log in, or clear a
+          “verify it’s you” screen.
+        </span>
+        <Check checked={Boolean(val<boolean>(ctx, "browser.start_hidden"))} onChange={(v) => ctx.set("browser.start_hidden", v)} label="Keep the browser hidden unless I show it" />
+        <Check checked={Boolean(val<boolean>(ctx, "browser.keep_running"))} onChange={(v) => ctx.set("browser.keep_running", v)} label="Start it again (hidden) if it closes" />
+        <Field label="Profiles started with Clipper" hint="Comma-separated profile names, e.g. main, podcastcuts">
+          {(id) => (
+            <TextField
+              id={id}
+              className="w-72"
+              value={(val<string[] | null>(ctx, "browser.autostart_profiles") ?? []).join(", ")}
+              onChange={(e) =>
+                ctx.set(
+                  "browser.autostart_profiles",
+                  e.target.value
+                    .split(",")
+                    .map((p) => p.trim())
+                    .filter(Boolean),
+                )
+              }
+            />
+          )}
+        </Field>
+        {status?.browser.map((b) => (
+          <span key={b.name} className="flex items-center gap-1.5">
+            <Dot tone={!b.running ? "warn" : b.visible ? "accent" : "muted"} /> {b.name}: {!b.running ? "not running" : b.visible ? "shown" : "hidden"}
+            {b.running && !b.extension_connected ? " · extension not connected" : ""}
+          </span>
+        ))}
+      </Fieldset>
       <Fieldset legend="Extension pairing">
         <span className="text-muted">Paste this token into the Companion extension's options in each Chrome profile. It only works on this PC (127.0.0.1).</span>
         <div className="flex items-center gap-2">

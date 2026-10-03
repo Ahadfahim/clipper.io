@@ -152,7 +152,7 @@ export function SetupWizard() {
         <Field label="Niche tags">{(id) => <TextField id={id} value={acct.tags} onChange={(e) => setAcct({ ...acct, tags: e.target.value })} placeholder="podcast, gaming" />}</Field>
       </div>
       <div className="flex items-center gap-2">
-        <Button onClick={() => void openProfile(acct.profile)}>Open Chrome window</Button>
+        <Button onClick={() => void openProfile(acct.profile)}>Show browser</Button>
         <Button
           variant="primary"
           disabled={!acct.handle.startsWith("@") || acctAdded}

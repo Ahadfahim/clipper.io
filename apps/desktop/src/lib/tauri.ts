@@ -48,10 +48,10 @@ export async function openPath(path: string): Promise<void> {
   await call("open_path", { path });
 }
 
-/** Opens the Chrome window of a Clipper profile; the core launches Chrome (it knows the paths). */
+/** Shows Clipper's own Chrome for a profile (it runs hidden); the core starts it if needed. */
 export async function openProfile(profile: string): Promise<void> {
   const { api } = await import("@/api/client");
-  await api.POST("/api/browser/profiles/{profile}/open", { params: { path: { profile } } });
+  await api.POST("/api/browser/profiles/{profile}/{action}", { params: { path: { profile, action: "show" } } });
 }
 
 export async function quitApp(): Promise<void> {

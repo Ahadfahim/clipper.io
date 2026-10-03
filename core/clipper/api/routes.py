@@ -272,20 +272,30 @@ def cancel_request(request: Request, request_id: int) -> S.OkOut:
     return S.OkOut(id=request_id)
 
 
-@system.post("/browser/profiles/{profile}/open", response_model=S.OkOut)
-def open_chrome_profile(core: CoreDep, request: Request, profile: str) -> S.OkOut:
-    """Opens the Chrome window for a Clipper profile (log in, fix a challenge). Fixture mode: no-op."""
-    from clipper.browser.launch import open_profile
+@system.get("/browser/profiles", response_model=list[S.BrowserProfileOut])
+def browser_profiles(core: CoreDep) -> list[S.BrowserProfileOut]:
+    return views.browser_profiles(core)
 
-    if request.app.state.fixture_mode:
-        return S.OkOut(detail="fixture mode: Chrome not opened")
+
+@system.post("/browser/profiles/{profile}/{action}", response_model=S.BrowserProfileOut)
+def browser_window(
+    core: CoreDep, profile: str, action: Literal["show", "hide", "toggle", "open"]
+) -> S.BrowserProfileOut:
+    """Show or hide Clipper's own Chrome for a profile (watch the agents, log in, fix a challenge).
+    ``open`` is the older name for ``show``. Clipper starts the profile's Chrome if it isn't running."""
+    chrome = core.chrome
     try:
-        open_profile(core.settings, profile)
+        state = {"show": chrome.show, "open": chrome.show, "hide": chrome.hide, "toggle": chrome.toggle}[
+            action
+        ](profile)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except OSError as exc:
         raise HTTPException(500, f"couldn't start Chrome: {exc}") from exc
-    return S.OkOut(detail=f"opened {profile}")
+    connected = profile in core.adapters.browser.connected_profiles()
+    return S.BrowserProfileOut(
+        name=state.name, running=state.running, visible=state.visible, extension_connected=connected
+    )
 
 
 @agents.post("/trigger/{name}", response_model=S.OkOut)

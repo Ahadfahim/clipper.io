@@ -54,6 +54,9 @@ def settings(tmp_path: Path) -> Settings:
                 "ffmpeg_bin": None,
                 "models_dir": str(tmp_path / "models"),
                 "gpu_python": str(tmp_path / "no-gpu" / "python"),
+                # never the real C:\ClipperData folders (sources, logged-in Chrome profiles)
+                "sources_dir": None,
+                "chrome_profiles_dir": str(tmp_path / "chrome"),
             },
             "media": {"encoder": "x264"},
         },

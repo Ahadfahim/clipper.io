@@ -1,6 +1,6 @@
-import { ArrowUpload16Regular, Checkmark16Regular, Pause16Filled, Play16Filled, Search16Regular } from "@fluentui/react-icons";
+import { ArrowUpload16Regular, Checkmark16Regular, Globe16Regular, Pause16Filled, Play16Filled, Search16Regular } from "@fluentui/react-icons";
 import { useNavigate } from "@tanstack/react-router";
-import { useControl, useShip, useSwitch, useTrigger } from "@/api/actions";
+import { useBrowserWindow, useControl, useShip, useSwitch, useTrigger } from "@/api/actions";
 import { useBatches, useStatus, useSwitches } from "@/api/queries";
 import { Button } from "@/components/ui/button";
 import { Check } from "@/components/ui/fields";
@@ -27,6 +27,8 @@ export function MainToolbar({ onSwitchOff }: { onSwitchOff: (t: { level: "market
   const c = status?.control;
   const batch = batches?.find((b) => b.pending > 0) ?? batches?.find((b) => b.status === "in_review");
   const shippable = batches?.find((b) => b.status !== "shipped" && b.approved > 0);
+  const browser = useBrowserWindow();
+  const mainBrowser = status?.browser.find((b) => b.name === "main");
 
   return (
     <Toolbar label="Main toolbar" className="flex-nowrap overflow-hidden [&>*]:shrink-0">
@@ -47,6 +49,15 @@ export function MainToolbar({ onSwitchOff }: { onSwitchOff: (t: { level: "market
       </Button>
       <Button variant="ghost" icon={<ArrowUpload16Regular />} disabled={!shippable} onClick={() => shippable && ship.mutate(shippable.id)}>
         Ship approved
+      </Button>
+      <Button
+        variant="ghost"
+        icon={<Globe16Regular />}
+        aria-pressed={Boolean(mainBrowser?.visible)}
+        onClick={() => browser.mutate({ profile: "main", action: "toggle" })}
+        title={`Clipper's own Chrome runs hidden; show it to watch the agents or fix a login (Ctrl+Shift+B)${mainBrowser && !mainBrowser.extension_connected ? " · extension not connected" : ""}`}
+      >
+        {mainBrowser?.visible ? "Hide browser" : "Show browser"}
       </Button>
       <ToolbarSep />
       <span className="px-1 text-muted max-[1365px]:hidden">Sources</span>

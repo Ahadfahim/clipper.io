@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { money, span } from "@/lib/format";
 import { nowMs } from "@/lib/now";
+import { useBrowserWindow } from "@/api/actions";
 import { useLive } from "@/api/live";
 import { useStatus } from "@/api/queries";
 import { Popover } from "@/components/ui/popover";
@@ -35,7 +36,9 @@ export function StatusBar() {
   const conn = useLive((x) => x.conn);
   const ui = useUi();
   const navigate = useNavigate();
+  const browser = useBrowserWindow();
   if (!s) return <footer className="h-6 shrink-0 border-t border-line bg-chrome" />;
+  const mainBrowser = s.browser.find((b) => b.name === "main");
   const c = s.control;
   const run: { tone: StatusTone; text: string } = c.kill_switch
     ? { tone: "bad", text: "Stopped" }
@@ -82,6 +85,15 @@ export function StatusBar() {
           </div>
         </div>
       </Popover>
+      {mainBrowser && (
+        <Seg
+          tone={!mainBrowser.running ? "warn" : mainBrowser.visible ? "accent" : "muted"}
+          onClick={() => browser.mutate({ profile: "main", action: "toggle" })}
+          title="Clipper's own Chrome · click to show or hide it (Ctrl+Shift+B)"
+        >
+          Browser {!mainBrowser.running ? "not running" : mainBrowser.visible ? "shown" : "hidden"}
+        </Seg>
+      )}
       <Seg tone={s.extension_profiles.length ? "ok" : "warn"} onClick={() => ui.openSettings("browser")} title="Chrome profiles with the Companion extension">
         Extension {s.extension_profiles.length}
       </Seg>

@@ -61,6 +61,13 @@ class SwitchesOut(M):
     accounts: list[AccountSwitch]
 
 
+class BrowserProfileOut(M):
+    name: str
+    running: bool
+    visible: bool
+    extension_connected: bool
+
+
 class StatusOut(M):
     version: str
     fixture_mode: bool
@@ -72,6 +79,7 @@ class StatusOut(M):
     jobs_queued: int
     gpu_util: float | None
     extension_profiles: list[str]
+    browser: list[BrowserProfileOut]
     discord_online: bool
     earned_today: float
     needs_you: int

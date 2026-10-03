@@ -16,9 +16,21 @@ import { cn } from "@/lib/cn";
 import { dayTime, relative } from "@/lib/format";
 import { nowMs } from "@/lib/now";
 import { PLATFORM_LABEL, PLATFORM_ORDER } from "@/lib/platforms";
-import { openProfile } from "@/lib/tauri";
 import { useQueryClient } from "@tanstack/react-query";
-import { qk } from "@/api/queries";
+import { qk, useStatus } from "@/api/queries";
+import { useBrowserWindow } from "@/api/actions";
+
+/** Show or hide Clipper's own Chrome for one profile (it runs hidden by default). */
+function BrowserButton({ profile }: { profile: string }) {
+  const state = useStatus().data?.browser.find((b) => b.name === profile);
+  const browser = useBrowserWindow();
+  const shown = Boolean(state?.visible);
+  return (
+    <Button size="sm" aria-pressed={shown} onClick={(e) => (e.stopPropagation(), browser.mutate({ profile, action: shown ? "hide" : "show" }))}>
+      {shown ? "Hide browser" : "Show browser"}
+    </Button>
+  );
+}
 
 function Warmup({ week }: { week: number | null }) {
   const steps = ["Week 1", "Week 2", "Normal"];
@@ -150,9 +162,7 @@ function Accounts({ accounts, focus }: { accounts: Schemas["AccountOut"][]; focu
       enableSorting: false,
       cell: (c) => (
         <span className="flex gap-1">
-          <Button size="sm" onClick={(e) => (e.stopPropagation(), void openProfile(c.row.original.chrome_profile))}>
-            Open Chrome window
-          </Button>
+          <BrowserButton profile={c.row.original.chrome_profile} />
           {c.row.original.status.startsWith("paused") && (
             <Button size="sm" variant="primary" onClick={(e) => (e.stopPropagation(), resume.mutate(c.row.original.id))}>
               Resume

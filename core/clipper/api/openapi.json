@@ -813,6 +813,34 @@
     "title": "BreakdownRow",
     "type": "object"
    },
+   "BrowserProfileOut": {
+    "properties": {
+     "extension_connected": {
+      "title": "Extension Connected",
+      "type": "boolean"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "running": {
+      "title": "Running",
+      "type": "boolean"
+     },
+     "visible": {
+      "title": "Visible",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "name",
+     "running",
+     "visible",
+     "extension_connected"
+    ],
+    "title": "BrowserProfileOut",
+    "type": "object"
+   },
    "BumpIn": {
     "properties": {
      "priority": {
@@ -3900,6 +3928,13 @@
       "title": "Agents Running",
       "type": "integer"
      },
+     "browser": {
+      "items": {
+       "$ref": "#/components/schemas/BrowserProfileOut"
+      },
+      "title": "Browser",
+      "type": "array"
+     },
      "campaigns_by_market": {
       "additionalProperties": {
        "type": "integer"
@@ -3979,6 +4014,7 @@
      "jobs_queued",
      "gpu_util",
      "extension_profiles",
+     "browser",
      "discord_online",
      "earned_today",
      "needs_you",
@@ -4905,10 +4941,35 @@
     ]
    }
   },
-  "/api/browser/profiles/{profile}/open": {
+  "/api/browser/profiles": {
+   "get": {
+    "operationId": "browser_profiles_api_browser_profiles_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/BrowserProfileOut"
+         },
+         "title": "Response Browser Profiles Api Browser Profiles Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Browser Profiles",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/browser/profiles/{profile}/{action}": {
    "post": {
-    "description": "Opens the Chrome window for a Clipper profile (log in, fix a challenge). Fixture mode: no-op.",
-    "operationId": "open_chrome_profile_api_browser_profiles__profile__open_post",
+    "description": "Show or hide Clipper's own Chrome for a profile (watch the agents, log in, fix a challenge).\n``open`` is the older name for ``show``. Clipper starts the profile's Chrome if it isn't running.",
+    "operationId": "browser_window_api_browser_profiles__profile___action__post",
     "parameters": [
      {
       "in": "path",
@@ -4918,6 +4979,21 @@
        "title": "Profile",
        "type": "string"
       }
+     },
+     {
+      "in": "path",
+      "name": "action",
+      "required": true,
+      "schema": {
+       "enum": [
+        "show",
+        "hide",
+        "toggle",
+        "open"
+       ],
+       "title": "Action",
+       "type": "string"
+      }
      }
     ],
     "responses": {
@@ -4925,7 +5001,7 @@
       "content": {
        "application/json": {
         "schema": {
-         "$ref": "#/components/schemas/OkOut"
+         "$ref": "#/components/schemas/BrowserProfileOut"
         }
        }
       },
@@ -4942,7 +5018,7 @@
       "description": "Validation Error"
      }
     },
-    "summary": "Open Chrome Profile",
+    "summary": "Browser Window",
     "tags": [
      "system"
     ]

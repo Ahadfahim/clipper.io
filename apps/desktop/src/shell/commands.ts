@@ -2,7 +2,7 @@
 // (UI.md §2, §6), so every action is reachable the same way from everywhere.
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useControl, useSwitch, useTrigger } from "@/api/actions";
+import { useBrowserWindow, useControl, useSwitch, useTrigger } from "@/api/actions";
 import { useBatches, useJobs, useSettings, useStatus, useSwitches } from "@/api/queries";
 import { IN_TAURI, openPath, popOut, quitApp } from "@/lib/tauri";
 import { MARKET_LABEL, PLATFORM_LABEL } from "@/lib/platforms";
@@ -37,6 +37,7 @@ export function useCommands(onSwitchOff: (t: { level: "marketplace" | "social"; 
   const settings = useSettings().data;
   const jobs = useJobs().data;
   const control = useControl();
+  const browser = useBrowserWindow();
   const sw = useSwitch();
   const trigger = useTrigger();
   const ui = useUi();
@@ -72,6 +73,14 @@ export function useCommands(onSwitchOff: (t: { level: "marketplace" | "social"; 
         },
       },
       { id: "file.gallery", label: "Component gallery", group: "Help", run: go("/dev/gallery") },
+      {
+        id: "tools.browser",
+        label: status?.browser.find((b) => b.name === "main")?.visible ? "Hide browser" : "Show browser",
+        group: "Tools",
+        shortcut: "Ctrl+Shift+B",
+        keys: "ctrl+shift+b",
+        run: () => browser.mutate({ profile: "main", action: "toggle" }),
+      },
       {
         id: "agents.pause",
         label: c?.paused ? "Resume all" : "Pause all",
@@ -147,5 +156,5 @@ export function useCommands(onSwitchOff: (t: { level: "marketplace" | "social"; 
       });
     }
     return cmds;
-  }, [navigate, batches, c, control, sw, trigger, ui, switches, onSwitchOff, settings, jobs]);
+  }, [navigate, batches, c, control, browser, status, sw, trigger, ui, switches, onSwitchOff, settings, jobs]);
 }

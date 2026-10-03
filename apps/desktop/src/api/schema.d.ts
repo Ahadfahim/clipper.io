@@ -198,7 +198,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/browser/profiles/{profile}/open": {
+    "/api/browser/profiles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Browser Profiles */
+        get: operations["browser_profiles_api_browser_profiles_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/browser/profiles/{profile}/{action}": {
         parameters: {
             query?: never;
             header?: never;
@@ -208,10 +225,11 @@ export interface paths {
         get?: never;
         put?: never;
         /**
-         * Open Chrome Profile
-         * @description Opens the Chrome window for a Clipper profile (log in, fix a challenge). Fixture mode: no-op.
+         * Browser Window
+         * @description Show or hide Clipper's own Chrome for a profile (watch the agents, log in, fix a challenge).
+         *     ``open`` is the older name for ``show``. Clipper starts the profile's Chrome if it isn't running.
          */
-        post: operations["open_chrome_profile_api_browser_profiles__profile__open_post"];
+        post: operations["browser_window_api_browser_profiles__profile___action__post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1536,6 +1554,17 @@ export interface components {
             /** Views */
             views: number;
         };
+        /** BrowserProfileOut */
+        BrowserProfileOut: {
+            /** Extension Connected */
+            extension_connected: boolean;
+            /** Name */
+            name: string;
+            /** Running */
+            running: boolean;
+            /** Visible */
+            visible: boolean;
+        };
         /** BumpIn */
         BumpIn: {
             /** Priority */
@@ -2580,6 +2609,8 @@ export interface components {
             agents_capacity: number;
             /** Agents Running */
             agents_running: number;
+            /** Browser */
+            browser: components["schemas"]["BrowserProfileOut"][];
             /** Campaigns By Market */
             campaigns_by_market: {
                 [key: string]: number;
@@ -3127,12 +3158,33 @@ export interface operations {
             };
         };
     };
-    open_chrome_profile_api_browser_profiles__profile__open_post: {
+    browser_profiles_api_browser_profiles_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserProfileOut"][];
+                };
+            };
+        };
+    };
+    browser_window_api_browser_profiles__profile___action__post: {
         parameters: {
             query?: never;
             header?: never;
             path: {
                 profile: string;
+                action: "show" | "hide" | "toggle" | "open";
             };
             cookie?: never;
         };
@@ -3144,7 +3196,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["OkOut"];
+                    "application/json": components["schemas"]["BrowserProfileOut"];
                 };
             };
             /** @description Validation Error */

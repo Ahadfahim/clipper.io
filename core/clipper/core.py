@@ -6,12 +6,15 @@ wires fakes for tests, CI and fixture mode. Everything else (tools, API, supervi
 
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
 from clipper.agents.guard_context import DbGuardContext, make_block_logger
 from clipper.agents.hooks import Guard
 from clipper.browser.bridge import BrowserBridge, CompanionBridge, FakeBrowserBridge
+from clipper.browser.manager import ChromeManager
+from clipper.browser.windows import FakeWindowOps, Win32WindowOps, WindowOps
 from clipper.clock import Clock, SystemClock
 from clipper.db.engine import Database
 from clipper.db.seed import seed_base
@@ -46,6 +49,7 @@ class Adapters:
     ocr: OcrEngine
     trends: TrendsSource
     encoder: Encoder
+    windows: WindowOps = field(default_factory=FakeWindowOps)
     extra: dict[str, object] = field(default_factory=lambda: {})
 
     @classmethod
@@ -88,6 +92,7 @@ class Adapters:
             ocr=TesseractOcr(ffmpeg=settings.paths.ffmpeg("ffmpeg")),
             trends=YtDlpTrends(settings),
             encoder=make_encoder(settings.media),
+            windows=Win32WindowOps() if sys.platform == "win32" else FakeWindowOps(),
         )
 
 
@@ -135,6 +140,7 @@ class Core:
         self.insights = InsightsService(self)
         self.trends = TrendsService(self)
         self.usage = UsageTracker(self)
+        self.chrome = ChromeManager(settings, adapters.windows)
         from clipper.worker.handlers import register_handlers
 
         register_handlers(self.jobs)

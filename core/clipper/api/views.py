@@ -245,6 +245,7 @@ def status(core: Core, fixture_mode: bool) -> S.StatusOut:
         jobs_queued=jobs_queued,
         gpu_util=None if fixture_mode else gpu_util(),
         extension_profiles=core.adapters.browser.connected_profiles(),
+        browser=browser_profiles(core),
         discord_online=discord_online,
         earned_today=round(float(earned), 2),
         needs_you=len(needs),
@@ -615,6 +616,17 @@ def status_light(core: Core) -> dict[str, Any]:
 
 
 # ---------------------------------------------------------------- agents
+
+
+def browser_profiles(core: Core) -> list[S.BrowserProfileOut]:
+    """Clipper's own Chrome per profile: running, shown or hidden, extension connected (cached state)."""
+    connected = set(core.adapters.browser.connected_profiles())
+    return [
+        S.BrowserProfileOut(
+            name=p.name, running=p.running, visible=p.visible, extension_connected=p.name in connected
+        )
+        for p in core.chrome.states()
+    ]
 
 
 def _capacity_out(core: Core) -> int:

@@ -107,6 +107,7 @@ def create_app(
             if isinstance(c.adapters.browser, CompanionBridge):
                 await c.adapters.browser.start()  # LOCAL-VERIFY: extension pairing
                 bridge_started = True
+            c.chrome.start()  # Clipper's own Chrome, hidden unless shown (browser.start_hidden)
             app.state.supervisor = Supervisor(c, SdkAgentRunner(c))
             await app.state.supervisor.start()
         try:
@@ -114,6 +115,7 @@ def create_app(
         finally:
             if app.state.supervisor is not None:
                 await app.state.supervisor.stop()
+            c.chrome.stop()  # stops watching; Chrome itself keeps running for the next start
             if bridge_started:
                 await c.adapters.browser.stop()  # type: ignore[attr-defined]
             if own_core:

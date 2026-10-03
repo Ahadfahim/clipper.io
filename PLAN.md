@@ -146,7 +146,9 @@ Core servers are below. The complete list, including `supervisor`, `notify`, `me
 
 ## 5. Browser automation: Clipper Companion extension
 
-No YouTube/TikTok/Instagram APIs. All platform work (Vyro, Whop, uploads, captions, post URLs) runs in a **real Chrome window you're logged into**, driven by our own extension.
+No YouTube/TikTok/Instagram APIs. All platform work (Vyro, Whop, uploads, captions, post URLs) runs in a **real Chrome you're logged into**, driven by our own extension.
+
+**Clipper's own browser, hidden by default.** The core launches Chrome itself for each profile in `browser.autostart_profiles` (`--user-data-dir=C:\ClipperData\chrome\<profile>`) and keeps it running with no window or taskbar button (`ChromeManager`, `core/clipper/browser/manager.py`). It is a normal Chrome, not headless. Its windows are hidden with Win32 `ShowWindow`, and startup switches keep hidden pages running at full speed. **Show browser / Hide browser** in the toolbar, status bar, Tools menu, Ctrl+Shift+B and per account (Publishing → Accounts) shows it to watch the agents, log in, or clear a challenge. A loop re-hides new windows while hidden and relaunches the profile (hidden) if Chrome closes.
 
 ### Why an extension (vs. Playwright-launched browser)
 | | Companion extension (**primary**) | Playwright over CDP (**backup**) |

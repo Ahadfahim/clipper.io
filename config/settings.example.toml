@@ -178,6 +178,9 @@ core_url = "http://127.0.0.1:8765"
 ws_host = "127.0.0.1"
 ws_port = 8766
 action_timeout_s = 90.0
+start_hidden = true             # Clipper's own Chrome runs hidden; use Show browser to see it
+autostart_profiles = ["main"]   # Chrome profiles (paths.chrome_profiles_dir) started with Clipper
+keep_running = true              # relaunch a profile's Chrome (hidden) if it closes
 
 [browser.domain_allowlist]  # further limited to the switches that are on
 vyro = ["vyro.com"]

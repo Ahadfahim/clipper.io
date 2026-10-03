@@ -146,9 +146,11 @@ DEMO_PROFILES = {"main": "https://studio.youtube.com/", "beast": "https://www.ti
 
 
 def demo_adapters(core: Core) -> None:
-    """Point the fake adapters at the demo data (both Chrome profiles connected)."""
+    """Point the fake adapters at the demo data (both Chrome profiles connected, running hidden)."""
     if isinstance(core.adapters.browser, FakeBrowserBridge):
         core.adapters.browser.profiles = dict(DEMO_PROFILES)
+    for profile in DEMO_PROFILES:
+        core.chrome.hide(profile)  # fake windows only: starts the profile's fake Chrome, hidden
 
 
 def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> dict[str, Any]:

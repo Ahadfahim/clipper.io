@@ -69,6 +69,9 @@
   },
   "browser": {
    "action_timeout_s": 90.0,
+   "autostart_profiles": [
+    "main"
+   ],
    "domain_allowlist": {
     "instagram": [
      "instagram.com"
@@ -90,6 +93,8 @@
      "youtube.com"
     ]
    },
+   "keep_running": true,
+   "start_hidden": true,
    "ws_host": "127.0.0.1",
    "ws_port": 8766
   },
@@ -145,7 +150,7 @@
   "paths": {
    "backups_dir": null,
    "chrome_exe": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-   "chrome_profiles_dir": "C:\\ClipperData\\chrome",
+   "chrome_profiles_dir": "D:/Clipper.io/data/chrome",
    "clips_dir": null,
    "data_dir": "D:/Clipper.io/data",
    "db_path": null,

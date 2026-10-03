@@ -38,6 +38,9 @@ def _default_data_dir() -> Path:
     return Path(r"D:\Clipper.io\data") if os.name == "nt" else Path.home() / ".clipper" / "data"
 
 
+DEFAULT_CHROME_PROFILES = Path(r"C:\ClipperData\chrome")
+
+
 def _default_sources_dir() -> Path | None:
     # Source videos are big (1-3 GB per hour of 1080p) and D: is small on the target machine, so on
     # Windows they default to C:. Elsewhere they live under the data folder.
@@ -59,7 +62,7 @@ class PathsSettings(_Model):
     yt_dlp: str = "yt-dlp"
     gpu_python: Path = Path(r"C:\ClipperData\envs\gpu\Scripts\python.exe")
     chrome_exe: Path = Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe")
-    chrome_profiles_dir: Path = Path(r"C:\ClipperData\chrome")
+    chrome_profiles_dir: Path = DEFAULT_CHROME_PROFILES
 
     def sub(self, name: str) -> Path:
         explicit: Path | None = getattr(self, f"{name}_dir", None)
@@ -253,6 +256,11 @@ class BrowserSettings(_Model):
     ws_host: str = "127.0.0.1"
     ws_port: int = 8766
     action_timeout_s: float = 90.0
+    # Clipper runs its own Chrome per profile (paths.chrome_profiles_dir/<name>), hidden unless you
+    # press Show browser. Profiles listed here start with the core and come back if Chrome closes.
+    start_hidden: bool = True
+    autostart_profiles: list[str] = Field(default_factory=lambda: ["main"])
+    keep_running: bool = True
     domain_allowlist: dict[str, list[str]] = Field(
         default_factory=lambda: {
             "vyro": ["vyro.com"],
@@ -310,6 +318,8 @@ class Settings(_Model):
         update: dict[str, Any] = {"data_dir": data_dir}
         if self.paths.sources_dir == _default_sources_dir():
             update["sources_dir"] = None
+        if self.paths.chrome_profiles_dir == DEFAULT_CHROME_PROFILES:
+            update["chrome_profiles_dir"] = data_dir / "chrome"  # never the real logged-in profiles
         return self.model_copy(update={"paths": self.paths.model_copy(update=update)})
 
 
