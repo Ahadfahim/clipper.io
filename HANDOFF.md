@@ -9,13 +9,13 @@
   - WP2 ✅ Guardrails: 15 pure PreToolUse rules + SDK hook adapters, 71 table-driven cases, DB context, blocked calls logged
   - WP3 ✅ MCP tools: 13 servers + `clipper` umbrella (93 tools), typed args, readOnlyHint, guard in every call path, adapters with fakes (marketplace, publish, browser bridge, transcriber, encoder, downloader, faces, OCR, trends), durable job queue, stdio entry
   - WP4 ✅ EDL engine: schema, 13 pure ops, renderer (eased crop/split/fit/zoom/progress bar/two-pass loudnorm), ASS captions with safe zones + face avoidance, QA checks, EdlService (edit_op log, undo by replay, locks, variants), golden renders
-  - WP5 ❌ Supervisor and agent runtime
+  - WP5 ✅ Supervisor + agents: slot pool (P0-P3, P0 reserve, usage shrink, rate-limit pause/auto-resume, daily cap), event -> resume routing with merging, wakeups, watchdog, triggers, kill switch; agent definitions (setting_sources=[], dontAsk, per-role effort/max_turns, claude-opus-5-5); real prompts; SdkAgentRunner + FakeAgentRunner; end-to-end dry-run test
   - WP6 ❌ API
   - WP7 ❌ Desktop UI
   - WP8 ❌ Discord bot
   - WP9 ❌ Companion extension
 - Test status:
-  - `uv run pytest -q` → 206 passed (golden renders need ffmpeg on PATH)
+  - `uv run pytest -q` → 239 passed (golden renders need ffmpeg on PATH)
   - `uv run ruff check . && uv run pyright` → clean
   - `pnpm -r run lint && pnpm -r run typecheck && pnpm -r run test` → clean, 2 passed
   - `just screenshots` → 4 passed (placeholder shell)
@@ -65,6 +65,14 @@ just test
 - Adapters: `marketplaces/{base,fake,browser}.py`, `publishing/{base,fake,browser}.py`, `browser/{protocol,bridge}.py` (`CompanionBridge` WS server: pairing token, origin check, one action per profile, timeouts), `media/{transcribe,download,faces,ocr}.py` (+ `media/gpu_scripts/whisperx_transcribe.py`), `trends/source.py`.
 - `core/clipper/worker/{jobs,handlers}.py`: durable job queue (`job` table, recover on start, per-resource limits) and handlers `download`, `analyze`, `render_preview` (review preview + QA + Discord size fit), `render_final`.
 - Writes use `BEGIN IMMEDIATE`, so cap checks stay atomic across processes (tested with two writers on one file).
+
+### WP5
+- `core/clipper/agents/definitions.py`: `build_options(SessionSpec, settings, guard=, tool_ctx=, record_builtin=)` -> `ClaudeAgentOptions` (setting_sources=[], `tools` = only needed built-ins, `allowed_tools` + `permission_mode="dontAsk"`, in-process MCP servers limited to the session's tools, `agents` = role + subagent `AgentDefinition`s with their own tool lists/effort/maxTurns, `extra_args={"agent": role}`, hooks, `env` with billing keys blanked, no `max_budget_usd`).
+- `core/clipper/agents/prompts/`: `shared.md` (untrusted-content and guard rules) + `scout.md`, `campaign.md`, `analyst.md`, `director.md`, `subagents/{brief-reader,research,editor,cutter,qa-checker,copywriter,browser-fixer}.md`.
+- `core/clipper/agents/runner.py`: `AgentRunner` protocol; `SdkAgentRunner` (ClaudeSDKClient; records messages/tool calls/thinking summaries to `agent_event`; handles `RateLimitEvent`, `rate_limit` errors and 429s; interrupt); `FakeAgentRunner` (scripted `ToolStep`/`Say`/`RateLimited`, runs through the same PreToolUse hook and tool wrapper).
+- `core/clipper/supervisor/`: `router.route()` (event -> priority/role/campaign; merging in `Supervisor.enqueue`), `pool.pick()` (pure scheduling), `messages.build_prompt()` (short resume messages with usage/dry-run/pinned notes), `supervisor.Supervisor` (inbox with DB catch-up cursor, dispatch, one session per campaign resumed via `resume=`, persistent Director, fresh Scout/Analyst, leases, triggers, wakeups, watchdog, due posts, question timeouts, kill switch, slot board, bump/cancel, `run_until_idle()` for tests).
+- `CampaignService.update`: agents can take a campaign only in `auto` mode above the auto-take score (enforced in code).
+- `core/clipper/evaluation.py` + `tests/golden/`: `clipper eval` scoring (pure, tested); the picker needs a real editor run.
 
 ### WP4 (built before WP3: the `edit` tools sit on it)
 - `core/clipper/media/edl/schema.py`: `Edl` (segments/camera/captions in source time, overlays in output time), `new_edl()`.

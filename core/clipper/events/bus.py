@@ -88,6 +88,15 @@ class Subscription:
         except RuntimeError:  # loop closed
             self.closed = True
 
+    def get_nowait(self) -> EventEnvelope | None:
+        try:
+            return self._queue.get_nowait()
+        except asyncio.QueueEmpty:
+            return None
+
+    def pending(self) -> int:
+        return self._queue.qsize()
+
     async def get(self, timeout: float | None = None) -> EventEnvelope | None:
         if timeout is None:
             return await self._queue.get()

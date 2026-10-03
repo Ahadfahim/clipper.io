@@ -176,7 +176,9 @@ class CampaignService(Service):
 
         self.db.write(job)
 
-    def update(self, campaign_id: int, fields: dict[str, Any]) -> list[str]:
+    def update(self, campaign_id: int, fields: dict[str, Any], *, by: str = "user") -> list[str]:
+        """Agents (``by`` = "session:<id>" or a role) may only *take* a campaign in auto mode above the
+        auto-take score (PLAN §3 Scout, §13 autonomy). Enforced here, not in the prompt."""
         bad = set(fields) - EDITABLE_FIELDS
         if bad:
             raise ServiceError(
@@ -184,14 +186,33 @@ class CampaignService(Service):
             )
         if "status" in fields and fields["status"] not in AGENT_STATUSES:
             raise ServiceError(f"status must be one of {', '.join(sorted(AGENT_STATUSES))}")
+        scout = self.settings.scout
 
         def job(tx: WriteTx) -> list[str]:
             row = self._get(tx, campaign_id)
+            taking = fields.get("status") == CampaignStatus.ACTIVE and row.status == CampaignStatus.SUGGESTED
+            if taking and by != "user":
+                market = tx.session.get(Marketplace, row.marketplace)
+                score = fields.get("score", row.score) or 0
+                if scout.mode != "auto" or (market is not None and market.mode != "auto"):
+                    raise ServiceError(
+                        "Scout is in suggest mode: only the user can take a campaign (post a card instead)"
+                    )
+                if score < scout.auto_take_min_score:
+                    raise ServiceError(f"auto-take needs a score of at least {scout.auto_take_min_score}")
             for key, value in fields.items():
                 setattr(row, key, value)
             row.updated_at = self.now()
+            if taking:
+                row.taken_at = self.now()
             tx.add(row)
             tx.publish(CampaignUpdated(campaign_id=campaign_id, fields=sorted(fields)))
+            if taking:
+                tx.publish(
+                    CampaignTaken(
+                        campaign_id=campaign_id, by=by, via="agent" if by != "user" else "dashboard"
+                    )
+                )
             return sorted(fields)
 
         return self.db.write(job)

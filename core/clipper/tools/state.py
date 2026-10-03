@@ -71,7 +71,10 @@ async def update_campaign(ctx: ToolContext, a: UpdateCampaign) -> dict[str, Any]
     fields = {k: v for k, v in a.model_dump().items() if k != "campaign_id" and v is not None}
     if not fields:
         raise ToolFailure("nothing to update")
-    return {"campaign_id": a.campaign_id, "updated": ctx.core.campaigns.update(a.campaign_id, fields)}
+    return {
+        "campaign_id": a.campaign_id,
+        "updated": ctx.core.campaigns.update(a.campaign_id, fields, by=ctx.actor),
+    }
 
 
 class SaveSpec(_A):
