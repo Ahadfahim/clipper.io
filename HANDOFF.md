@@ -1,7 +1,7 @@
 # HANDOFF — cloud → local
 
 ## 1. Snapshot
-- Branch / PR: `claude/affectionate-davinci-f3xmlm` / PR: (set after the PR is opened)
+- Branch / PR: `claude/affectionate-davinci-f3xmlm` / https://github.com/Ahadfahim/clipper.io/pull/1 (draft)
 - Last commit: `66869c0` fix(tauri): remember one pop-out position for every Review batch (commits after it only touch this file)
 - Work packages:
   - WP0 ✅ Repo scaffold: uv + pnpm workspaces, ruff/pyright (strict on core)/pytest, eslint/tsc/vitest/Playwright, settings example, justfile, CI (lint, tests, builds, screenshots, `cargo check` for Linux and Windows)
