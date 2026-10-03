@@ -107,7 +107,9 @@ function CaptionField({ batchId, clip, platform }: { batchId: number; clip: RC; 
   const save = useCaption();
   const saved = clip.captions[platform] ?? "";
   const [v, setV] = useState(saved);
-  useEffect(() => setV(saved), [saved, clip.clip.id]);
+  useEffect(() => {
+    setV(saved);
+  }, [saved, clip.clip.id]);
   const label = platform === "youtube" ? "YouTube title" : `${PLATFORM_LABEL[platform]} caption`;
   return (
     <Field label={label}>

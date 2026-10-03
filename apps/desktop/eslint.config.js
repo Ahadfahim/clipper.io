@@ -15,6 +15,16 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": "off",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "no-restricted-syntax": [
+        "error",
+        {
+          // an effect must return a cleanup function or nothing; a concise body returns whatever the
+          // expression gives (scrollIntoView returns a Promise in WebView2) and React then crashes
+          // with "destroy is not a function"
+          selector: "CallExpression[callee.name=/^use(Layout|Insertion)?Effect$/] > ArrowFunctionExpression[expression=true]",
+          message: "Give effects a block body: { ... }. A returned value is taken as the cleanup function.",
+        },
+      ],
     },
   },
 );

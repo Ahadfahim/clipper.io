@@ -80,7 +80,11 @@ function Transcript({ detail, onReplay }: { detail?: Schemas["SessionDetail"]; o
     return flatten(items).filter((i) => (onlyBlocked && i.kind === "blocked") || (onlyErrors && (i.kind === "blocked" || (i.kind === "tool" && i.ok === false))));
   }, [items, onlyErrors, onlyBlocked]);
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [detail?.events.length]);
+  // a block body: scrollIntoView returns a Promise in current Chromium (WebView2), and an effect
+  // that returns anything but a cleanup function crashes React ("destroy is not a function")
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [detail?.events.length]);
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <PaneHeader
@@ -190,7 +194,9 @@ function DirectorChat() {
   const chat = useDirectorChat();
   const [text, setText] = useState("");
   const end = useRef<HTMLDivElement>(null);
-  useEffect(() => end.current?.scrollIntoView({ block: "end" }), [msgs.length]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ block: "end" });
+  }, [msgs.length]);
   return (
     <section aria-label="Director chat" className="flex min-h-0 flex-1 flex-col">
       <PaneHeader>Director · same conversation as #control in Discord</PaneHeader>
