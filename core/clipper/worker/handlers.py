@@ -14,14 +14,14 @@ from clipper.db.engine import WriteTx
 from clipper.db.models import Analysis, Campaign, Clip, Moment, Review, ReviewBatch, Source
 from clipper.db.types import BatchStatus, ClipStatus, SourceStatus
 from clipper.events.types import ClipUpdated, PreviewReplaced
-from clipper.media.download import file_hash
+from clipper.media.download import DownloadError, file_hash
 from clipper.media.edl.qa import measure, qa_report
 from clipper.media.edl.render import encode_to_size, render_edl, thumbnail
 from clipper.media.encode import final_profile, review_profile
 from clipper.media.ffmpeg import detect_silences, energy_curve, probe, run_ffmpeg, scene_cuts
 from clipper.rules.spec import ClipSpec
 from clipper.services.media import load_faces
-from clipper.worker.jobs import JobContext, JobQueue
+from clipper.worker.jobs import JobContext, JobFailed, JobQueue
 
 log = logging.getLogger(__name__)
 
@@ -61,9 +61,11 @@ def download(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
         res = core.adapters.downloader.download(str(data["url"]), dest)
     except Exception as exc:
         _set_source(core, source_id, status=SourceStatus.FAILED)
-        raise RuntimeError(
-            f"{exc}\n\nDownload it yourself and put the video in {dest} (Clipper attaches it on its own), "
-            "or use Attach file on the source."
+        reason = exc.reason if isinstance(exc, DownloadError) else f"{type(exc).__name__}: {exc}"
+        raise JobFailed(
+            f"{reason}\n\nDownload it yourself and put the video in {dest} (Clipper attaches it on its own), "
+            "or use Attach file on the source.",
+            raw_tail=exc.raw_tail if isinstance(exc, DownloadError) else "",
         ) from exc
     ctx.progress(0.8)
     digest = file_hash(res.path)

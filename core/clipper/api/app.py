@@ -70,7 +70,7 @@ def _fixture_core(settings: Settings) -> Core:
     from clipper.fixtures.seed import demo_adapters, seed_demo
 
     data = settings.paths.data_dir / "fixture"
-    fixture_settings = settings.with_data_dir(data)
+    fixture_settings = settings.isolated(data)
     db_path = data / "fixture.sqlite"
     if data.exists():
         for p in data.glob("fixture.sqlite*"):

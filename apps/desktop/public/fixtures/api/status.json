@@ -4,12 +4,14 @@
  "browser": [
   {
    "extension_connected": true,
+   "hung": false,
    "name": "beast",
    "running": false,
    "visible": false
   },
   {
    "extension_connected": true,
+   "hung": false,
    "name": "main",
    "running": false,
    "visible": false

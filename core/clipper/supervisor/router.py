@@ -81,6 +81,8 @@ def route(env: EventEnvelope, *, session_of: SessionLookup, clip_campaign: ClipC
             cid = clip_campaign(int(p["scope_id"]))
         return campaign(P0, cid) if cid is not None else [RequestSpec(P0, "director", t, None, ev)]
     if t == "question.answered":
+        if p.get("via") == "campaign_closed":
+            return []  # the campaign is over; nobody to resume
         sid = p.get("session_id")
         info = session_of(int(sid)) if sid is not None else None
         if info is not None and info.role == "campaign":

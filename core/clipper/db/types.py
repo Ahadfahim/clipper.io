@@ -126,6 +126,7 @@ class QuestionStatus(StrEnum):
     OPEN = "open"
     ANSWERED = "answered"
     TIMED_OUT = "timed_out"
+    CLOSED = "closed"  # its campaign ended or was skipped before anyone answered
 
 
 class WakeupStatus(StrEnum):

@@ -15,6 +15,43 @@ from clipper.rules.urls import canonical_source
 from clipper.settings import Settings
 
 
+class DownloadError(RuntimeError):
+    """A download failed. ``reason`` is one plain sentence; ``raw_tail`` is the tool's last output."""
+
+    def __init__(self, reason: str, raw_tail: str = "") -> None:
+        super().__init__(reason)
+        self.reason = reason
+        self.raw_tail = raw_tail
+
+
+_KNOWN_ERRORS: tuple[tuple[str, str], ...] = (
+    ("unsupported url", "This site isn't supported by the downloader"),
+    ("http error 403", "The host refused the download (403)"),
+    ("http error 404", "The link doesn't exist any more (404)"),
+    ("sign in to confirm", "YouTube asked for a sign-in check"),
+    ("private video", "The video is private"),
+    ("video unavailable", "The video isn't available"),
+    ("this video is not available", "The video isn't available"),
+)
+
+
+def clean_ytdlp_error(stderr: str) -> tuple[str, str]:
+    """Reduce yt-dlp's stderr to one sentence. Its warnings come first (an out-of-date notice, for
+    one) and used to be all anyone saw; the reason is the last ``ERROR:`` line."""
+    lines = [ln.strip() for ln in stderr.splitlines() if ln.strip()]
+    tail = "\n".join(lines)[-4000:]
+    errors = [ln for ln in lines if ln.startswith("ERROR:")]
+    pool = errors or [ln for ln in lines if not ln.startswith("WARNING:")]
+    if not pool:
+        return "yt-dlp failed without saying why", tail
+    reason = pool[-1].removeprefix("ERROR:").strip()
+    low = reason.lower()
+    for needle, friendly in _KNOWN_ERRORS:
+        if needle in low:
+            return friendly, tail
+    return reason[:300], tail
+
+
 @dataclass(frozen=True)
 class DownloadResult:
     path: Path
@@ -113,7 +150,8 @@ class YtDlpDownloader:
         ]  # fmt: skip
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=6 * 3600, check=False)
         if proc.returncode != 0:
-            raise RuntimeError(f"yt-dlp failed: {proc.stderr.strip()[-600:]}")
+            reason, tail = clean_ytdlp_error(proc.stderr)
+            raise DownloadError(reason, tail)
         path = Path(proc.stdout.strip().splitlines()[-1])
         info_path = path.with_suffix(".info.json")
         info: dict[str, Any] = json.loads(info_path.read_text(encoding="utf-8")) if info_path.exists() else {}
@@ -133,7 +171,8 @@ class YtDlpDownloader:
                "--extractor-args", f"youtube:max_comments={limit},all,0;comment_sort=top", url]  # fmt: skip
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=600, check=False)
         if proc.returncode != 0:
-            raise RuntimeError(f"yt-dlp comments failed: {proc.stderr.strip()[-400:]}")
+            reason, tail = clean_ytdlp_error(proc.stderr)
+            raise DownloadError(f"couldn't read comments: {reason}", tail)
         data: dict[str, Any] = json.loads(proc.stdout or "{}")
         raw: list[dict[str, Any]] = list(data.get("comments") or [])
         out = [

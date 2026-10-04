@@ -144,6 +144,21 @@ def doctor(core: CoreDep, request: Request) -> list[S.HealthItem]:
     return [S.HealthItem.model_validate(r.as_dict()) for r in run_checks(core.settings, include_slow=False)]
 
 
+@system.post("/ytdlp/update", response_model=S.YtdlpUpdateOut)
+async def ytdlp_update(core: CoreDep, request: Request) -> S.YtdlpUpdateOut:
+    """Update yt-dlp (Settings -> Media and captions). Sites change often; an old copy fails downloads."""
+    import asyncio
+
+    from clipper.media.ytdlp_update import update_ytdlp
+
+    if request.app.state.fixture_mode:
+        return S.YtdlpUpdateOut(
+            ok=True, before="2026.03.17", after="2026.08.19", detail="updated to 2026.08.19"
+        )
+    res = await asyncio.to_thread(update_ytdlp, core.settings.paths.yt_dlp)
+    return S.YtdlpUpdateOut(ok=res.ok, before=res.before, after=res.after, detail=res.detail)
+
+
 @system.get("/events", response_model=list[S.EventOut])
 def events(
     core: CoreDep,
@@ -406,15 +421,19 @@ def browser_profiles(core: CoreDep) -> list[S.BrowserProfileOut]:
 
 @system.post("/browser/profiles/{profile}/{action}", response_model=S.BrowserProfileOut)
 def browser_window(
-    core: CoreDep, profile: str, action: Literal["show", "hide", "toggle", "open"]
+    core: CoreDep, profile: str, action: Literal["show", "hide", "toggle", "open", "restart"]
 ) -> S.BrowserProfileOut:
     """Show or hide Clipper's own Chrome for a profile (watch the agents, log in, fix a challenge).
     ``open`` is the older name for ``show``. Clipper starts the profile's Chrome if it isn't running."""
     chrome = core.chrome
     try:
-        state = {"show": chrome.show, "open": chrome.show, "hide": chrome.hide, "toggle": chrome.toggle}[
-            action
-        ](profile)
+        state = {
+            "show": chrome.show,
+            "open": chrome.show,
+            "hide": chrome.hide,
+            "toggle": chrome.toggle,
+            "restart": chrome.restart,
+        }[action](profile)
     except ValueError as exc:
         raise HTTPException(400, str(exc)) from exc
     except OSError as exc:

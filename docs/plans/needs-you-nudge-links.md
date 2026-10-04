@@ -1,6 +1,6 @@
 # Plan: Needs you details, nudges, campaign links, and stuck-work fixes
 
-Status: planned 2026-10-04. Nothing is implemented yet. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
+Status: planned 2026-10-04. M0 is implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
 
 This plan is for whoever implements it. Read CLAUDE.md first: agents run on the plan login only, safety rules live in code, and UI work follows the routine (frontend-design skill, shadcn MCP, utility style, check dark and light at 1280×800 and 1920×1080).
 
@@ -412,12 +412,13 @@ The window is a Clipper Chrome window (`main` profile), shown before Chrome has 
 - Progress and stall handling: see B3.
 
 ### 6.6 Drop-folder safety and fixture isolation (H2)
-- `scan_drop_folders` only attaches a file when all of these hold:
-  - its `st_mtime` is later than the source started waiting (`created_at`, or the time it last entered a waiting status);
-  - the source's status is `failed` or `needs_footage`, never `listed`/`queued` (those haven't been tried);
-  - the duration check in §6.2 passes. A suspicious file becomes a `footage` item with "Found <file> in the drop folder. Use it for source N?" instead of being attached.
+- `scan_drop_folders` only attaches a file when all of these hold (implemented in M0):
+  - its `st_mtime` is not older than the source (`created_at`); an older file is a leftover. Later, with `source.waiting_since` (migration `0003`), use the time the source last entered a waiting status;
+  - the source's status is `failed` (and `needs_footage` once M3 adds it), never `listed`, `queued` or `downloading` (those haven't been tried, or are still running);
+  - the file is not shorter than the campaign spec's `duration_min_s`. This check only runs once a spec is saved; the UI's confirm in §6.2 also warns about files under 60 s.
+  - A file that fails a rule is mentioned once (an alert) and ignored until it changes, with the list kept in `kv` (`media.drop_refused`). From M3 it becomes a `footage` item with "Found <file> in the drop folder. Use it for source N?" instead of an alert.
 - Every automatic attach posts an `info` alert (today) **and** adds a line to the campaign timeline with "Undo": put the source back to waiting and move the file aside.
-- Fixture isolation: `Settings.with_data_dir()` (`settings.py:310`) still keeps a sources folder **you chose yourself**. Fixture mode and `Core.create(fakes=True)` must move **every** path under `<data_dir>/fixture/`, whatever the settings say. Add a guard in `FakeDownloader.download` and the fixture seeder that raises if `dest_dir` is inside the real `paths.sources_dir`, and a test that runs fixture mode with a custom `sources_dir` and asserts nothing is written there.
+- Fixture isolation (implemented in M0): `Settings.with_data_dir()` keeps a sources folder **you chose yourself**, on purpose. Fixture mode and the fixture export now use the new `Settings.isolated(data_dir)`, which moves **every** folder under the demo data folder. `Core.create(fakes=True)` raises when the sources folder is outside the data folder, so fake footage can't reach real folders; tests cover both.
 
 ### 6.7 One-time cleanup on this machine (do it by hand; listed so it isn't forgotten)
 1. Move `C:\ClipperData\sources\campaign_1\youtube_ext101xxxxx.*` and `youtube_dQw4w9WgXcQ.*` to a quarantine folder. They are fixtures, not footage.
@@ -638,7 +639,7 @@ Each milestone ends with `just lint`, `just test`, the e2e run and the screensho
 
 **M0. Hotfixes (H1–H5, 7.1, 7.2, 7.8, 7.19)**
 - Needs you grid layout: the question text is visible and actions never overflow. Collapsed rows only; the expansion comes in M1.
-- Option validation and Discord option indexes.
+- Option validation (the Discord bot already sent option indexes, not option text, so it needed no change).
 - Drop-folder rules (6.6) and fixture isolation, then the cleanup in 6.7 (by hand).
 - `clean_ytdlp_error`, the yt-dlp age warning and the update button.
 - Chrome window fixes from §5, steps 1–6 (step 7, pop-outs, is in M6).
@@ -667,7 +668,7 @@ Each milestone ends with `just lint`, `just test`, the e2e run and the screensho
 - The detector, the nudge API and events, job progress/heartbeat/cancel, the UI on every surface, 7.6, 7.9, 7.10 and 7.14.
 - Done when each stall kind can be produced on purpose (a hung fake runner, a stalled dummy job, a lease held by a dead session) and cleared from Needs you with one action.
 
-**M5. Automatic nudges and Discord (B4, A4's "Other…" modal, Discord parts of B5 and C3; A4's option indexes ship in M0)**
+**M5. Automatic nudges and Discord (B4, A4's "Other…" modal, Discord parts of B5 and C3)**
 - Done when an automatic restart happens once, escalates after `max_auto_nudges`, and Discord can nudge and send a custom answer.
 
 **M6. Polish**

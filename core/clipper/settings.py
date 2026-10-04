@@ -238,6 +238,7 @@ class MediaSettings(_Model):
     max_concurrent_downloads: int = 2
     default_caption_style: str = "bold-pop"
     silence_threshold_db: float = -35.0
+    ytdlp_max_age_days: int = 60  # the doctor warns when yt-dlp is older than this
 
 
 class DiscordChannels(_Model):
@@ -326,6 +327,27 @@ class Settings(_Model):
         if self.paths.chrome_profiles_dir == DEFAULT_CHROME_PROFILES:
             update["chrome_profiles_dir"] = data_dir / "chrome"  # never the real logged-in profiles
         return self.model_copy(update={"paths": self.paths.model_copy(update=update)})
+
+    def isolated(self, data_dir: Path) -> Settings:
+        """A copy whose every writable folder lives under ``data_dir``, whatever this one chose.
+        Demo and test runs use it so fake footage and fake Chrome profiles can never land in the
+        folders you picked for real work (``with_data_dir`` keeps those on purpose)."""
+        reset = dict.fromkeys(
+            (
+                "sources_dir",
+                "work_dir",
+                "clips_dir",
+                "previews_dir",
+                "db_path",
+                "logs_dir",
+                "screenshots_dir",
+                "backups_dir",
+            )
+        )
+        paths = self.paths.model_copy(
+            update={"data_dir": data_dir, "chrome_profiles_dir": data_dir / "chrome", **reset}
+        )
+        return self.model_copy(update={"paths": paths})
 
 
 def load_settings(path: Path | None = None, overrides: dict[str, Any] | None = None) -> Settings:

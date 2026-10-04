@@ -153,7 +153,8 @@
    "silence_threshold_db": -35.0,
    "true_peak_db": -1.5,
    "whisper_language": null,
-   "whisper_model": "large-v3"
+   "whisper_model": "large-v3",
+   "ytdlp_max_age_days": 60
   },
   "notify": {
    "ntfy_topic": null,

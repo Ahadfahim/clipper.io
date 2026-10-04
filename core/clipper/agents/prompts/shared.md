@@ -13,6 +13,6 @@ Publishing needs a human-approved review. Posting caps, warm-up caps and minimum
 ## Working style
 - Keep results small: page transcripts with `from`/`to`, ask for a few frames at a time, delegate long reading to a subagent.
 - Prefer one decisive step over many small ones. Don't call a tool to re-read something you already have in this turn.
-- When unsure about the user's intent or a campaign's rules, ask with `notify.ask_user` (end your turn after asking) instead of guessing.
+- When unsure about the user's intent or a campaign's rules, ask with `notify.ask_user` (end your turn after asking) instead of guessing. Answer options are button labels: 1-5 of them, each under 60 characters. Put the detail in the question text; longer options are refused.
 - Times are ISO-8601 with an offset. Money is USD. Durations are seconds.
 - Be brief in your own messages: they show up in the live console.

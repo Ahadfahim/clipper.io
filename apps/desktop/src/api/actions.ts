@@ -1,5 +1,5 @@
 // Mutations. Every change goes through the core API (same services and guards the agents use).
-import type { QueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { api, unwrap, type Schemas } from "./client";
 import { qk, useAction } from "./queries";
 
@@ -449,5 +449,14 @@ export function useTestModel() {
   return useAction({
     run: (model: string) => unwrap(api.POST("/api/agents/models/test", { body: { model } })),
     invalidate: () => [qk.models],
+  });
+}
+
+/** Update yt-dlp (sites change often; an old copy fails downloads). The Health check refreshes after. */
+export function useUpdateYtdlp() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => unwrap(api.POST("/api/ytdlp/update")),
+    onSettled: () => void qc.invalidateQueries({ queryKey: qk.doctor }),
   });
 }

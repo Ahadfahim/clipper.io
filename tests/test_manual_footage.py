@@ -136,3 +136,86 @@ def test_campaigns_whose_payouts_ended_are_never_suggested_and_wind_down(core: C
     with core.db.read() as s:
         status = s.exec(select(Campaign).where(Campaign.external_id == "fresh")).one().status
     assert status == CampaignStatus.ENDING
+
+
+# ---------------------------------------------------------------- the drop folder only takes the right file
+
+
+def _drop(core: Core, cid: int, video: Path, *, age_s: float = 0.0) -> Path:
+    import os
+    import time
+
+    folder = core.media.drop_folder(cid)
+    folder.mkdir(parents=True, exist_ok=True)
+    target = folder / video.name
+    shutil.copy(video, target)
+    when = time.time() - age_s
+    os.utime(target, (when, when))
+    return target
+
+
+def _alerts(core: Core) -> list[str]:
+    seen: list[str] = []
+    core.bus.add_listener(lambda e: seen.append(str(e.payload["text"])), types=["alert"])
+    return seen
+
+
+def test_a_source_that_was_only_listed_never_takes_a_file_from_the_folder(
+    core: Core, video: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("clipper.services.media.DROP_SCAN_EVERY_S", 0.0)
+    camp = make_campaign(core.db)
+    assert camp.id is not None
+    for status in (SourceStatus.LISTED, SourceStatus.QUEUED, SourceStatus.DOWNLOADING):
+        make_source(core.db, camp.id, url=f"https://f.io/{status}", status=status)
+    _drop(core, camp.id, video)
+    assert core.media.scan_drop_folders() == []
+    assert core.media.scan_drop_folders() == []  # stable size, still not taken
+    with core.db.read() as s:
+        assert all(x.path is None for x in s.exec(select(Source)).all())
+
+
+def test_a_file_older_than_the_request_is_left_alone_and_mentioned_once(
+    core: Core, video: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("clipper.services.media.DROP_SCAN_EVERY_S", 0.0)
+    cid, sid = _failed_source(core)
+    _drop(core, cid, video, age_s=3600)  # a leftover from before the source existed
+    alerts = _alerts(core)
+    assert [core.media.scan_drop_folders() for _ in range(4)] == [[], [], [], []]
+    assert core.media.source(sid).path is None
+    assert len(alerts) == 1 and "older than the request" in alerts[0] and video.name in alerts[0]
+
+
+def test_a_file_shorter_than_the_spec_minimum_is_left_alone_and_mentioned_once(
+    core: Core, video: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from clipper.rules.spec import ClipSpec
+
+    monkeypatch.setattr("clipper.services.media.DROP_SCAN_EVERY_S", 0.0)
+    cid, sid = _failed_source(core)
+    core.campaigns.save_spec(cid, ClipSpec(duration_min_s=45.0))
+    _drop(core, cid, video)  # the test clip is about 8 s long
+    alerts = _alerts(core)
+    assert [core.media.scan_drop_folders() for _ in range(4)] == [[], [], [], []]
+    assert core.media.source(sid).path is None
+    assert len(alerts) == 1 and "only 0:0" in alerts[0] and "at least 0:45" in alerts[0]
+
+
+def test_without_a_spec_the_length_is_not_checked(core: Core, video: Path) -> None:
+    _cid, sid = _failed_source(core)
+    assert core.media.attach_file(sid, video, check=True)["source_id"] == sid
+    assert core.media.source(sid).status == SourceStatus.DOWNLOADED
+
+
+def test_attach_with_check_raises_suspicious_footage(core: Core, video: Path) -> None:
+    from clipper.rules.spec import ClipSpec
+    from clipper.services.media import SuspiciousFootage
+
+    cid, sid = _failed_source(core)
+    core.campaigns.save_spec(cid, ClipSpec(duration_min_s=45.0))
+    with pytest.raises(SuspiciousFootage) as err:
+        core.media.attach_file(sid, video, check=True)
+    assert err.value.minimum == 45.0 and 7 < err.value.duration < 12
+    assert core.media.source(sid).status == SourceStatus.FAILED
+    assert core.media.attach_file(sid, video)["source_id"] == sid  # the user confirmed

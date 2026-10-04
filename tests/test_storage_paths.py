@@ -37,3 +37,31 @@ def test_saving_a_relative_folder_is_refused(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="full path"):
         patch_settings_file({"paths.sources_dir": "sources"}, tmp_path / "settings.toml")
     assert not (tmp_path / "settings.toml").exists()
+
+
+def test_isolated_settings_move_every_folder_even_ones_you_chose(tmp_path: Path) -> None:
+    chosen = {
+        "sources_dir": str(tmp_path / "real" / "sources"),
+        "clips_dir": str(tmp_path / "real" / "clips"),
+        "backups_dir": str(tmp_path / "real" / "backups"),
+        "chrome_profiles_dir": str(tmp_path / "real" / "chrome"),
+    }
+    s = load_settings(tmp_path / "none.toml", overrides={"paths": chosen})
+    demo = s.isolated(tmp_path / "demo")
+    for name in ("sources", "clips", "backups", "work", "previews", "logs", "screenshots"):
+        assert demo.paths.sub(name) == tmp_path / "demo" / name
+    assert demo.paths.chrome_profiles_dir == tmp_path / "demo" / "chrome"
+    assert demo.paths.database == tmp_path / "demo" / "clipper.sqlite"
+    assert s.paths.sub("sources") == tmp_path / "real" / "sources"  # the original is untouched
+
+
+def test_fake_adapters_refuse_a_sources_folder_outside_the_data_folder(tmp_path: Path) -> None:
+    from clipper.core import Core
+
+    s = load_settings(
+        tmp_path / "none.toml",
+        overrides={"paths": {"data_dir": str(tmp_path / "data"), "sources_dir": str(tmp_path / "real")}},
+    )
+    with pytest.raises(RuntimeError, match="outside the data folder"):
+        Core.create(s, fakes=True)
+    Core.create(s.isolated(tmp_path / "demo"), fakes=True).close()

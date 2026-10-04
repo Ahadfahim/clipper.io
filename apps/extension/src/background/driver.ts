@@ -33,10 +33,13 @@ export class ChromeTabDriver implements TabDriver {
         /* closed */
       }
     }
-    const t = await chrome.tabs.create({ url: "about:blank", active: true });
-    this.tabId = t.id ?? null;
+    // Its own window, never a tab among yours: a recipe run can't change what you are looking at,
+    // links you open yourself don't land in the middle of a run, and a screenshot of "the visible tab"
+    // is the tab the recipe is working in.
+    const w = await chrome.windows.create({ url: "about:blank", type: "normal", focused: false });
+    this.tabId = w?.tabs?.[0]?.id ?? null;
     await chrome.storage.session.set({ clipperTab: this.tabId });
-    if (this.tabId === null) throw new Error("couldn't open a tab");
+    if (this.tabId === null) throw new Error("couldn't open a window for the recipe");
     return this.tabId;
   }
 

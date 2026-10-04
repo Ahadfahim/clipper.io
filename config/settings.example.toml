@@ -161,6 +161,7 @@ max_concurrent_transcribes = 1
 max_concurrent_downloads = 2
 default_caption_style = "bold-pop"
 silence_threshold_db = -35.0
+ytdlp_max_age_days = 60       # the doctor warns when yt-dlp is older than this
 
 [discord]
 enabled = true

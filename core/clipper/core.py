@@ -96,6 +96,18 @@ class Adapters:
         )
 
 
+def _refuse_fake_footage_outside_data(settings: Settings) -> None:
+    """Fake adapters copy test videos into the sources folder. If that folder is outside the data
+    folder it is somebody's real one (the default is C:/ClipperData/sources), and a stray fixture there gets
+    attached to a real campaign. Use ``settings.isolated(data_dir)`` for demo and test runs."""
+    sources = settings.paths.sub("sources").resolve()
+    if not sources.is_relative_to(settings.paths.data_dir.resolve()):
+        raise RuntimeError(
+            f"fake adapters would write test footage into {sources}, outside the data folder "
+            f"{settings.paths.data_dir}; build the settings with Settings.isolated(data_dir)"
+        )
+
+
 class Core:
     def __init__(
         self, settings: Settings, db: Database, adapters: Adapters, clock: Clock | None = None
@@ -141,6 +153,12 @@ class Core:
         self.trends = TrendsService(self)
         self.usage = UsageTracker(self)
         self.chrome = ChromeManager(settings, adapters.windows)
+        self.chrome.on_hung = lambda profile: self.notify.alert(
+            "error",
+            f"Clipper's Chrome ({profile}) isn't responding. Restart the browser from Tools, "
+            "or show it to see what it is stuck on.",
+            source="browser",
+        )
         from clipper.worker.handlers import register_handlers
 
         register_handlers(self.jobs)
@@ -155,6 +173,8 @@ class Core:
         db_path: Path | None = None,
     ) -> Core:
         path = db_path or settings.paths.database
+        if fakes:
+            _refuse_fake_footage_outside_data(settings)
         db = Database(path, create=True)
         seed_base(db, settings)
         adapters = Adapters.fakes() if fakes else Adapters.real(settings)

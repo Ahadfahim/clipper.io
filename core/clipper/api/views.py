@@ -624,7 +624,11 @@ def browser_profiles(core: Core) -> list[S.BrowserProfileOut]:
     connected = set(core.adapters.browser.connected_profiles())
     return [
         S.BrowserProfileOut(
-            name=p.name, running=p.running, visible=p.visible, extension_connected=p.name in connected
+            name=p.name,
+            running=p.running,
+            visible=p.visible,
+            hung=p.hung,
+            extension_connected=p.name in connected,
         )
         for p in core.chrome.states()
     ]

@@ -66,6 +66,7 @@ class BrowserProfileOut(M):
     running: bool
     visible: bool
     extension_connected: bool
+    hung: bool = False  # its window has not responded for 30 s
 
 
 class StatusOut(M):
@@ -125,6 +126,13 @@ class OkOut(M):
     ok: bool = True
     id: int | None = None
     detail: str | None = None
+
+
+class YtdlpUpdateOut(M):
+    ok: bool
+    before: str
+    after: str
+    detail: str
 
 
 class RecipeTestIn(BaseModel):

@@ -904,6 +904,11 @@
       "title": "Extension Connected",
       "type": "boolean"
      },
+     "hung": {
+      "default": false,
+      "title": "Hung",
+      "type": "boolean"
+     },
      "name": {
       "title": "Name",
       "type": "string"
@@ -921,7 +926,8 @@
      "name",
      "running",
      "visible",
-     "extension_connected"
+     "extension_connected",
+     "hung"
     ],
     "title": "BrowserProfileOut",
     "type": "object"
@@ -5178,6 +5184,34 @@
     ],
     "title": "WordOut",
     "type": "object"
+   },
+   "YtdlpUpdateOut": {
+    "properties": {
+     "after": {
+      "title": "After",
+      "type": "string"
+     },
+     "before": {
+      "title": "Before",
+      "type": "string"
+     },
+     "detail": {
+      "title": "Detail",
+      "type": "string"
+     },
+     "ok": {
+      "title": "Ok",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "ok",
+     "before",
+     "after",
+     "detail"
+    ],
+    "title": "YtdlpUpdateOut",
+    "type": "object"
    }
   }
  },
@@ -5904,7 +5938,8 @@
         "show",
         "hide",
         "toggle",
-        "open"
+        "open",
+        "restart"
        ],
        "title": "Action",
        "type": "string"
@@ -9177,6 +9212,28 @@
      }
     },
     "summary": "Version"
+   }
+  },
+  "/api/ytdlp/update": {
+   "post": {
+    "description": "Update yt-dlp (Settings -> Media and captions). Sites change often; an old copy fails downloads.",
+    "operationId": "ytdlp_update_api_ytdlp_update_post",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/YtdlpUpdateOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Ytdlp Update",
+    "tags": [
+     "system"
+    ]
    }
   }
  }

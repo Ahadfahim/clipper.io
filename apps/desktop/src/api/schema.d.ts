@@ -1498,6 +1498,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ytdlp/update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ytdlp Update
+         * @description Update yt-dlp (Settings -> Media and captions). Sites change often; an old copy fails downloads.
+         */
+        post: operations["ytdlp_update_api_ytdlp_update_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1804,6 +1824,11 @@ export interface components {
         BrowserProfileOut: {
             /** Extension Connected */
             extension_connected: boolean;
+            /**
+             * Hung
+             * @default false
+             */
+            hung: boolean;
             /** Name */
             name: string;
             /** Running */
@@ -3266,6 +3291,17 @@ export interface components {
             /** Text */
             text: string;
         };
+        /** YtdlpUpdateOut */
+        YtdlpUpdateOut: {
+            /** After */
+            after: string;
+            /** Before */
+            before: string;
+            /** Detail */
+            detail: string;
+            /** Ok */
+            ok: boolean;
+        };
     };
     responses: never;
     parameters: never;
@@ -3781,7 +3817,7 @@ export interface operations {
             header?: never;
             path: {
                 profile: string;
-                action: "show" | "hide" | "toggle" | "open";
+                action: "show" | "hide" | "toggle" | "open" | "restart";
             };
             cookie?: never;
         };
@@ -6008,6 +6044,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: unknown;
                     };
+                };
+            };
+        };
+    };
+    ytdlp_update_api_ytdlp_update_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["YtdlpUpdateOut"];
                 };
             };
         };

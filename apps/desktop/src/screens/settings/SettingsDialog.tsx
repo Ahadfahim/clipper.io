@@ -1,7 +1,7 @@
 import * as D from "@radix-ui/react-dialog";
 import { Dismiss16Regular } from "@fluentui/react-icons";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useDeleteLesson, useEditLesson, usePatchSettings, useSavePrompt, useSaveModels, useSaveSecret, useSwitch, useTestModel } from "@/api/actions";
+import { useDeleteLesson, useEditLesson, usePatchSettings, useSavePrompt, useSaveModels, useSaveSecret, useSwitch, useTestModel, useUpdateYtdlp } from "@/api/actions";
 import { useCampaigns, useDoctor, useLessons, useModels, usePrompts, useSettings, useStatus, useSwitches, useTools } from "@/api/queries";
 import { useLive } from "@/api/live";
 import type { Schemas } from "@/api/client";
@@ -694,6 +694,29 @@ function SpeakerLabels({ secrets }: { secrets: Record<string, boolean> }) {
   );
 }
 
+const DOCTOR_TONE: Record<string, StatusTone> = { ok: "ok", warn: "warn", fail: "bad", skip: "off" };
+
+/** yt-dlp downloads the sources. Sites change their pages every few weeks, so an old copy starts failing. */
+function Downloader() {
+  const row = useDoctor().data?.find((d) => d.name === "yt-dlp");
+  const update = useUpdateYtdlp();
+  return (
+    <Fieldset legend="Downloader">
+      <span className="flex items-center gap-1.5">
+        <Dot tone={row ? (DOCTOR_TONE[row.status] ?? "muted") : "muted"} /> {row?.detail ?? "Checking yt-dlp…"}
+      </span>
+      {row && row.status !== "ok" && row.fix && <span className="text-muted">{row.fix}</span>}
+      <div className="flex items-center gap-2">
+        <Button disabled={update.isPending} onClick={() => update.mutate()}>
+          {update.isPending ? "Updating…" : "Update yt-dlp"}
+        </Button>
+        {update.data && <span className={update.data.ok ? "text-muted" : "text-bad"}>{update.data.detail}</span>}
+        {update.error && <span className="text-bad">{update.error.message}</span>}
+      </div>
+    </Fieldset>
+  );
+}
+
 function Media({ ctx, secrets }: { ctx: Ctx; secrets: Record<string, boolean> }) {
   const current = String(val(ctx, "media.default_caption_style"));
   return (
@@ -735,6 +758,7 @@ function Media({ ctx, secrets }: { ctx: Ctx; secrets: Record<string, boolean> })
           <NumField ctx={ctx} k="media.loudness_lufs" label="Loudness (LUFS)" min={-24} max={-9} />
         </div>
       </Fieldset>
+      <Downloader />
       <SpeakerLabels secrets={secrets} />
     </>
   );

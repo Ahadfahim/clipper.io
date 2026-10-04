@@ -7,11 +7,13 @@ import json
 import re
 import shutil
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from sqlmodel import col, select
 
+from clipper.clock import ensure_utc
 from clipper.db.engine import WriteTx
 from clipper.db.models import Analysis, Campaign, Clip, Job, Moment, Question, Source
 from clipper.db.types import ClipStatus, QuestionStatus, SourceStatus
@@ -23,14 +25,32 @@ from clipper.media.reframe import auto_camera_keys
 from clipper.rules.spec import ClipSpec
 from clipper.rules.urls import canonical_source, host_of
 from clipper.services.base import Service, ServiceError
+from clipper.services.control import kv_get, kv_set_tx
 
 MAX_TRANSCRIPT_WORDS = 400
 COMMENT_HOSTS = ("youtube.com", "youtu.be", "tiktok.com", "instagram.com", "x.com", "twitter.com")
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".avi"}
-WAITING = (SourceStatus.FAILED, SourceStatus.LISTED, SourceStatus.QUEUED)
+# Only a source whose download was tried and failed takes a file from the drop folder. A source that
+# is merely named by the marketplace page (listed) or still downloading must never grab a file that
+# happens to be lying there.
+WAITING = (SourceStatus.FAILED,)
 DROP_SCAN_EVERY_S = 10.0
+DROP_REFUSED_KEY = "media.drop_refused"
 _FOOTAGE_QUESTION = re.compile(r"download|footage|source|episode|video|frame\.io|wetransfer|drive", re.I)
 SAFE_ZONE_FOR = {"tiktok": "tiktok", "youtube": "shorts", "instagram": "reels", "x": "shorts"}
+
+
+class SuspiciousFootage(ServiceError):
+    """The file reads as a video but doesn't look like the footage the campaign needs."""
+
+    def __init__(self, message: str, *, duration: float, minimum: float) -> None:
+        super().__init__(message)
+        self.duration = duration
+        self.minimum = minimum
+
+
+def _mmss(seconds: float) -> str:
+    return f"{int(seconds) // 60}:{int(seconds) % 60:02d}"
 
 
 def load_words(path: str | None) -> list[dict[str, Any]]:
@@ -104,10 +124,15 @@ class MediaService(Service):
         """Where to put footage you downloaded yourself: Clipper attaches it on its own."""
         return self.core.dir("sources") / f"campaign_{campaign_id}"
 
-    def attach_file(self, source_id: int, path: str | Path, *, by: str = "user") -> dict[str, Any]:
+    def attach_file(
+        self, source_id: int, path: str | Path, *, by: str = "user", check: bool = False
+    ) -> dict[str, Any]:
         """Use a video file you supplied as a source's footage (when the site can't be downloaded
         from: Frame.io, WeTransfer, Drive). A file outside the campaign's folder is copied in. Then the
-        analysis is queued, which resumes the campaign's agent when it finishes."""
+        analysis is queued, which resumes the campaign's agent when it finishes.
+
+        With ``check`` a file shorter than the campaign spec's minimum clip length is refused with
+        ``SuspiciousFootage`` (the caller asks the user, or leaves the file alone)."""
         src = self.source(source_id)
         if src.status in (SourceStatus.DOWNLOADING, SourceStatus.ANALYZING):
             raise ServiceError(f"source {source_id} is {src.status} right now")
@@ -122,6 +147,15 @@ class MediaService(Service):
             raise ServiceError(f"{file.name} doesn't read as a video: {exc}") from exc
         if not info.duration or info.duration < 1:
             raise ServiceError(f"{file.name} has no playable video")
+        if check:
+            minimum = self._spec_minimum(src.campaign_id)
+            if minimum is not None and info.duration < minimum:
+                raise SuspiciousFootage(
+                    f"{file.name} is only {_mmss(info.duration)} long, and the campaign needs clips of at "
+                    f"least {_mmss(minimum)}",
+                    duration=info.duration,
+                    minimum=minimum,
+                )
         folder = self.drop_folder(src.campaign_id)
         folder.mkdir(parents=True, exist_ok=True)
         if file.resolve().parent != folder.resolve():
@@ -165,10 +199,22 @@ class MediaService(Service):
         )
         return {"source_id": source_id, "path": str(file), "duration": info.duration, "job_id": job_id}
 
+    def _spec_minimum(self, campaign_id: int) -> float | None:
+        """The shortest clip the campaign's saved spec allows (None until a spec is saved)."""
+        with self.db.read() as s:
+            camp = s.get(Campaign, campaign_id)
+        if camp is None or not camp.spec_json:
+            return None
+        return float(ClipSpec.model_validate(camp.spec_json).duration_min_s)
+
     def scan_drop_folders(self) -> list[dict[str, Any]]:
-        """Attach new videos you put in ``sources/campaign_<id>/`` to that campaign's source that is
-        waiting for footage (failed, listed or queued). A file is taken once its size has stopped
-        changing between two scans, so a copy in progress is left alone."""
+        """Attach new videos you put in ``sources/campaign_<id>/`` to that campaign's source whose
+        download failed. A file is taken once its size has stopped changing between two scans, so a
+        copy in progress is left alone.
+
+        A file is left alone when it is older than every waiting source (a leftover from before the
+        request), or shorter than the spec's minimum clip length. Each such file is mentioned once
+        (an alert), then ignored until it changes; attach it by hand if it is the right one."""
         now = time.monotonic()
         if now - getattr(self, "_last_scan", 0.0) < DROP_SCAN_EVERY_S:
             return []
@@ -178,6 +224,8 @@ class MediaService(Service):
         with self.db.read() as s:
             sources = s.exec(select(Source)).all()
         known = {str(Path(x.path).resolve()).lower() for x in sources if x.path}
+        refused: dict[str, int] = dict(kv_get(self.db, DROP_REFUSED_KEY, {}) or {})
+        refused_before = dict(refused)
         attached: list[dict[str, Any]] = []
         seen: dict[str, int] = {}
         for folder in root.glob("campaign_*"):
@@ -187,27 +235,52 @@ class MediaService(Service):
             cid = int(m.group(1))
             waiting = sorted(
                 (x for x in sources if x.campaign_id == cid and x.status in WAITING and x.id is not None),
-                key=lambda x: (x.status != SourceStatus.FAILED, x.id),
+                key=lambda x: x.id or 0,
             )
+            if not waiting:
+                continue
             for f in sorted(folder.iterdir(), key=lambda f: f.stat().st_mtime):
                 if f.suffix.lower() not in VIDEO_EXTS or not f.is_file():
                     continue
                 if str(f.resolve()).lower() in known:
                     continue
                 size = f.stat().st_size
-                seen[str(f)] = size
-                if not waiting or size == 0 or sizes.get(str(f)) != size:
-                    continue  # nothing waiting, or still being copied
-                src = waiting.pop(0)
+                key = str(f)
+                if size == 0 or refused.get(key) == size:
+                    continue
+                seen[key] = size
+                if sizes.get(key) != size:
+                    continue  # still being copied
+                modified = datetime.fromtimestamp(f.stat().st_mtime, UTC)
+                src = next((x for x in waiting if modified >= ensure_utc(x.created_at)), None)
+                if src is None:
+                    refused[key] = size
+                    self.core.notify.alert(
+                        "info",
+                        f"{f.name} in the campaign {cid} folder is older than the request for footage, so "
+                        "it was left alone. Use Attach file on the source if it is the right video.",
+                        source="media",
+                        campaign_id=cid,
+                    )
+                    continue
                 assert src.id is not None
                 try:
-                    attached.append(self.attach_file(src.id, f, by="user"))
+                    attached.append(self.attach_file(src.id, f, by="user", check=True))
+                    waiting.remove(src)
                 except ServiceError as exc:
+                    refused[key] = size
                     self.core.notify.alert(
-                        "warning", f"Couldn't use {f.name}: {exc}", source="media", campaign_id=cid
+                        "warning",
+                        f"Left {f.name} alone: {exc}. Use Attach file on the source if it is the right video.",
+                        source="media",
+                        campaign_id=cid,
                     )
-                    known.add(str(f.resolve()).lower())
+                if not waiting:
+                    break
         self._drop_sizes = seen
+        if refused != refused_before:
+            keep = {k: v for k, v in refused.items() if Path(k).exists()}
+            self.db.write(lambda tx: kv_set_tx(tx, DROP_REFUSED_KEY, keep))
         return attached
 
     def _open_job(self, kind: str, source_id: int) -> bool:

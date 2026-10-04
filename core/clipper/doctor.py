@@ -13,6 +13,7 @@ import subprocess
 import sys
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any, Literal, cast
 
@@ -148,19 +149,31 @@ def check_ffmpeg(settings: Settings) -> CheckResult:
     return CheckResult("ffmpeg", "ok", detail)
 
 
-def check_yt_dlp(settings: Settings) -> CheckResult:
+def check_yt_dlp(settings: Settings, today: date | None = None) -> CheckResult:
+    from clipper.media.ytdlp_update import age_days
+
     code, out = _run([settings.paths.yt_dlp, "--version"])
     if code != 0:
         return CheckResult("yt-dlp", "fail", "yt-dlp not found", "Install yt-dlp and keep it updated.")
+    version = out.strip().splitlines()[-1] if out.strip() else ""
     # YouTube extraction needs a JavaScript runtime; yt-dlp uses Deno by default
     if shutil.which("deno") is None:
         return CheckResult(
             "yt-dlp",
             "warn",
-            f"{out.strip()} · no JavaScript runtime: YouTube downloads will fail",
+            f"{version} · no JavaScript runtime: YouTube downloads will fail",
             "winget install DenoLand.Deno (then restart Clipper so it's on PATH).",
         )
-    return CheckResult("yt-dlp", "ok", f"{out.strip()} · deno found")
+    age = age_days(version, today or date.today())
+    limit = settings.media.ytdlp_max_age_days
+    if age is not None and age > limit:
+        return CheckResult(
+            "yt-dlp",
+            "warn",
+            f"{version} · {age} days old: sites change and downloads start failing",
+            "Settings -> Media and captions -> Update yt-dlp.",
+        )
+    return CheckResult("yt-dlp", "ok", f"{version} · deno found")
 
 
 def check_gpu_env(settings: Settings) -> CheckResult:

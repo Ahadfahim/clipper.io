@@ -15,6 +15,38 @@ from clipper.db.types import QuestionStatus
 from clipper.events.types import Alert, QuestionAnswered, QuestionAsked, Report
 from clipper.services.base import Service, ServiceError
 
+MAX_OPTION_CHARS = 60  # a button label, not a paragraph: put the detail in the question text
+STORED_OPTION_CHARS = 200
+CLOSED_VIA = "campaign_closed"
+
+
+def close_questions_tx(tx: WriteTx, campaign_id: int, why: str, now: Any) -> list[int]:
+    """Close the open questions of a campaign that just ended or was skipped, in the caller's
+    transaction. Nobody is left to answer them, and the agent must not be resumed for them."""
+    rows = tx.session.exec(
+        select(Question).where(Question.campaign_id == campaign_id, Question.status == QuestionStatus.OPEN)
+    ).all()
+    out: list[int] = []
+    for q in rows:
+        q.status = QuestionStatus.CLOSED
+        q.answer = f"({why})"
+        q.answered_by = "system"
+        q.via = CLOSED_VIA
+        q.answered_at = now
+        tx.add(q)
+        assert q.id is not None
+        tx.publish(
+            QuestionAnswered(
+                question_id=q.id,
+                session_id=q.session_id,
+                campaign_id=q.campaign_id,
+                answer=q.answer,
+                via=CLOSED_VIA,
+            )
+        )
+        out.append(q.id)
+    return out
+
 
 class NotifyService(Service):
     def alert(self, level: str, text: str, *, source: str = "system", campaign_id: int | None = None) -> None:
@@ -50,6 +82,12 @@ class NotifyService(Service):
     ) -> int:
         if not options or len(options) > 5:
             raise ServiceError("give 1-5 answer options")
+        long = [o for o in options if len(o) > MAX_OPTION_CHARS]
+        if long:
+            raise ServiceError(
+                f"keep each answer option under {MAX_OPTION_CHARS} characters (an option is a button label); "
+                "put the detail in the question text"
+            )
         timeout_at = self.now() + timedelta(seconds=timeout_s) if timeout_s else None
 
         def job(tx: WriteTx) -> int:
@@ -57,7 +95,7 @@ class NotifyService(Service):
                 session_id=session_id,
                 campaign_id=campaign_id,
                 text=text[:1000],
-                options_json=[o[:80] for o in options],
+                options_json=[o[:STORED_OPTION_CHARS] for o in options],
                 timeout_at=timeout_at,
             )
             tx.add(q)

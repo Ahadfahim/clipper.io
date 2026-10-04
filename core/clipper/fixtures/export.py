@@ -84,7 +84,7 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
     from clipper.settings import Settings
 
     tmp = Path(tempfile.mkdtemp(prefix="clipper-fixtures-"))
-    settings = Settings().with_data_dir(tmp)
+    settings = Settings().isolated(tmp)
     core = Core.create(settings, fakes=True, clock=FakeClock(FIXED_NOW))
     demo_adapters(core)
     ids = seed_demo(core.db, settings, now=FIXED_NOW)

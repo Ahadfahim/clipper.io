@@ -33,6 +33,7 @@ from clipper.events.types import (
 from clipper.marketplaces.base import CampaignCard
 from clipper.rules.spec import ClipSpec
 from clipper.services.base import Service, ServiceError
+from clipper.services.notify import close_questions_tx
 
 EDITABLE_FIELDS = {"status", "score", "score_reason"}
 AGENT_STATUSES = {
@@ -115,6 +116,8 @@ class CampaignService(Service):
                 if card.payouts_ended and not is_new:
                     if row.status == CampaignStatus.SUGGESTED:
                         row.status = CampaignStatus.ENDED
+                        tx.flush()
+                        close_questions_tx(tx, row.id or 0, "campaign ended", now)
                     elif row.status in (CampaignStatus.TAKEN, CampaignStatus.ACTIVE):
                         row.status = CampaignStatus.ENDING  # work in flight finishes; no new clips
                         tx.publish(CampaignEnding(campaign_id=row.id or 0, reason="payouts ended"))
@@ -187,6 +190,7 @@ class CampaignService(Service):
             row = self._get(tx, campaign_id)
             row.status = CampaignStatus.SKIPPED
             tx.add(row)
+            close_questions_tx(tx, campaign_id, "campaign skipped", self.now())
             tx.publish(CampaignSkipped(campaign_id=campaign_id, by=by, via=via))
 
         self.db.write(job)
@@ -221,6 +225,8 @@ class CampaignService(Service):
             if taking:
                 row.taken_at = self.now()
             tx.add(row)
+            if fields.get("status") in (CampaignStatus.ENDED, CampaignStatus.SKIPPED):
+                close_questions_tx(tx, campaign_id, f"campaign {fields['status']}", self.now())
             tx.publish(CampaignUpdated(campaign_id=campaign_id, fields=sorted(fields)))
             if taking:
                 tx.publish(

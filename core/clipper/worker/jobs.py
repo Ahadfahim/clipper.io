@@ -37,6 +37,15 @@ class JobCancelled(Exception):
     pass
 
 
+class JobFailed(RuntimeError):
+    """A job failed for a reason worth reading as is: ``str(exc)`` is stored without the class name,
+    and ``raw_tail`` (the tool's last output) goes to the job's result for the "full output" view."""
+
+    def __init__(self, message: str, raw_tail: str = "") -> None:
+        super().__init__(message)
+        self.raw_tail = raw_tail
+
+
 @dataclass
 class JobContext:
     core: Core
@@ -202,6 +211,10 @@ class JobQueue:
             status, error = JobStatus.DONE, None
         except JobCancelled:
             result, status, error = {}, JobStatus.CANCELLED, "cancelled"
+        except JobFailed as exc:
+            log.warning("job %s (%s) failed: %s", job_id, kind, exc)
+            result = {"raw_tail": exc.raw_tail[-4000:]} if exc.raw_tail else {}
+            status, error = JobStatus.FAILED, str(exc)[:2000]
         except Exception as exc:
             log.exception("job %s (%s) failed", job_id, kind)
             result, status, error = {}, JobStatus.FAILED, f"{type(exc).__name__}: {exc}"[:2000]
