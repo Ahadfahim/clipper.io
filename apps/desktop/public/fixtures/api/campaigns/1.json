@@ -47,6 +47,7 @@
  "session_id": 1,
  "sources": [
   {
+   "drop_folder": "D:/Clipper.io/data/sources/campaign_1",
    "duration": 1260.0,
    "heatmap": [
     0.214,
@@ -111,11 +112,13 @@
     0.188
    ],
    "id": 1,
+   "path": "D:/Clipper.io/tests/fixtures/media/talk_16x9.mp4",
    "status": "analyzed",
    "title": "I Gave Away $1,000,000",
    "url": "https://www.youtube.com/watch?v=beast42xxxx"
   },
   {
+   "drop_folder": "D:/Clipper.io/data/sources/campaign_1",
    "duration": 1820.0,
    "heatmap": [
     0.249,
@@ -210,6 +213,7 @@
     0.181
    ],
    "id": 2,
+   "path": null,
    "status": "downloading",
    "title": "Last To Leave Wins",
    "url": "https://www.youtube.com/watch?v=beast42yyyy"

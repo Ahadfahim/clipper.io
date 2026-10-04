@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import contextlib
 import json
+import re
+import shutil
+import time
 from pathlib import Path
 from typing import Any
 
 from sqlmodel import col, select
 
 from clipper.db.engine import WriteTx
-from clipper.db.models import Analysis, Campaign, Clip, Job, Moment, Source
-from clipper.db.types import ClipStatus, SourceStatus
+from clipper.db.models import Analysis, Campaign, Clip, Job, Moment, Question, Source
+from clipper.db.types import ClipStatus, QuestionStatus, SourceStatus
 from clipper.events.types import ClipUpdated
+from clipper.media.download import file_hash
 from clipper.media.edl.schema import Box, CaptionWord, SourceInfo, new_edl
 from clipper.media.ffmpeg import probe, run_ffmpeg
 from clipper.media.reframe import auto_camera_keys
@@ -20,6 +25,10 @@ from clipper.rules.urls import canonical_source
 from clipper.services.base import Service, ServiceError
 
 MAX_TRANSCRIPT_WORDS = 400
+VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".avi"}
+WAITING = (SourceStatus.FAILED, SourceStatus.LISTED, SourceStatus.QUEUED)
+DROP_SCAN_EVERY_S = 10.0
+_FOOTAGE_QUESTION = re.compile(r"download|footage|source|episode|video|frame\.io|wetransfer|drive", re.I)
 SAFE_ZONE_FOR = {"tiktok": "tiktok", "youtube": "shorts", "instagram": "reels", "x": "shorts"}
 
 
@@ -87,6 +96,118 @@ class MediaService(Service):
             "download", {"source_id": source_id, "url": url, "analyze": analyze}, campaign_id=campaign_id
         )
         return {"source_id": source_id, "job_id": job_id, "status": "queued"}
+
+    # ------------------------------------------------------------ sources you supply yourself
+
+    def drop_folder(self, campaign_id: int) -> Path:
+        """Where to put footage you downloaded yourself: Clipper attaches it on its own."""
+        return self.core.dir("sources") / f"campaign_{campaign_id}"
+
+    def attach_file(self, source_id: int, path: str | Path, *, by: str = "user") -> dict[str, Any]:
+        """Use a video file you supplied as a source's footage (when the site can't be downloaded
+        from: Frame.io, WeTransfer, Drive). A file outside the campaign's folder is copied in. Then the
+        analysis is queued, which resumes the campaign's agent when it finishes."""
+        src = self.source(source_id)
+        if src.status in (SourceStatus.DOWNLOADING, SourceStatus.ANALYZING):
+            raise ServiceError(f"source {source_id} is {src.status} right now")
+        file = Path(path).expanduser()
+        if not file.is_file():
+            raise ServiceError(f"no such file: {file}")
+        if file.suffix.lower() not in VIDEO_EXTS:
+            raise ServiceError(f"{file.name} isn't a video ({', '.join(sorted(VIDEO_EXTS))})")
+        try:
+            info = probe(file, self.settings)
+        except Exception as exc:
+            raise ServiceError(f"{file.name} doesn't read as a video: {exc}") from exc
+        if not info.duration or info.duration < 1:
+            raise ServiceError(f"{file.name} has no playable video")
+        folder = self.drop_folder(src.campaign_id)
+        folder.mkdir(parents=True, exist_ok=True)
+        if file.resolve().parent != folder.resolve():
+            target = folder / file.name
+            if target.exists():
+                target = folder / f"{file.stem}_{source_id}{file.suffix}"
+            shutil.copy2(file, target)
+            file = target
+        digest = file_hash(file)
+
+        def job(tx: WriteTx) -> list[int]:
+            row = tx.session.get(Source, source_id)
+            assert row is not None
+            row.path, row.hash, row.duration = str(file), digest, info.duration
+            row.title = row.title or file.stem
+            row.status = SourceStatus.DOWNLOADED
+            tx.add(row)
+            # the agent asked you for this footage: that question is answered now
+            asked = tx.session.exec(
+                select(Question).where(
+                    Question.campaign_id == row.campaign_id, Question.status == QuestionStatus.OPEN
+                )
+            ).all()
+            return [q.id for q in asked if q.id is not None and _FOOTAGE_QUESTION.search(q.text)]
+
+        questions = self.db.write(job)
+        job_id = self.request_analyze(source_id)
+        for qid in questions:
+            with contextlib.suppress(ServiceError):  # answered meanwhile
+                self.core.notify.answer(
+                    qid,
+                    f"Footage supplied by hand: {file.name}. Analysis is queued (job {job_id}).",
+                    by=by,
+                    via="file",
+                )
+        self.core.notify.alert(
+            "info",
+            f"Attached {file.name} to source {source_id}; analyzing",
+            source="media",
+            campaign_id=src.campaign_id,
+        )
+        return {"source_id": source_id, "path": str(file), "duration": info.duration, "job_id": job_id}
+
+    def scan_drop_folders(self) -> list[dict[str, Any]]:
+        """Attach new videos you put in ``sources/campaign_<id>/`` to that campaign's source that is
+        waiting for footage (failed, listed or queued). A file is taken once its size has stopped
+        changing between two scans, so a copy in progress is left alone."""
+        now = time.monotonic()
+        if now - getattr(self, "_last_scan", 0.0) < DROP_SCAN_EVERY_S:
+            return []
+        self._last_scan = now
+        sizes: dict[str, int] = getattr(self, "_drop_sizes", {})
+        root = self.core.dir("sources")
+        with self.db.read() as s:
+            sources = s.exec(select(Source)).all()
+        known = {str(Path(x.path).resolve()).lower() for x in sources if x.path}
+        attached: list[dict[str, Any]] = []
+        seen: dict[str, int] = {}
+        for folder in root.glob("campaign_*"):
+            m = re.fullmatch(r"campaign_(\d+)", folder.name)
+            if m is None or not folder.is_dir():
+                continue
+            cid = int(m.group(1))
+            waiting = sorted(
+                (x for x in sources if x.campaign_id == cid and x.status in WAITING and x.id is not None),
+                key=lambda x: (x.status != SourceStatus.FAILED, x.id),
+            )
+            for f in sorted(folder.iterdir(), key=lambda f: f.stat().st_mtime):
+                if f.suffix.lower() not in VIDEO_EXTS or not f.is_file():
+                    continue
+                if str(f.resolve()).lower() in known:
+                    continue
+                size = f.stat().st_size
+                seen[str(f)] = size
+                if not waiting or size == 0 or sizes.get(str(f)) != size:
+                    continue  # nothing waiting, or still being copied
+                src = waiting.pop(0)
+                assert src.id is not None
+                try:
+                    attached.append(self.attach_file(src.id, f, by="user"))
+                except ServiceError as exc:
+                    self.core.notify.alert(
+                        "warning", f"Couldn't use {f.name}: {exc}", source="media", campaign_id=cid
+                    )
+                    known.add(str(f.resolve()).lower())
+        self._drop_sizes = seen
+        return attached
 
     def _open_job(self, kind: str, source_id: int) -> bool:
         with self.db.read() as s:

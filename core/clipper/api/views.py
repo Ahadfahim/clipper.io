@@ -900,6 +900,8 @@ def campaign_detail(core: Core, campaign_id: int) -> S.CampaignDetail | None:
                 status=x.status,
                 duration=x.duration,
                 heatmap=[float(h.get("value", 0)) for h in x.heatmap_json],
+                path=x.path,
+                drop_folder=str(core.media.drop_folder(x.campaign_id)),
             )
             for x in sources
         ],

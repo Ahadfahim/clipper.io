@@ -56,9 +56,12 @@ def download(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
     dest = core.dir("sources") / f"campaign_{src.campaign_id}"
     try:
         res = core.adapters.downloader.download(str(data["url"]), dest)
-    except Exception:
+    except Exception as exc:
         _set_source(core, source_id, status=SourceStatus.FAILED)
-        raise
+        raise RuntimeError(
+            f"{exc}\n\nDownload it yourself and put the video in {dest} (Clipper attaches it on its own), "
+            "or use Attach file on the source."
+        ) from exc
     ctx.progress(0.8)
     digest = file_hash(res.path)
     with core.db.read() as s:

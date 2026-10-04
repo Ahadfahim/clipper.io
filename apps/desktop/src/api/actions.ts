@@ -410,3 +410,28 @@ export const useReplay = () =>
   useAction({
     run: (eventId: number) => unwrap(api.POST("/api/agents/events/{event_id}/replay", { params: { path: { event_id: eventId } } })),
   });
+
+/** Run a failed or cancelled job again (Jobs panel). */
+export function useRetryJob() {
+  return useAction({
+    run: (jobId: number) => unwrap(api.POST("/api/jobs/{job_id}/retry", { params: { path: { job_id: jobId } } })),
+    invalidate: () => [qk.jobs, qk.status],
+  });
+}
+
+/** Try a source's download again. */
+export function useRetrySource(campaignId: number) {
+  return useAction({
+    run: (sourceId: number) => unwrap(api.POST("/api/sources/{source_id}/retry", { params: { path: { source_id: sourceId } } })),
+    invalidate: () => [qk.campaign(campaignId), qk.jobs, qk.status],
+  });
+}
+
+/** Use a video you downloaded yourself as a source's footage. */
+export function useAttachFile(campaignId: number) {
+  return useAction({
+    run: (v: { sourceId: number; path: string }) =>
+      unwrap(api.POST("/api/sources/{source_id}/file", { params: { path: { source_id: v.sourceId } }, body: { path: v.path } })),
+    invalidate: () => [qk.campaign(campaignId), qk.jobs, qk.status, qk.overview, qk.questions],
+  });
+}

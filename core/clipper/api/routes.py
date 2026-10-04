@@ -162,6 +162,37 @@ def jobs(core: CoreDep, limit: int = 50) -> list[S.JobOut]:
     return views.jobs(core, limit)
 
 
+@system.post("/jobs/{job_id}/retry", response_model=S.OkOut)
+def job_retry(core: CoreDep, job_id: int) -> S.OkOut:
+    """Run a failed or cancelled job again (same input)."""
+    try:
+        new_id = core.jobs.retry(job_id)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return S.OkOut(id=new_id, detail=f"queued again as job {new_id}")
+
+
+@system.post("/sources/{source_id}/retry", response_model=S.OkOut)
+def source_retry(core: CoreDep, source_id: int) -> S.OkOut:
+    """Try a source's download again."""
+    try:
+        src = core.media.source(source_id)
+        res = core.media.request_download(src.campaign_id, src.url)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(id=res.get("job_id"), detail=str(res.get("note") or "download queued"))
+
+
+@system.post("/sources/{source_id}/file", response_model=S.OkOut)
+def source_attach_file(core: CoreDep, source_id: int, body: S.AttachFileIn) -> S.OkOut:
+    """Use a video you downloaded yourself as this source's footage, then analyze it."""
+    try:
+        res = core.media.attach_file(source_id, body.path)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(id=res["job_id"], detail=f"attached {Path(res['path']).name}; analyzing")
+
+
 @system.get("/questions", response_model=list[S.QuestionOut])
 def questions(core: CoreDep, status: str | None = "open") -> list[S.QuestionOut]:
     return views.questions(core, status)

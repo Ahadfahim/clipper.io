@@ -41,9 +41,11 @@
  "session_id": null,
  "sources": [
   {
+   "drop_folder": "D:/Clipper.io/data/sources/campaign_3",
    "duration": null,
    "heatmap": [],
    "id": 4,
+   "path": null,
    "status": "listed",
    "title": "The Habit Expert",
    "url": "https://www.youtube.com/watch?v=doac0000001"

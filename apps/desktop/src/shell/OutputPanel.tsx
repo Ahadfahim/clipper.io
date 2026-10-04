@@ -4,7 +4,9 @@ import { cn } from "@/lib/cn";
 import { clock, relative } from "@/lib/format";
 import { describeEvent, TONE_VAR } from "@/api/describe";
 import { useLive } from "@/api/live";
+import { useRetryJob } from "@/api/actions";
 import { useJobs } from "@/api/queries";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/misc";
 import { StatusPill } from "@/components/ui/status";
 import { useUi, type OutputTab } from "@/state/ui";
@@ -37,16 +39,24 @@ function LogRows({ filter }: { filter: (d: ReturnType<typeof describeEvent>) => 
 
 function JobRows() {
   const jobs = useJobs().data ?? [];
+  const retry = useRetryJob();
   if (!jobs.length) return <div className="px-3 py-2 text-muted">No jobs.</div>;
   return (
     <div role="table" aria-label="Jobs" className="flex flex-col">
       {jobs.map((j) => (
-        <div key={j.id} role="row" className="grid h-7 items-center border-b border-line-soft px-3" style={{ gridTemplateColumns: "48px 120px 110px minmax(80px,1fr) 160px" }}>
+        <div key={j.id} role="row" className="grid h-7 items-center border-b border-line-soft px-3" style={{ gridTemplateColumns: "48px 120px 110px minmax(80px,1fr) 64px 160px" }}>
           <span className="num text-muted">#{j.id}</span>
           <span>{j.kind.replace(/_/g, " ")}</span>
           <StatusPill status={j.status} />
           <span className="flex items-center gap-2 pr-4">
-            {j.status === "running" ? <Progress value={j.progress} label={`${j.kind} progress`} /> : <span className="truncate-1 text-muted">{j.error ?? ""}</span>}
+            {j.status === "running" ? <Progress value={j.progress} label={`${j.kind} progress`} /> : <span className="truncate-1 text-muted" title={j.error ?? undefined}>{j.error ?? ""}</span>}
+          </span>
+          <span>
+            {(j.status === "failed" || j.status === "cancelled") && (
+              <Button size="sm" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}>
+                Retry
+              </Button>
+            )}
           </span>
           <span className="num text-right text-muted">{relative(j.finished_at ?? j.started_at ?? j.created_at)}</span>
         </div>

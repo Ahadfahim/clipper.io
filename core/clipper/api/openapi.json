@@ -523,6 +523,21 @@
     "title": "AnswerIn",
     "type": "object"
    },
+   "AttachFileIn": {
+    "properties": {
+     "path": {
+      "description": "a video file on this PC",
+      "minLength": 1,
+      "title": "Path",
+      "type": "string"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "title": "AttachFileIn",
+    "type": "object"
+   },
    "AutoApproveOffer": {
     "properties": {
      "current_tier": {
@@ -4165,6 +4180,17 @@
    },
    "SourceOut": {
     "properties": {
+     "drop_folder": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Drop Folder"
+     },
      "duration": {
       "anyOf": [
        {
@@ -4186,6 +4212,17 @@
      "id": {
       "title": "Id",
       "type": "integer"
+     },
+     "path": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Path"
      },
      "status": {
       "title": "Status",
@@ -4213,7 +4250,9 @@
      "title",
      "status",
      "duration",
-     "heatmap"
+     "heatmap",
+     "path",
+     "drop_folder"
     ],
     "title": "SourceOut",
     "type": "object"
@@ -6791,6 +6830,49 @@
     ]
    }
   },
+  "/api/jobs/{job_id}/retry": {
+   "post": {
+    "description": "Run a failed or cancelled job again (same input).",
+    "operationId": "job_retry_api_jobs__job_id__retry_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "job_id",
+      "required": true,
+      "schema": {
+       "title": "Job Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Job Retry",
+    "tags": [
+     "system"
+    ]
+   }
+  },
   "/api/notes": {
    "get": {
     "operationId": "notes_api_notes_get",
@@ -8351,6 +8433,102 @@
     "summary": "Tools",
     "tags": [
      "settings"
+    ]
+   }
+  },
+  "/api/sources/{source_id}/file": {
+   "post": {
+    "description": "Use a video you downloaded yourself as this source's footage, then analyze it.",
+    "operationId": "source_attach_file_api_sources__source_id__file_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "source_id",
+      "required": true,
+      "schema": {
+       "title": "Source Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AttachFileIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Source Attach File",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/sources/{source_id}/retry": {
+   "post": {
+    "description": "Try a source's download again.",
+    "operationId": "source_retry_api_sources__source_id__retry_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "source_id",
+      "required": true,
+      "schema": {
+       "title": "Source Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Source Retry",
+    "tags": [
+     "system"
     ]
    }
   },

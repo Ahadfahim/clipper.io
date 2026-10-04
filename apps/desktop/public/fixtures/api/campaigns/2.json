@@ -43,6 +43,7 @@
  "session_id": 2,
  "sources": [
   {
+   "drop_folder": "D:/Clipper.io/data/sources/campaign_2",
    "duration": 3600.0,
    "heatmap": [
     0.25,
@@ -167,6 +168,7 @@
     0.151
    ],
    "id": 3,
+   "path": null,
    "status": "analyzing",
    "title": "How I Manage My Time",
    "url": "https://www.youtube.com/watch?v=aliabdaal01"

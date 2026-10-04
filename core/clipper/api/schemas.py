@@ -385,6 +385,12 @@ class SourceOut(M):
     status: str
     duration: float | None
     heatmap: list[float]
+    path: str | None = None
+    drop_folder: str | None = None  # put footage you downloaded yourself here; Clipper attaches it
+
+
+class AttachFileIn(BaseModel):
+    path: str = Field(min_length=1, description="a video file on this PC")
 
 
 class TimelineEntry(M):

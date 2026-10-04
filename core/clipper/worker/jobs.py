@@ -131,6 +131,16 @@ class JobQueue:
 
         return self.core.db.write(job)
 
+    def retry(self, job_id: int) -> int:
+        """Queue a failed or cancelled job again with the same input. Returns the new job's id."""
+        with self.core.db.read() as s:
+            row = s.get(Job, job_id)
+        if row is None:
+            raise ValueError(f"job {job_id} not found")
+        if row.status not in (JobStatus.FAILED, JobStatus.CANCELLED):
+            raise ValueError(f"job {job_id} is {row.status}; only failed or cancelled jobs can be retried")
+        return self.enqueue(row.kind, dict(row.input_json), campaign_id=row.campaign_id)
+
     def recover(self) -> int:
         """Put jobs that were running when the process died back in the queue."""
 

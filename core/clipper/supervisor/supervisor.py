@@ -153,6 +153,9 @@ class Supervisor:
         self.core.wakeups.fire_due()
         self.watchdog()
         self.core.notify.expire()
+        # footage you put in sources/campaign_<id>/ yourself; off the loop: probing and hashing a
+        # multi-GB video takes seconds
+        await asyncio.to_thread(self.core.media.scan_drop_folders)
         await self.core.publishing.run_due()
         await self.process_inbox()
         await self.dispatch()
