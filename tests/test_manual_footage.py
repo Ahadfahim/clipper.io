@@ -106,3 +106,8 @@ def test_retry_a_failed_download_and_a_failed_job(core: Core) -> None:
     assert new_id != res["job_id"] and len(_jobs(core, "download")) == 2
     with pytest.raises(ValueError, match="only failed or cancelled"):
         core.jobs.retry(new_id)
+
+
+def test_file_hosts_have_no_comments(core: Core) -> None:
+    _cid, sid = _failed_source(core)  # https://f.io/... (Frame.io)
+    assert core.media.comments(sid) == []

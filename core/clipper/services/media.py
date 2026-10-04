@@ -21,10 +21,11 @@ from clipper.media.edl.schema import Box, CaptionWord, SourceInfo, new_edl
 from clipper.media.ffmpeg import probe, run_ffmpeg
 from clipper.media.reframe import auto_camera_keys
 from clipper.rules.spec import ClipSpec
-from clipper.rules.urls import canonical_source
+from clipper.rules.urls import canonical_source, host_of
 from clipper.services.base import Service, ServiceError
 
 MAX_TRANSCRIPT_WORDS = 400
+COMMENT_HOSTS = ("youtube.com", "youtu.be", "tiktok.com", "instagram.com", "x.com", "twitter.com")
 VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".avi"}
 WAITING = (SourceStatus.FAILED, SourceStatus.LISTED, SourceStatus.QUEUED)
 DROP_SCAN_EVERY_S = 10.0
@@ -276,8 +277,16 @@ class MediaService(Service):
         }
 
     def comments(self, source_id: int, limit: int = 30) -> list[dict[str, Any]]:
+        """Top viewer comments with the timestamps they mention. Only public video sites have them:
+        a file host (Frame.io, WeTransfer) or footage you supplied yourself has none."""
         src = self.source(source_id)
-        out = self.core.adapters.downloader.comments(src.url, limit=limit)
+        host = host_of(src.url)
+        if not any(host == h or host.endswith(f".{h}") for h in COMMENT_HOSTS):
+            return []
+        try:
+            out = self.core.adapters.downloader.comments(src.url, limit=limit)
+        except Exception as exc:
+            raise ServiceError(f"couldn't read comments for source {source_id}: {str(exc)[-200:]}") from exc
         return [{"text": c.text[:200], "likes": c.likes, "timestamps": c.timestamps} for c in out]
 
     def _work(self, name: str) -> Path:
