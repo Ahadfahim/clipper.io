@@ -24,6 +24,13 @@ export const ROLE_LABEL: Record<string, string> = {
   director: "Director",
 };
 
+/** "claude-sonnet-5-5" -> "Sonnet 5.5" for tables; unknown ids pass through. */
+export function modelLabel(id: string | null | undefined): string {
+  if (!id) return "";
+  const m = /^claude-(opus|sonnet|haiku|fable)-(\d+)-(\d+)/.exec(id);
+  return m ? `${m[1]![0]!.toUpperCase()}${m[1]!.slice(1)} ${m[2]}.${m[3]}` : id;
+}
+
 export const REJECT_REASONS = [
   { value: "bad_hook", label: "Bad hook" },
   { value: "boring", label: "Boring" },

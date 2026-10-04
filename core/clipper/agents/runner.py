@@ -49,6 +49,7 @@ class RunOutcome:
     resets_at: datetime | None = None
     error: str | None = None
     interrupted: bool = False
+    model: str | None = None  # what Claude Code reported running (shows when the fallback kicked in)
 
 
 class AgentRunner(Protocol):
@@ -182,6 +183,7 @@ class SdkAgentRunner:
                     outcome.sdk_session_id = (
                         str(msg.data.get("session_id") or outcome.sdk_session_id or "") or None
                     )
+                    outcome.model = str(msg.data.get("model") or "") or outcome.model
                 elif isinstance(msg, RateLimitEvent):
                     info = msg.rate_limit_info
                     resets = datetime.fromtimestamp(info.resets_at, UTC) if info.resets_at else None

@@ -1,6 +1,6 @@
 # Plan: choose the Claude model per agent in Settings
 
-Status: proposed (2026-10-03). For whoever implements it. Read CLAUDE.md first (plan login only, rules in code, UI routine).
+Status: steps 1–5 implemented (2026-10-03); step 6 (usage-based downgrade) not yet. Fable 5.1 left out: on the Pro plan it needs paid usage credits. For whoever implements it. Read CLAUDE.md first (plan login only, rules in code, UI routine).
 
 ## Why
 Every agent and subagent runs on one model: `agents.model = "claude-opus-5-5"` (`core/clipper/settings.py`, `config/settings.toml`). Settings only shows it as text. On a Claude Pro plan, Opus uses the shared usage allowance much faster than Sonnet or Haiku. So the busiest, simplest work (Scout every 15 minutes, QA checks, captions) spends the same budget per token as the hardest work. The user should be able to pick a model per role, see what each choice costs, and change it without restarting.

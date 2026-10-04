@@ -14,6 +14,7 @@ from sqlmodel import Session, col, func, select
 
 from clipper import __version__
 from clipper.agents.access import ACCESS, CATALOG, SUBAGENTS
+from clipper.agents.models import model_for
 from clipper.api import schemas as S  # noqa: N812
 from clipper.db.models import (
     Account,
@@ -684,6 +685,7 @@ def board(core: Core) -> S.BoardOut:
                 started=r.started_at if r else None,
                 current_tool=tools.get(sess.id) if sess and sess.id else None,
                 dimmed=capacity != UNLIMITED and i >= capacity,
+                model=model_for(core.settings, core.db, r.role) if r else None,
             )
         )
     queue = [
@@ -725,6 +727,7 @@ def session_out(core: Core, a: AgentSession, titles: dict[int | None, str]) -> S
         last_active=a.last_active,
         summary=a.summary,
         sdk_session_id=a.sdk_session_id,
+        model=a.model,
     )
 
 

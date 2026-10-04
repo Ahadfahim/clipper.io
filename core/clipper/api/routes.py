@@ -249,6 +249,61 @@ def clear_note(core: CoreDep, note_id: int) -> S.OkOut:
 # ---------------------------------------------------------------- agents
 
 
+def _models_out(core: Core) -> S.ModelsOut:
+    from clipper.agents import models as am
+
+    o = am.overrides(core.db)
+    roles = am.as_map(o.get("roles"))
+    subs = am.as_map(o.get("subagents"))
+    return S.ModelsOut(
+        catalogue=[
+            S.ModelInfoOut(id=m.id, label=m.label, use_for=m.use_for, usage=m.usage) for m in am.CATALOGUE
+        ],
+        presets=am.PRESETS,
+        preset=o.get("preset"),
+        default=str(o.get("default") or core.settings.agents.model),
+        file_default=core.settings.agents.model,
+        fallback=core.settings.agents.fallback_model,
+        roles={r: roles.get(r) for r in am.MAIN_ROLES},
+        subagents={s: subs.get(s) for r in am.MAIN_ROLES for s in am.SUBAGENTS.get(r, [])},
+        parents={s: r for r in am.MAIN_ROLES for s in am.SUBAGENTS.get(r, [])},
+        resolved=am.resolved(core.settings, core.db),
+        tested=list(o.get("tested") or []),
+    )
+
+
+@agents.get("/models", response_model=S.ModelsOut)
+def models_get(core: CoreDep) -> S.ModelsOut:
+    """Which Claude model each agent runs on, and the choices."""
+    return _models_out(core)
+
+
+@agents.put("/models", response_model=S.ModelsOut)
+def models_put(core: CoreDep, body: S.ModelsIn) -> S.ModelsOut:
+    """Set the models (the whole map). Applies to the next agent session; running ones keep theirs."""
+    from clipper.agents.models import set_models
+
+    try:
+        set_models(core.db, body.model_dump())
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
+    return _models_out(core)
+
+
+@agents.post("/models/test", response_model=S.ModelTestOut)
+async def models_test(core: CoreDep, body: S.ModelTestIn, request: Request) -> S.ModelTestOut:
+    """One tiny turn on the plan login: can this plan use the model? A custom id that works becomes
+    selectable. A model the plan doesn't include fails here; nothing is billed beyond the plan."""
+    from clipper.agents.models import KNOWN, check_model, mark_tested
+
+    if request.app.state.fixture_mode:
+        return S.ModelTestOut(ok=True, model=body.model, reported=body.model, error=None)
+    res = await check_model(core.settings, body.model)
+    if res.ok and body.model not in KNOWN:
+        mark_tested(core.db, body.model)
+    return S.ModelTestOut(ok=res.ok, model=res.model, reported=res.reported, error=res.error)
+
+
 @agents.get("/board", response_model=S.BoardOut)
 def board(core: CoreDep) -> S.BoardOut:
     return views.board(core)

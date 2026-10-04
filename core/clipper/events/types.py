@@ -284,7 +284,7 @@ class ControlChanged(EventPayload):
     TYPE = "control.changed"
     ENTITY = "control"
     ENTITY_FIELD = "key"
-    key: Literal["dry_run", "paused", "kill_switch", "slots", "auto_approve_tier"]
+    key: Literal["dry_run", "paused", "kill_switch", "slots", "auto_approve_tier", "models"]
     value: Any
     by: str = "user"
     via: str = "app"

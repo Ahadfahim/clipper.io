@@ -2510,6 +2510,261 @@
     "title": "MarketSwitch",
     "type": "object"
    },
+   "ModelInfoOut": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "usage": {
+      "title": "Usage",
+      "type": "string"
+     },
+     "use_for": {
+      "title": "Use For",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "label",
+     "use_for",
+     "usage"
+    ],
+    "title": "ModelInfoOut",
+    "type": "object"
+   },
+   "ModelTestIn": {
+    "properties": {
+     "model": {
+      "maxLength": 80,
+      "minLength": 3,
+      "title": "Model",
+      "type": "string"
+     }
+    },
+    "required": [
+     "model"
+    ],
+    "title": "ModelTestIn",
+    "type": "object"
+   },
+   "ModelTestOut": {
+    "properties": {
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "model": {
+      "title": "Model",
+      "type": "string"
+     },
+     "ok": {
+      "title": "Ok",
+      "type": "boolean"
+     },
+     "reported": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reported"
+     }
+    },
+    "required": [
+     "ok",
+     "model",
+     "reported",
+     "error"
+    ],
+    "title": "ModelTestOut",
+    "type": "object"
+   },
+   "ModelsIn": {
+    "properties": {
+     "default": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Default"
+     },
+     "preset": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preset"
+     },
+     "roles": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "title": "Roles",
+      "type": "object"
+     },
+     "subagents": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "title": "Subagents",
+      "type": "object"
+     }
+    },
+    "title": "ModelsIn",
+    "type": "object"
+   },
+   "ModelsOut": {
+    "description": "Which model each agent runs on. `resolved` keys are \"director\" or \"campaign/cutter\".",
+    "properties": {
+     "catalogue": {
+      "items": {
+       "$ref": "#/components/schemas/ModelInfoOut"
+      },
+      "title": "Catalogue",
+      "type": "array"
+     },
+     "default": {
+      "title": "Default",
+      "type": "string"
+     },
+     "fallback": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Fallback"
+     },
+     "file_default": {
+      "title": "File Default",
+      "type": "string"
+     },
+     "parents": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "title": "Parents",
+      "type": "object"
+     },
+     "preset": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Preset"
+     },
+     "presets": {
+      "additionalProperties": {
+       "additionalProperties": true,
+       "type": "object"
+      },
+      "title": "Presets",
+      "type": "object"
+     },
+     "resolved": {
+      "additionalProperties": {
+       "type": "string"
+      },
+      "title": "Resolved",
+      "type": "object"
+     },
+     "roles": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "title": "Roles",
+      "type": "object"
+     },
+     "subagents": {
+      "additionalProperties": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ]
+      },
+      "title": "Subagents",
+      "type": "object"
+     },
+     "tested": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Tested",
+      "type": "array"
+     }
+    },
+    "required": [
+     "catalogue",
+     "presets",
+     "preset",
+     "default",
+     "file_default",
+     "fallback",
+     "roles",
+     "subagents",
+     "parents",
+     "resolved",
+     "tested"
+    ],
+    "title": "ModelsOut",
+    "type": "object"
+   },
    "MoneyOut": {
     "properties": {
      "earnings": {
@@ -3898,6 +4153,17 @@
       "title": "Max Turns",
       "type": "integer"
      },
+     "model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model"
+     },
      "output_tokens": {
       "title": "Output Tokens",
       "type": "integer"
@@ -3955,7 +4221,8 @@
      "started",
      "last_active",
      "summary",
-     "sdk_session_id"
+     "sdk_session_id",
+     "model"
     ],
     "title": "SessionOut",
     "type": "object"
@@ -4078,6 +4345,17 @@
       ],
       "title": "Kind"
      },
+     "model": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Model"
+     },
      "priority": {
       "anyOf": [
        {
@@ -4150,7 +4428,8 @@
      "priority",
      "started",
      "current_tool",
-     "dimmed"
+     "dimmed",
+     "model"
     ],
     "title": "SlotOut",
     "type": "object"
@@ -4985,6 +5264,110 @@
      }
     },
     "summary": "Replay Event",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/models": {
+   "get": {
+    "description": "Which Claude model each agent runs on, and the choices.",
+    "operationId": "models_get_api_agents_models_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Models Get",
+    "tags": [
+     "agents"
+    ]
+   },
+   "put": {
+    "description": "Set the models (the whole map). Applies to the next agent session; running ones keep theirs.",
+    "operationId": "models_put_api_agents_models_put",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ModelsIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelsOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Models Put",
+    "tags": [
+     "agents"
+    ]
+   }
+  },
+  "/api/agents/models/test": {
+   "post": {
+    "description": "One tiny turn on the plan login: can this plan use the model? A custom id that works becomes\nselectable. A model the plan doesn't include fails here; nothing is billed beyond the plan.",
+    "operationId": "models_test_api_agents_models_test_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ModelTestIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ModelTestOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Models Test",
     "tags": [
      "agents"
     ]

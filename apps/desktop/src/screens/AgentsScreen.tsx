@@ -13,7 +13,7 @@ import { AgentEventRow, SlotBoard } from "@/components/domain/agents";
 import { UsageMeter } from "@/components/domain/meters";
 import { cn } from "@/lib/cn";
 import { clock, compact, relative } from "@/lib/format";
-import { ROLE_LABEL } from "@/lib/platforms";
+import { ROLE_LABEL, modelLabel } from "@/lib/platforms";
 import { flatten, groupTranscript, type TranscriptItem } from "@/lib/transcript";
 
 const GROUPS: { key: string; label: string; match: (s: Schemas["SessionOut"]) => boolean }[] = [
@@ -146,6 +146,7 @@ function Context({ detail }: { detail?: Schemas["SessionDetail"] }) {
               ),
             ],
             ["Status", s.status.replace("_", " ")],
+            ["Model", s.model ? <span key="m" title={s.model}>{modelLabel(s.model)}</span> : "—"],
             [
               "Turns",
               <span key="t" className="num">

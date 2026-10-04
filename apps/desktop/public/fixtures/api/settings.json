@@ -8,6 +8,7 @@
  "settings": {
   "agents": {
    "cli_path": null,
+   "fallback_model": "claude-sonnet-5-5",
    "min_free_ram_gb": 2.0,
    "model": "claude-opus-5-5",
    "prompts_dir": null,
@@ -15,50 +16,61 @@
    "roles": {
     "analyst": {
      "effort": "medium",
-     "max_turns": 60
+     "max_turns": 60,
+     "model": null
     },
     "campaign": {
      "effort": "high",
-     "max_turns": 80
+     "max_turns": 80,
+     "model": null
     },
     "director": {
      "effort": "high",
-     "max_turns": 40
+     "max_turns": 40,
+     "model": null
     },
     "scout": {
      "effort": "low",
-     "max_turns": 40
+     "max_turns": 40,
+     "model": null
     }
    },
    "slots": 2,
    "subagents": {
     "brief-reader": {
      "effort": "high",
-     "max_turns": 10
+     "max_turns": 10,
+     "model": null
     },
     "browser-fixer": {
      "effort": "medium",
-     "max_turns": 30
+     "max_turns": 30,
+     "model": null
     },
     "copywriter": {
      "effort": "medium",
-     "max_turns": 15
+     "max_turns": 15,
+     "model": null
     },
     "cutter": {
      "effort": "high",
-     "max_turns": 60
+     "max_turns": 60,
+     "model": null
     },
     "editor": {
      "effort": "high",
-     "max_turns": 40
+     "max_turns": 40,
+     "model": null
     },
     "qa-checker": {
      "effort": "low",
-     "max_turns": 20
+     "max_turns": 20,
+     "model": null
     },
     "research": {
      "effort": "medium",
-     "max_turns": 20
+     "max_turns": 20,
+     "model": null
     }
    }
   },

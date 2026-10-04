@@ -37,6 +37,7 @@ GETS = [
     "/api/questions",
     "/api/notes",
     "/api/agents/board",
+    "/api/agents/models",
     "/api/agents/sessions",
     "/api/agents/sessions/1",
     "/api/agents/director/messages",

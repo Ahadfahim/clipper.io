@@ -30,7 +30,8 @@ port = 8765
 fixture_mode = false # true serves seeded demo data and starts no agents
 
 [agents]
-model = "claude-opus-5-5"
+model = "claude-opus-5-5"            # default model; Settings → Agents can pick one per agent (no restart)
+fallback_model = "claude-sonnet-5-5" # used when a session's model isn't available
 slots = 2                # agent sessions at once; 0 = unlimited (grows with the campaigns). 2 suits Claude Pro
 reserve_p0_slot = true   # one slot always free for you (Director chat, answers, notes)
 min_free_ram_gb = 2.0    # don't start background sessions below this much free RAM; 0 = off
@@ -40,6 +41,7 @@ min_free_ram_gb = 2.0    # don't start background sessions below this much free 
 [agents.roles.scout]
 effort = "low"
 max_turns = 40
+# model = "claude-haiku-4-5-20251001"   # any role or subagent can set its own model
 
 [agents.roles.campaign]
 effort = "high"

@@ -413,6 +413,7 @@ class Supervisor:
             sess.turns += outcome.turns
             sess.input_tokens += outcome.input_tokens
             sess.output_tokens += outcome.output_tokens
+            sess.model = outcome.model or sess.model
             sess.last_active = now
             if outcome.error and not requeue:
                 sess.status = SessionStatus.FAILED if sess.sdk_session_id is None else SessionStatus.WAITING

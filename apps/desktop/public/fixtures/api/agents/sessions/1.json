@@ -190,6 +190,7 @@
   "input_tokens": 182000,
   "last_active": "2026-10-02T17:59:20Z",
   "max_turns": 80,
+  "model": null,
   "output_tokens": 21400,
   "role": "campaign",
   "sdk_session_id": "0b8f2c1e-beast",

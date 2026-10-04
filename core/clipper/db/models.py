@@ -258,6 +258,7 @@ class AgentSession(SQLModel, table=True):
     started: datetime = _now_dt()
     last_active: datetime = _now_dt()
     summary: str | None = None
+    model: str | None = None  # the model that last ran (as Claude Code reported it)
 
 
 class AgentEvent(SQLModel, table=True):

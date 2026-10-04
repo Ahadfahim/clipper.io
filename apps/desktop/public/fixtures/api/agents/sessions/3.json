@@ -33,6 +33,7 @@
   "input_tokens": 26000,
   "last_active": "2026-10-02T17:53:00Z",
   "max_turns": 40,
+  "model": null,
   "output_tokens": 2900,
   "role": "scout",
   "sdk_session_id": "scout-run-0931",

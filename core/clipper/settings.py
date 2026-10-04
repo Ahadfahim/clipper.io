@@ -96,11 +96,13 @@ class ApiSettings(_Model):
 class RoleSettings(_Model):
     effort: Effort = "high"
     max_turns: int = 60
+    model: str | None = None  # None = agents.model
 
 
 class SubagentSettings(_Model):
     effort: Effort = "medium"
     max_turns: int = 30
+    model: str | None = None  # None = its role's model
 
 
 def _default_roles() -> dict[str, RoleSettings]:
@@ -125,7 +127,10 @@ def _default_subagents() -> dict[str, SubagentSettings]:
 
 
 class AgentSettings(_Model):
+    # the default model; each role/subagent can override it (Settings → Agents, agents/models.py)
     model: str = "claude-opus-5-5"
+    # used when a session's model isn't available (e.g. not on this plan); None = no fallback
+    fallback_model: str | None = "claude-sonnet-5-5"
     # How many agent sessions run at once. 0 = unlimited: the pool grows with the work (one session
     # per active campaign plus Scout/Analyst/Director), still paused by the plan's rate limit and the
     # free-memory floor below. Default 2 suits a Claude Pro plan.

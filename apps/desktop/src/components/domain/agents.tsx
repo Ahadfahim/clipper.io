@@ -3,7 +3,7 @@ import { useState } from "react";
 import { cn } from "@/lib/cn";
 import { clock, span } from "@/lib/format";
 import { nowMs } from "@/lib/now";
-import { ROLE_LABEL } from "@/lib/platforms";
+import { ROLE_LABEL, modelLabel } from "@/lib/platforms";
 import { shortTool, type TranscriptItem } from "@/lib/transcript";
 import { Dot } from "@/components/ui/status";
 import { Tooltip } from "@/components/ui/misc";
@@ -35,7 +35,7 @@ export function SlotBoard({
   showQueue?: boolean;
 }) {
   const now = nowMs();
-  const cols = "34px minmax(0,1.4fr) 34px minmax(0,1.5fr) 56px";
+  const cols = "34px minmax(0,1.4fr) 34px minmax(0,1.5fr) 74px 56px";
   return (
     <div className="flex flex-wrap gap-3.5">
       <div role="table" aria-label="Agent slots" className="min-w-[380px] flex-[3_1_420px] overflow-hidden rounded-[var(--radius)] border border-line">
@@ -44,6 +44,7 @@ export function SlotBoard({
           <span role="columnheader" className="px-2">Agent</span>
           <span role="columnheader" className="px-1">Pri</span>
           <span role="columnheader" className="px-2">Current tool</span>
+          <span role="columnheader" className="px-2">Model</span>
           <span role="columnheader" className="px-2 text-right">Time</span>
         </div>
         {board.slots.map((s) => {
@@ -65,6 +66,7 @@ export function SlotBoard({
               </span>
               <span role="cell" className="num px-1">{busy ? P(s.priority) : reserved ? "P0" : ""}</span>
               <span role="cell" className={cn("num truncate-1 px-2", busy ? "text-agent" : "text-muted")}>{busy ? shortTool(s.current_tool) || "thinking" : "idle"}</span>
+              <span role="cell" className="truncate-1 px-2 text-muted">{busy ? modelLabel(s.model) : ""}</span>
               <span role="cell" className="num px-2 text-right">{s.started ? span(now - Date.parse(s.started)) : "—"}</span>
             </div>
           );

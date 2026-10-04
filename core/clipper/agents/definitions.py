@@ -30,9 +30,11 @@ from clipper.agents.hooks import (
     make_post_tool_use_hook,
     make_pre_tool_use_hook,
 )
+from clipper.agents.models import model_for
 from clipper.settings import Settings
 
 if TYPE_CHECKING:
+    from clipper.db.engine import Database
     from clipper.tools.base import ToolContext
 
 PROMPTS_DIR = Path(__file__).parent / "prompts"
@@ -76,8 +78,10 @@ def session_tools(role: str) -> set[str]:
     return names
 
 
-def agent_definitions(role: str, settings: Settings) -> dict[str, AgentDefinition]:
-    model = settings.agents.model
+def agent_definitions(
+    role: str, settings: Settings, db: Database | None = None
+) -> dict[str, AgentDefinition]:
+    model = model_for(settings, db, role)
     prompts_dir = settings.agents.prompts_dir or PROMPTS_DIR
     role_cfg = settings.agents.roles[role]
     defs: dict[str, AgentDefinition] = {
@@ -96,11 +100,16 @@ def agent_definitions(role: str, settings: Settings) -> dict[str, AgentDefinitio
             description=DESCRIPTIONS[sub],
             prompt=load_prompt(sub, prompts_dir),
             tools=list(ACCESS[sub]),
-            model=model,
+            model=model_for(settings, db, role, sub),
             effort=cfg.effort,
             maxTurns=cfg.max_turns,
         )
     return defs
+
+
+def _fallback(settings: Settings, model: str) -> str | None:
+    fb = settings.agents.fallback_model
+    return fb if fb and fb != model else None  # the SDK refuses a fallback equal to the model
 
 
 @dataclass(frozen=True)
@@ -149,10 +158,11 @@ def build_options(
         permission_mode="dontAsk",
         mcp_servers=mcp_servers,
         strict_mcp_config=True,
-        agents=agent_definitions(role, settings),
+        agents=agent_definitions(role, settings, tool_ctx.core.db),
         extra_args={"agent": role},  # main thread = the role's agent definition (LOCAL-VERIFY)
         setting_sources=[],
-        model=settings.agents.model,
+        model=model_for(settings, tool_ctx.core.db, role),
+        fallback_model=_fallback(settings, model_for(settings, tool_ctx.core.db, role)),
         effort=role_cfg.effort,
         max_turns=role_cfg.max_turns,
         resume=spec.resume,

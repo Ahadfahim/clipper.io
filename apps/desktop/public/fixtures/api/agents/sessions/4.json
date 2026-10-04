@@ -8,6 +8,7 @@
   "input_tokens": 95000,
   "last_active": "2026-10-02T13:20:00Z",
   "max_turns": 60,
+  "model": null,
   "output_tokens": 8800,
   "role": "analyst",
   "sdk_session_id": "analyst-daily",

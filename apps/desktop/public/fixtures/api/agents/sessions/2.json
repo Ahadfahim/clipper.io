@@ -19,6 +19,7 @@
   "input_tokens": 38000,
   "last_active": "2026-10-02T17:42:00Z",
   "max_turns": 80,
+  "model": null,
   "output_tokens": 4100,
   "role": "campaign",
   "sdk_session_id": "7d1e9a44-ali",

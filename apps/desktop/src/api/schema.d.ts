@@ -76,6 +76,51 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/agents/models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Models Get
+         * @description Which Claude model each agent runs on, and the choices.
+         */
+        get: operations["models_get_api_agents_models_get"];
+        /**
+         * Models Put
+         * @description Set the models (the whole map). Applies to the next agent session; running ones keep theirs.
+         */
+        put: operations["models_put_api_agents_models_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/agents/models/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Models Test
+         * @description One tiny turn on the plan login: can this plan use the model? A custom id that works becomes
+         *     selectable. A model the plan doesn't include fails here; nothing is billed beyond the plan.
+         */
+        post: operations["models_test_api_agents_models_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/agents/requests/{request_id}": {
         parameters: {
             query?: never;
@@ -2277,6 +2322,88 @@ export interface components {
             /** Session Ok */
             session_ok: boolean;
         };
+        /** ModelInfoOut */
+        ModelInfoOut: {
+            /** Id */
+            id: string;
+            /** Label */
+            label: string;
+            /** Usage */
+            usage: string;
+            /** Use For */
+            use_for: string;
+        };
+        /** ModelTestIn */
+        ModelTestIn: {
+            /** Model */
+            model: string;
+        };
+        /** ModelTestOut */
+        ModelTestOut: {
+            /** Error */
+            error: string | null;
+            /** Model */
+            model: string;
+            /** Ok */
+            ok: boolean;
+            /** Reported */
+            reported: string | null;
+        };
+        /** ModelsIn */
+        ModelsIn: {
+            /** Default */
+            default?: string | null;
+            /** Preset */
+            preset?: string | null;
+            /** Roles */
+            roles?: {
+                [key: string]: string | null;
+            };
+            /** Subagents */
+            subagents?: {
+                [key: string]: string | null;
+            };
+        };
+        /**
+         * ModelsOut
+         * @description Which model each agent runs on. `resolved` keys are "director" or "campaign/cutter".
+         */
+        ModelsOut: {
+            /** Catalogue */
+            catalogue: components["schemas"]["ModelInfoOut"][];
+            /** Default */
+            default: string;
+            /** Fallback */
+            fallback: string | null;
+            /** File Default */
+            file_default: string;
+            /** Parents */
+            parents: {
+                [key: string]: string;
+            };
+            /** Preset */
+            preset: string | null;
+            /** Presets */
+            presets: {
+                [key: string]: {
+                    [key: string]: unknown;
+                };
+            };
+            /** Resolved */
+            resolved: {
+                [key: string]: string;
+            };
+            /** Roles */
+            roles: {
+                [key: string]: string | null;
+            };
+            /** Subagents */
+            subagents: {
+                [key: string]: string | null;
+            };
+            /** Tested */
+            tested: string[];
+        };
         /** MoneyOut */
         MoneyOut: {
             /** Earnings */
@@ -2755,6 +2882,8 @@ export interface components {
             last_active: string;
             /** Max Turns */
             max_turns: number;
+            /** Model */
+            model: string | null;
             /** Output Tokens */
             output_tokens: number;
             /** Role */
@@ -2819,6 +2948,8 @@ export interface components {
             dimmed: boolean;
             /** Kind */
             kind: string | null;
+            /** Model */
+            model: string | null;
             /** Priority */
             priority: number | null;
             /** Request Id */
@@ -3199,6 +3330,92 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ReplayOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    models_get_api_agents_models_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelsOut"];
+                };
+            };
+        };
+    };
+    models_put_api_agents_models_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelsIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelsOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    models_test_api_agents_models_test_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ModelTestIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ModelTestOut"];
                 };
             };
             /** @description Validation Error */

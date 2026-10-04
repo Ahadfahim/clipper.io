@@ -435,3 +435,19 @@ export function useAttachFile(campaignId: number) {
     invalidate: () => [qk.campaign(campaignId), qk.jobs, qk.status, qk.overview, qk.questions],
   });
 }
+
+/** Set which model each agent runs on (applies to the next agent session). */
+export function useSaveModels() {
+  return useAction({
+    run: (v: Schemas["ModelsIn"]) => unwrap(api.PUT("/api/agents/models", { body: v })),
+    invalidate: () => [qk.models, qk.board],
+  });
+}
+
+/** One tiny turn on the plan login: can this plan use the model? */
+export function useTestModel() {
+  return useAction({
+    run: (model: string) => unwrap(api.POST("/api/agents/models/test", { body: { model } })),
+    invalidate: () => [qk.models],
+  });
+}

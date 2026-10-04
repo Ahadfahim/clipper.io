@@ -100,3 +100,14 @@ async def test_api_key_never_reaches_the_cli(
     assert "--setting-sources=" in cmd and "--agent" in cmd
     assert cmd[cmd.index("--model") + 1] == "claude-opus-5-5"
     assert cmd[cmd.index("--permission-mode") + 1] == "dontAsk"
+
+
+def test_options_follow_the_apps_model_choice_with_a_fallback(core: Core, tmp_path: Path) -> None:
+    from clipper.agents import models as am
+
+    assert _options(core, "director", tmp_path).fallback_model == "claude-sonnet-5-5"
+    am.set_models(core.db, am.PRESETS["balanced"])
+    scout = _options(core, "scout", tmp_path)
+    assert scout.model == am.HAIKU and scout.fallback_model == "claude-sonnet-5-5"
+    campaign = _options(core, "campaign", tmp_path)
+    assert campaign.model == am.SONNET and campaign.fallback_model is None  # never equal to the model

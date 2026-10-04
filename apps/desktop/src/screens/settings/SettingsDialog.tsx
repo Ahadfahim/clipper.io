@@ -1,8 +1,8 @@
 import * as D from "@radix-ui/react-dialog";
 import { Dismiss16Regular } from "@fluentui/react-icons";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { useDeleteLesson, useEditLesson, usePatchSettings, useSavePrompt, useSaveSecret, useSwitch } from "@/api/actions";
-import { useCampaigns, useDoctor, useLessons, usePrompts, useSettings, useStatus, useSwitches, useTools } from "@/api/queries";
+import { useDeleteLesson, useEditLesson, usePatchSettings, useSavePrompt, useSaveModels, useSaveSecret, useSwitch, useTestModel } from "@/api/actions";
+import { useCampaigns, useDoctor, useLessons, useModels, usePrompts, useSettings, useStatus, useSwitches, useTools } from "@/api/queries";
 import { useLive } from "@/api/live";
 import type { Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -344,6 +344,123 @@ export function lineDiff(a: string, b: string): { kind: " " | "+" | "-"; text: s
   return out;
 }
 
+const PRESET_LABEL: Record<string, string> = { balanced: "Balanced (recommended for Pro)", save_usage: "Save usage", best_quality: "Best quality" };
+const USAGE_NOTE: Record<string, string> = { most: "uses your plan fastest", medium: "moderate use", least: "uses your plan slowest" };
+type ModelMap = { preset: string | null; default: string; roles: Record<string, string | null>; subagents: Record<string, string | null> };
+
+/** Which Claude model each agent runs on. Saved live (next session), unlike the settings file. */
+function Models() {
+  const q = useModels();
+  const save = useSaveModels();
+  const test = useTestModel();
+  const [draft, setDraft] = useState<ModelMap | null>(null);
+  const [tested, setTested] = useState<Schemas["ModelTestOut"] | null>(null);
+  const m = q.data;
+  useEffect(() => {
+    if (m) setDraft({ preset: m.preset ?? null, default: m.default, roles: { ...m.roles }, subagents: { ...m.subagents } });
+  }, [m]);
+  if (!m || !draft) return null;
+  const label = (id: string | null | undefined) => m.catalogue.find((c) => c.id === id)?.label ?? id ?? "";
+  const options = [...m.catalogue.map((c) => c.id), ...m.tested.filter((t) => !m.catalogue.some((c) => c.id === t))];
+  const roleModel = (r: string) => draft.roles[r] ?? draft.default;
+  const dirty = JSON.stringify(draft) !== JSON.stringify({ preset: m.preset ?? null, default: m.default, roles: m.roles, subagents: m.subagents });
+  const applyPreset = (name: string) => {
+    if (name === "custom") return setDraft({ ...draft, preset: null });
+    const p = m.presets[name] as { default: string; roles: Record<string, string>; subagents: Record<string, string> };
+    setDraft({
+      preset: name,
+      default: p.default,
+      roles: Object.fromEntries(Object.keys(m.roles).map((r) => [r, p.roles[r] ?? null])),
+      subagents: Object.fromEntries(Object.keys(m.subagents).map((s) => [s, p.subagents[s] ?? null])),
+    });
+  };
+  const pick = (value: string | null, inherit: string, aria: string, onChange: (v: string | null) => void) => (
+    <Select aria-label={aria} value={value ?? ""} onChange={(e) => onChange(e.target.value || null)} className="h-6">
+      <option value="">Default ({label(inherit)})</option>
+      {options.map((id) => (
+        <option key={id} value={id}>
+          {label(id)}
+        </option>
+      ))}
+    </Select>
+  );
+  const rows: [kind: "roles" | "subagents", name: string][] = Object.keys(m.roles).flatMap((r) => [
+    ["roles", r] as ["roles", string],
+    ...Object.keys(m.subagents)
+      .filter((s) => m.parents[s] === r)
+      .map((s) => ["subagents", s] as ["subagents", string]),
+  ]);
+  return (
+    <Fieldset legend="Models">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <span className="w-[140px] text-muted">Preset</span>
+          <Select aria-label="Model preset" value={draft.preset ?? "custom"} onChange={(e) => applyPreset(e.target.value)} className="w-64">
+            {Object.keys(m.presets).map((p) => (
+              <option key={p} value={p}>
+                {PRESET_LABEL[p] ?? p}
+              </option>
+            ))}
+            <option value="custom">Custom</option>
+          </Select>
+          <Badge>Claude plan login</Badge>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-[140px] text-muted">Default model</span>
+          <Select aria-label="Default model" value={draft.default} onChange={(e) => setDraft({ ...draft, preset: null, default: e.target.value })} className="w-64">
+            {options.map((id) => (
+              <option key={id} value={id}>
+                {label(id)}
+              </option>
+            ))}
+          </Select>
+          <Button size="sm" disabled={test.isPending} onClick={() => test.mutate(draft.default, { onSuccess: (r) => setTested(r as Schemas["ModelTestOut"]) })}>
+            {test.isPending ? "Testing…" : "Test"}
+          </Button>
+          {tested && tested.model === draft.default && (
+            <span className={cn("truncate-1", tested.ok ? "text-ok" : "text-bad")}>{tested.ok ? "Works on your plan" : tested.error}</span>
+          )}
+        </div>
+        <div className="grid items-center gap-x-3 gap-y-1" style={{ gridTemplateColumns: "140px 220px minmax(0,1fr)" }}>
+          <span className="text-muted">Agent</span>
+          <span className="text-muted">Model</span>
+          <span className="text-muted">Runs on</span>
+          {rows.map(([kind, name]) => {
+            const value = kind === "roles" ? draft.roles[name] : draft.subagents[name];
+            const inherit = kind === "roles" ? draft.default : roleModel(m.parents[name]!);
+            const set = (v: string | null) => setDraft({ ...draft, preset: null, [kind]: { ...draft[kind], [name]: v } });
+            const runs = value ?? inherit;
+            return (
+              <div key={`${kind}-${name}`} className="contents">
+                <span className={kind === "subagents" ? "pl-3 text-muted" : ""}>{ROLE_LABEL[name] ?? name}</span>
+                {pick(value ?? null, inherit, `${name} model`, set)}
+                <span className="truncate-1 text-muted">
+                  {label(runs)}
+                  {m.catalogue.find((c) => c.id === runs) ? `: ${USAGE_NOTE[m.catalogue.find((c) => c.id === runs)!.usage] ?? ""}` : ""}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <p className="text-muted">
+          Opus uses your plan's allowance fastest, Haiku slowest. Changes apply to each agent's next session; running ones keep their model.
+          {m.fallback ? ` If a model isn't available, sessions fall back to ${label(m.fallback)}.` : ""}
+        </p>
+        <div className="flex items-center gap-2">
+          <Button variant="primary" disabled={!dirty || save.isPending} onClick={() => save.mutate(draft)}>
+            Save models
+          </Button>
+          <Button disabled={!dirty} onClick={() => setDraft({ preset: m.preset ?? null, default: m.default, roles: { ...m.roles }, subagents: { ...m.subagents } })}>
+            Discard
+          </Button>
+          {save.error && <span className="text-bad">{save.error.message}</span>}
+          {save.isSuccess && !dirty && <span className="text-muted">Saved</span>}
+        </div>
+      </div>
+    </Fieldset>
+  );
+}
+
 function Agents({ ctx }: { ctx: Ctx }) {
   const prompts = usePrompts().data ?? [];
   const save = useSavePrompt();
@@ -362,11 +479,7 @@ function Agents({ ctx }: { ctx: Ctx }) {
   return (
     <>
       <H>Agents</H>
-      <div className="flex items-center gap-2">
-        <span className="text-muted">Model</span>
-        <span className="num">{String(val(ctx, "agents.model"))}</span>
-        <Badge>Claude plan login</Badge>
-      </div>
+      <Models />
       <Fieldset legend="Effort and turn limits">
         <div className="grid items-center gap-x-3 gap-y-1" style={{ gridTemplateColumns: "140px 120px 110px" }}>
           <span className="text-muted">Agent</span>

@@ -133,6 +133,47 @@ class RecipeTestIn(BaseModel):
     params: dict[str, Any] = Field(default_factory=dict)
 
 
+class ModelInfoOut(M):
+    id: str
+    label: str
+    use_for: str
+    usage: str
+
+
+class ModelsOut(M):
+    """Which model each agent runs on. `resolved` keys are "director" or "campaign/cutter"."""
+
+    catalogue: list[ModelInfoOut]
+    presets: dict[str, dict[str, Any]]
+    preset: str | None
+    default: str  # in force (app choice, else settings file)
+    file_default: str
+    fallback: str | None
+    roles: dict[str, str | None]  # app choices (None = use the default)
+    subagents: dict[str, str | None]  # app choices (None = use the role's model)
+    parents: dict[str, str]  # subagent -> its role
+    resolved: dict[str, str]
+    tested: list[str]
+
+
+class ModelsIn(BaseModel):
+    preset: str | None = None
+    default: str | None = None
+    roles: dict[str, str | None] = Field(default_factory=dict)
+    subagents: dict[str, str | None] = Field(default_factory=dict)
+
+
+class ModelTestIn(BaseModel):
+    model: str = Field(min_length=3, max_length=80)
+
+
+class ModelTestOut(M):
+    ok: bool
+    model: str
+    reported: str | None
+    error: str | None
+
+
 class CheckUploadIn(BaseModel):
     """A real upload of a synthetic test clip, as Private, to check an upload recipe end to end."""
 
@@ -278,6 +319,7 @@ class SlotOut(M):
     started: datetime | None
     current_tool: str | None
     dimmed: bool
+    model: str | None = None  # the model this role runs on now
 
 
 class QueueItem(M):
@@ -314,6 +356,7 @@ class SessionOut(M):
     last_active: datetime
     summary: str | None
     sdk_session_id: str | None
+    model: str | None = None  # what the last run reported (shows when the fallback was used)
 
 
 class AgentEventOut(M):

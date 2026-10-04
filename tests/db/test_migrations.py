@@ -25,7 +25,7 @@ def test_upgrade_creates_every_plan_table(tmp_path: Path) -> None:
     with sqlite3.connect(db) as conn:
         tables = {r[0] for r in conn.execute("select name from sqlite_master where type='table'")}
     assert tables >= PLAN_TABLES
-    assert current_revision(db) == head_revision() == "0001_initial"
+    assert current_revision(db) == head_revision() == "0002_session_model"
 
 
 def test_migration_matches_models(tmp_path: Path) -> None:

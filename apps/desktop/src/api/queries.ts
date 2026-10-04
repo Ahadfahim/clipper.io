@@ -13,6 +13,7 @@ export const qk = {
   questions: ["questions"],
   notes: ["notes"],
   board: ["board"],
+  models: ["models"],
   sessions: ["sessions"],
   session: (id: number) => ["session", id],
   director: ["director"],
@@ -51,6 +52,7 @@ export const useSwitchPreview = (level: "marketplace" | "social" | "account", na
 export const useJobs = () => useQuery({ queryKey: qk.jobs, queryFn: () => unwrap(api.GET("/api/jobs")), ...live });
 export const useQuestions = () => useQuery({ queryKey: qk.questions, queryFn: () => unwrap(api.GET("/api/questions")), ...live });
 export const useNotes = () => useQuery({ queryKey: qk.notes, queryFn: () => unwrap(api.GET("/api/notes")), ...live });
+export const useModels = () => useQuery({ queryKey: qk.models, queryFn: () => unwrap(api.GET("/api/agents/models")) });
 export const useBoard = () =>
   useQuery({ queryKey: qk.board, queryFn: () => unwrap(api.GET("/api/agents/board")), refetchInterval: FIXTURE_MODE ? false : 5_000, ...live });
 export const useSessions = () => useQuery({ queryKey: qk.sessions, queryFn: () => unwrap(api.GET("/api/agents/sessions")), ...live });
