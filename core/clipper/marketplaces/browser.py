@@ -100,6 +100,11 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
     used = _num(row.get("budget_used"))  # Whop's cards show "$2.3k / $10.5k" (paid out / total)
     if left is None and total is not None and used is not None:
         left = max(total - used, 0.0)
+    # Vyro shows "% paid out" instead of a dollar budget; at 100% (or "Payouts ended") nothing can earn
+    pct = _num(row.get("paid_out_pct"))
+    ended = (pct is not None and pct >= 100) or "ended" in str(row.get("state") or "").lower()
+    if ended:
+        left = 0.0
     return CampaignCard(
         marketplace=market,
         external_id=str(row["id"]),
@@ -118,6 +123,7 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
         tracking_window_days=int(_num(row.get("tracking_days")) or 0) or None,
         deadline=_date(row.get("deadline")),
         join=_join(row.get("join")),
+        payouts_ended=ended,
     )
 
 

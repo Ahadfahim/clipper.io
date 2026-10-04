@@ -30,6 +30,7 @@ class CampaignCard:
     tracking_window_days: int | None = None
     deadline: datetime | None = None
     join: JoinKind = "none"
+    payouts_ended: bool = False  # the marketplace says no more payouts: nothing posted now can earn
 
 
 @dataclass(frozen=True)

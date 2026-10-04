@@ -111,3 +111,28 @@ def test_retry_a_failed_download_and_a_failed_job(core: Core) -> None:
 def test_file_hosts_have_no_comments(core: Core) -> None:
     _cid, sid = _failed_source(core)  # https://f.io/... (Frame.io)
     assert core.media.comments(sid) == []
+
+
+def test_campaigns_whose_payouts_ended_are_never_suggested_and_wind_down(core: Core) -> None:
+    from clipper.db.models import Campaign
+    from clipper.db.types import CampaignStatus
+    from clipper.marketplaces.base import CampaignCard
+
+    def card(ext: str, ended: bool) -> CampaignCard:
+        return CampaignCard(marketplace="vyro", external_id=ext, title=ext, cpm_usd=1.0, payouts_ended=ended)
+
+    core.campaigns.upsert_cards([card("fresh", False), card("dead", True)])
+    with core.db.read() as s:
+        rows = {c.external_id: c.status for c in s.exec(select(Campaign)).all()}
+    assert rows["fresh"] == CampaignStatus.SUGGESTED and rows["dead"] == CampaignStatus.ENDED
+
+    def activate(tx: object) -> None:
+        row = tx.session.exec(select(Campaign).where(Campaign.external_id == "fresh")).one()  # type: ignore[attr-defined]
+        row.status = CampaignStatus.ACTIVE
+        tx.add(row)  # type: ignore[attr-defined]
+
+    core.db.write(activate)
+    core.campaigns.upsert_cards([card("fresh", True)])  # its payouts ended while we work on it
+    with core.db.read() as s:
+        status = s.exec(select(Campaign).where(Campaign.external_id == "fresh")).one().status
+    assert status == CampaignStatus.ENDING

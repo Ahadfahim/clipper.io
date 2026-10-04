@@ -22,7 +22,14 @@ from clipper.db.models import (
     Source,
 )
 from clipper.db.types import CampaignStatus
-from clipper.events.types import CampaignFound, CampaignSkipped, CampaignTaken, CampaignUpdated, SpecUpdated
+from clipper.events.types import (
+    CampaignEnding,
+    CampaignFound,
+    CampaignSkipped,
+    CampaignTaken,
+    CampaignUpdated,
+    SpecUpdated,
+)
 from clipper.marketplaces.base import CampaignCard
 from clipper.rules.spec import ClipSpec
 from clipper.services.base import Service, ServiceError
@@ -82,6 +89,8 @@ class CampaignService(Service):
                     status = CampaignStatus.SUGGESTED
                     if card.content_type == "ugc" and not include_ugc:
                         status = CampaignStatus.SKIPPED
+                    if card.payouts_ended:
+                        status = CampaignStatus.ENDED  # never suggest what can't pay
                     row = Campaign(
                         marketplace=card.marketplace,
                         external_id=card.external_id,
@@ -103,6 +112,12 @@ class CampaignService(Service):
                 row.tracking_window_days = card.tracking_window_days
                 row.deadline = card.deadline
                 row.updated_at = now
+                if card.payouts_ended and not is_new:
+                    if row.status == CampaignStatus.SUGGESTED:
+                        row.status = CampaignStatus.ENDED
+                    elif row.status in (CampaignStatus.TAKEN, CampaignStatus.ACTIVE):
+                        row.status = CampaignStatus.ENDING  # work in flight finishes; no new clips
+                        tx.publish(CampaignEnding(campaign_id=row.id or 0, reason="payouts ended"))
                 tx.add(row)
                 tx.flush()
                 assert row.id is not None

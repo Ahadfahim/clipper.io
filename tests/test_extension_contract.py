@@ -233,3 +233,11 @@ async def test_joining_without_a_join_recipe_is_an_answer_not_a_crash() -> None:
     whop = await RecipeMarketplace("whop", bridge).join_campaign("abc")
     assert whop.status == "already"
     assert not any(c[1] == "whop.join_campaign" for c in bridge.calls)
+
+
+def test_vyro_campaigns_at_100_percent_paid_out_have_ended() -> None:
+    live = card_from_row("vyro", {"id": "a", "paid_out_pct": "7", "cpm": "1.00"})
+    assert not live.payouts_ended and live.budget_left is None
+    gone = card_from_row("vyro", {"id": "b", "paid_out_pct": "100", "cpm": "1.00"})
+    assert gone.payouts_ended and gone.budget_left == 0
+    assert card_from_row("vyro", {"id": "c", "state": "Payouts ended"}).payouts_ended

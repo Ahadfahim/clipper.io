@@ -1,21 +1,22 @@
 {
   "$schema": "./schema.json",
   "name": "vyro.submit_url",
-  "version": 1,
+  "version": 2,
   "site": "vyro",
   "status": "UNVERIFIED",
-  "description": "Vyro: submit a live post URL to a campaign the account has joined. UNVERIFIED selectors.",
+  "description": "Vyro: submit a live post URL to a campaign you joined. Opens the campaign (app.vyro.com/campaigns?c=<id>) and clicks Submit post, which is disabled once payouts end. The form's fields are UNVERIFIED: they could only be written once a live, joined campaign exists to look at.",
   "params": {
-    "id": { "type": "string", "required": true, "description": "campaign id on Vyro" },
+    "id": { "type": "string", "required": true, "description": "campaign id on Vyro (the ?c= slug)" },
     "url": { "type": "string", "required": true, "description": "the live post URL" },
     "step_delay_ms": { "type": "array" }
   },
   "steps": [
-    { "action": "navigate", "url": "https://vyro.com/campaigns/{{id|url}}" },
-    { "action": "click", "text": "Submit", "note": "opens the submission form" },
-    { "action": "type", "selector": "input[name=url], input[type=url], input[placeholder*='link' i]", "value": "{{url}}" },
-    { "action": "click", "selector": "form button[type=submit]", "final": true },
-    { "action": "read_text", "selector": "[data-testid=submission-status], [role=status]", "save_as": "status", "optional": true, "timeout_ms": 20000 }
+    { "action": "navigate", "url": "https://app.vyro.com/campaigns?c={{id|url}}" },
+    { "action": "wait_for", "selector": "[role=dialog] [data-slot=sheet-header] h2", "timeout_ms": 30000 },
+    { "action": "click", "selector": "[role=dialog] button[data-size='3xl']", "note": "Submit post (disabled when the campaign's payouts have ended)" },
+    { "action": "type", "selector": "[role=dialog] input[type=url], [role=dialog] input[placeholder*='link' i], [role=dialog] input[placeholder*='url' i], [role=dialog] textarea", "value": "{{url}}" },
+    { "action": "click", "selector": "[role=dialog] button[type=submit], [role=dialog] button[data-variant=default]", "final": true },
+    { "action": "read_text", "selector": "[role=status], [data-sonner-toast]", "save_as": "status", "optional": true, "timeout_ms": 20000 }
   ],
   "returns": []
 }
