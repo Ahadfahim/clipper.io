@@ -18,6 +18,8 @@ dependencies = [
   "tzdata>=2024.2",
   "anyio>=4.6",
   "tomli-w>=1.1",
+  # face tracking for reframing (MediaPipeFaceDetector); a plain dependency so `uv sync` keeps it
+  "mediapipe>=1.0.1,<2; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]

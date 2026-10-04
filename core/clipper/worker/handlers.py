@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import statistics
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -21,6 +22,8 @@ from clipper.media.ffmpeg import detect_silences, energy_curve, probe, run_ffmpe
 from clipper.rules.spec import ClipSpec
 from clipper.services.media import load_faces
 from clipper.worker.jobs import JobContext, JobQueue
+
+log = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from clipper.core import Core
@@ -144,7 +147,11 @@ def analyze(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
     )
     (work / "energy.json").write_text(json.dumps(curve), encoding="utf-8")
     ctx.progress(0.7)
-    faces = core.adapters.faces.track(video, info.duration)
+    try:
+        faces = core.adapters.faces.track(video, info.duration)
+    except Exception as exc:  # faces only guide reframing: center crop without them
+        log.warning("face tracking skipped for source %s: %s", source_id, exc)
+        faces = []
     faces_path = work / "faces.json"
     faces_path.write_text(json.dumps([[t, b.model_dump()] for t, b in faces]), encoding="utf-8")
     proxy = work / "proxy.mp4"
