@@ -45,33 +45,57 @@ function Warmup({ week }: { week: number | null }) {
   );
 }
 
+type LoginState = { kind: "idle" } | { kind: "busy" } | { kind: "result"; loggedIn: boolean | null; detail: string } | { kind: "error"; message: string };
+
 function AddAccountDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [platform, setPlatform] = useState<"youtube" | "tiktok" | "instagram" | "x">("youtube");
   const [handle, setHandle] = useState("");
   const [profile, setProfile] = useState("main");
   const [tags, setTags] = useState("");
   const [fresh, setFresh] = useState(true);
+  const [login, setLogin] = useState<LoginState>({ kind: "idle" });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const qc = useQueryClient();
+  const clean = handle.trim().replace(/^@*/, "");
+  const loginStep = (action: "open" | "check") => {
+    setLogin({ kind: "busy" });
+    unwrap(api.POST("/api/publishing/accounts/login", { body: { platform, profile, action } }))
+      .then((r) => setLogin({ kind: "result", loggedIn: r.logged_in, detail: r.detail }))
+      .catch((e: unknown) => setLogin({ kind: "error", message: e instanceof Error ? e.message : String(e) }));
+  };
+  const reset = () => {
+    setHandle("");
+    setTags("");
+    setLogin({ kind: "idle" });
+    setError(null);
+  };
+  const add = () => {
+    setSaving(true);
+    unwrap(
+      api.POST("/api/publishing/accounts", {
+        body: { platform, handle: `@${clean}`, chrome_profile: profile, niche_tags: tags.split(",").map((t) => t.trim()).filter(Boolean), new_account: fresh, daily_cap: null },
+      }),
+    )
+      .then(() => {
+        void qc.invalidateQueries({ queryKey: qk.accounts });
+        reset();
+        onClose();
+      })
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setSaving(false));
+  };
+  const loggedIn = login.kind === "result" && login.loggedIn === true;
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => !o && onClose()}
       title="Add account"
-      width={440}
+      description="Log in to the account in Clipper's own browser, then add it. Clipper never types your password or solves a verification."
+      width={500}
       footer={
         <>
-          <Button
-            variant="primary"
-            disabled={!handle.startsWith("@")}
-            onClick={() => {
-              void unwrap(
-                api.POST("/api/publishing/accounts", {
-                  body: { platform, handle, chrome_profile: profile, niche_tags: tags.split(",").map((t) => t.trim()).filter(Boolean), new_account: fresh, daily_cap: null },
-                }),
-              ).then(() => qc.invalidateQueries({ queryKey: qk.accounts }));
-              onClose();
-            }}
-          >
+          <Button variant="primary" disabled={!clean || saving} onClick={add}>
             Add account
           </Button>
           <Button onClick={onClose}>Cancel</Button>
@@ -81,7 +105,7 @@ function AddAccountDialog({ open, onClose }: { open: boolean; onClose: () => voi
       <div className="flex flex-col gap-3">
         <Field label="Platform">
           {(id) => (
-            <Select id={id} value={platform} onChange={(e) => setPlatform(e.target.value as typeof platform)}>
+            <Select id={id} value={platform} onChange={(e) => (setPlatform(e.target.value as typeof platform), setLogin({ kind: "idle" }))}>
               {PLATFORM_ORDER.map((p) => (
                 <option key={p} value={p}>
                   {PLATFORM_LABEL[p]}
@@ -90,14 +114,41 @@ function AddAccountDialog({ open, onClose }: { open: boolean; onClose: () => voi
             </Select>
           )}
         </Field>
-        <Field label="Handle">{(id) => <TextField id={id} value={handle} onChange={(e) => setHandle(e.target.value)} placeholder="@yourhandle" />}</Field>
-        <Field label="Chrome profile" hint="Log in to the account inside this profile first.">
+        <Field label="Log in" hint="Opens the login page in Clipper's browser (it runs hidden otherwise). Log in there, then press Check login.">
+          {() => (
+            <div className="flex flex-wrap items-center gap-2">
+              <Button disabled={login.kind === "busy"} onClick={() => loginStep("open")}>
+                Open login page
+              </Button>
+              <Button disabled={login.kind === "busy"} onClick={() => loginStep("check")}>
+                Check login
+              </Button>
+              {login.kind === "busy" && <span className="text-muted">Working…</span>}
+              {login.kind === "result" && (
+                <span className={cn(login.loggedIn === true ? "text-ok" : login.loggedIn === false ? "text-warn-strong" : "text-bad")}>
+                  {login.loggedIn === true ? "Logged in" : login.detail.charAt(0).toUpperCase() + login.detail.slice(1)}
+                </span>
+              )}
+              {login.kind === "error" && <span className="text-bad">{login.message}</span>}
+            </div>
+          )}
+        </Field>
+        <Field label="Handle" hint={loggedIn ? "Type the account's handle (the @ is added for you)." : "You can add the account before logging in, but posting needs the login."}>
+          {(id) => (
+            <div className="flex items-center gap-1">
+              <span className="text-muted">@</span>
+              <TextField id={id} value={clean} onChange={(e) => setHandle(e.target.value)} placeholder="yourhandle" />
+            </div>
+          )}
+        </Field>
+        <Field label="Chrome profile" hint="Leave as main: that's Clipper's own browser.">
           {(id) => <TextField id={id} value={profile} onChange={(e) => setProfile(e.target.value)} />}
         </Field>
         <Field label="Niche tags" hint="Comma separated; used to match campaigns.">
           {(id) => <TextField id={id} value={tags} onChange={(e) => setTags(e.target.value)} placeholder="podcast, gaming" />}
         </Field>
         <Check checked={fresh} onChange={setFresh} label="New account: start the warm-up schedule (1 post/day, then 2)" />
+        {error && <p className="text-bad">{error}</p>}
       </div>
     </Dialog>
   );

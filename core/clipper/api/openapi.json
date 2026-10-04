@@ -53,6 +53,76 @@
     "title": "AccountIn",
     "type": "object"
    },
+   "AccountLoginIn": {
+    "properties": {
+     "action": {
+      "enum": [
+       "open",
+       "check"
+      ],
+      "title": "Action",
+      "type": "string"
+     },
+     "platform": {
+      "enum": [
+       "youtube",
+       "tiktok",
+       "instagram",
+       "x"
+      ],
+      "title": "Platform",
+      "type": "string"
+     },
+     "profile": {
+      "default": "main",
+      "title": "Profile",
+      "type": "string"
+     }
+    },
+    "required": [
+     "platform",
+     "action"
+    ],
+    "title": "AccountLoginIn",
+    "type": "object"
+   },
+   "AccountLoginOut": {
+    "properties": {
+     "detail": {
+      "title": "Detail",
+      "type": "string"
+     },
+     "logged_in": {
+      "anyOf": [
+       {
+        "type": "boolean"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Logged In"
+     },
+     "url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Url"
+     }
+    },
+    "required": [
+     "logged_in",
+     "url",
+     "detail"
+    ],
+    "title": "AccountLoginOut",
+    "type": "object"
+   },
    "AccountOut": {
     "properties": {
      "cap_today": {
@@ -7486,6 +7556,48 @@
      }
     },
     "summary": "Account Add",
+    "tags": [
+     "publishing"
+    ]
+   }
+  },
+  "/api/publishing/accounts/login": {
+   "post": {
+    "description": "Open a platform's login page in Clipper's browser (shown), or check you're logged in.",
+    "operationId": "account_login_api_publishing_accounts_login_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/AccountLoginIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/AccountLoginOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Account Login",
     "tags": [
      "publishing"
     ]

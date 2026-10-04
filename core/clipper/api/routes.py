@@ -34,6 +34,7 @@ from clipper.events.types import UserChat
 from clipper.media.edl.ops import EditError
 from clipper.rules.spec import ClipSpec
 from clipper.secrets import SECRET_NAMES, get_secret, set_secret
+from clipper.services.account_login import login_step
 from clipper.services.base import ServiceError
 from clipper.services.control import set_control
 from clipper.services.recipe_check import CLIP_NAME, run_check_upload
@@ -766,6 +767,16 @@ def account_add(core: CoreDep, body: S.AccountIn) -> S.OkOut:
         return a.id
 
     return S.OkOut(id=core.db.write(job))
+
+
+@publishing.post("/accounts/login", response_model=S.AccountLoginOut)
+async def account_login(core: CoreDep, body: S.AccountLoginIn) -> S.AccountLoginOut:
+    """Open a platform's login page in Clipper's browser (shown), or check you're logged in."""
+    try:
+        res = await login_step(core, body.platform, body.profile, body.action)
+    except (ServiceError, ValueError) as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return S.AccountLoginOut(logged_in=res.logged_in, url=res.url, detail=res.detail)
 
 
 @publishing.patch("/accounts/{account_id}", response_model=S.OkOut)

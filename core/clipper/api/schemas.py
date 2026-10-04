@@ -174,6 +174,18 @@ class ModelTestOut(M):
     error: str | None
 
 
+class AccountLoginIn(BaseModel):
+    platform: Literal["youtube", "tiktok", "instagram", "x"]
+    profile: str = "main"
+    action: Literal["open", "check"]
+
+
+class AccountLoginOut(M):
+    logged_in: bool | None  # None = a CAPTCHA/verification screen is waiting for you
+    url: str | None
+    detail: str
+
+
 class CheckUploadIn(BaseModel):
     """A real upload of a synthetic test clip, as Private, to check an upload recipe end to end."""
 
