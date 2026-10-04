@@ -1,0 +1,589 @@
+{
+ "approve_all_threshold": 80,
+ "batch": {
+  "approved": 5,
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "created_at": "2026-10-02T17:10:00Z",
+  "id": 1,
+  "pending": 5,
+  "rejected": 2,
+  "source_title": "I Gave Away $1,000,000",
+  "status": "in_review",
+  "timeout_at": "2026-10-02T23:00:00Z",
+  "total": 12
+ },
+ "clips": [
+  {
+   "captions": {
+    "instagram": "Nobody tells you this about the $1M prize @mrbeast",
+    "tiktok": "nobody tells you this about the $1m prize #mrbeast #shorts",
+    "youtube": "Nobody tells you this about the $1M prize | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "bold-pop",
+    "decision": "approved",
+    "duration": 42.0,
+    "editing_live": false,
+    "hook": "Nobody tells you this about the $1M prize",
+    "id": 1,
+    "layout": "crop",
+    "moment_id": 1,
+    "platforms_posted": [
+     "youtube"
+    ],
+    "preview_url": "/api/files/clip/1/preview",
+    "score": 92.0,
+    "status": "posted",
+    "thumb_url": "/api/files/clip/1/thumb",
+    "variant_label": null,
+    "version": 2,
+    "views": 74126
+   },
+   "decision": "approved",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 2:00; quoted in 3 comments",
+   "reviewer": "ahad",
+   "source_range": [
+    120.0,
+    162.0
+   ],
+   "via": "dashboard"
+  },
+  {
+   "captions": {
+    "instagram": "The moment the crowd realized @mrbeast",
+    "tiktok": "the moment the crowd realized #mrbeast #shorts",
+    "youtube": "The moment the crowd realized | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "clean",
+    "decision": "approved",
+    "duration": 38.0,
+    "editing_live": false,
+    "hook": "The moment the crowd realized",
+    "id": 2,
+    "layout": "split",
+    "moment_id": 2,
+    "platforms_posted": [
+     "tiktok",
+     "youtube"
+    ],
+    "preview_url": "/api/files/clip/2/preview",
+    "score": 87.0,
+    "status": "posted",
+    "thumb_url": "/api/files/clip/2/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 70858
+   },
+   "decision": "approved",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 3:01; quoted in 4 comments",
+   "reviewer": "ahad",
+   "source_range": [
+    181.0,
+    219.0
+   ],
+   "via": "discord"
+  },
+  {
+   "captions": {
+    "instagram": "He thought it was a prank @mrbeast",
+    "tiktok": "he thought it was a prank #mrbeast #shorts",
+    "youtube": "He thought it was a prank | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "boxed",
+    "decision": "pending",
+    "duration": 47.0,
+    "editing_live": true,
+    "hook": "He thought it was a prank",
+    "id": 3,
+    "layout": "crop",
+    "moment_id": 3,
+    "platforms_posted": [],
+    "preview_url": "/api/files/clip/3/preview",
+    "score": 84.0,
+    "status": "in_review",
+    "thumb_url": "/api/files/clip/3/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 0
+   },
+   "decision": "pending",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 4:02; quoted in 5 comments",
+   "reviewer": null,
+   "source_range": [
+    242.0,
+    289.0
+   ],
+   "via": null
+  },
+  {
+   "captions": {
+    "instagram": "Last to leave wins a car @mrbeast",
+    "tiktok": "last to leave wins a car #mrbeast #shorts",
+    "youtube": "Last to leave wins a car | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "karaoke",
+    "decision": "approved",
+    "duration": 29.0,
+    "editing_live": false,
+    "hook": "Last to leave wins a car",
+    "id": 4,
+    "layout": "fit",
+    "moment_id": 4,
+    "platforms_posted": [
+     "youtube"
+    ],
+    "preview_url": "/api/files/clip/4/preview",
+    "score": 81.0,
+    "status": "approved",
+    "thumb_url": "/api/files/clip/4/thumb",
+    "variant_label": null,
+    "version": 2,
+    "views": 51429
+   },
+   "decision": "approved",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 5:03; quoted in 6 comments",
+   "reviewer": "ahad",
+   "source_range": [
+    303.0,
+    332.0
+   ],
+   "via": "discord"
+  },
+  {
+   "captions": {
+    "instagram": "This cost more than my house @mrbeast",
+    "tiktok": "this cost more than my house #mrbeast #shorts",
+    "youtube": "This cost more than my house | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "bold-pop",
+    "decision": "rejected",
+    "duration": 51.0,
+    "editing_live": false,
+    "hook": "This cost more than my house",
+    "id": 5,
+    "layout": "crop",
+    "moment_id": 5,
+    "platforms_posted": [],
+    "preview_url": "/api/files/clip/5/preview",
+    "score": 79.0,
+    "status": "rejected",
+    "thumb_url": "/api/files/clip/5/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 0
+   },
+   "decision": "rejected",
+   "decision_reason": "boring",
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 6:04; quoted in 3 comments",
+   "reviewer": "ahad",
+   "source_range": [
+    364.0,
+    415.0
+   ],
+   "via": "dashboard"
+  },
+  {
+   "captions": {
+    "instagram": "Wait for the twist at the end @mrbeast",
+    "tiktok": "wait for the twist at the end #mrbeast #shorts",
+    "youtube": "Wait for the twist at the end | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "clean",
+    "decision": "approved",
+    "duration": 33.0,
+    "editing_live": false,
+    "hook": "Wait for the twist at the end",
+    "id": 6,
+    "layout": "split",
+    "moment_id": 6,
+    "platforms_posted": [
+     "youtube"
+    ],
+    "preview_url": "/api/files/clip/6/preview",
+    "score": 77.0,
+    "status": "approved",
+    "thumb_url": "/api/files/clip/6/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 47302
+   },
+   "decision": "approved",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 7:05; quoted in 4 comments",
+   "reviewer": "ahad",
+   "source_range": [
+    425.0,
+    458.0
+   ],
+   "via": "discord"
+  },
+  {
+   "captions": {
+    "instagram": "I can't believe he said yes @mrbeast",
+    "tiktok": "i can't believe he said yes #mrbeast #shorts",
+    "youtube": "I can't believe he said yes | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "boxed",
+    "decision": "pending",
+    "duration": 44.0,
+    "editing_live": false,
+    "hook": "I can't believe he said yes",
+    "id": 7,
+    "layout": "crop",
+    "moment_id": 7,
+    "platforms_posted": [],
+    "preview_url": "/api/files/clip/7/preview",
+    "score": 74.0,
+    "status": "in_review",
+    "thumb_url": "/api/files/clip/7/thumb",
+    "variant_label": null,
+    "version": 2,
+    "views": 0
+   },
+   "decision": "pending",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 8:06; quoted in 5 comments",
+   "reviewer": null,
+   "source_range": [
+    486.0,
+    530.0
+   ],
+   "via": null
+  },
+  {
+   "captions": {
+    "instagram": "100 hours in a box @mrbeast",
+    "tiktok": "100 hours in a box #mrbeast #shorts",
+    "youtube": "100 hours in a box | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "karaoke",
+    "decision": "pending",
+    "duration": 58.0,
+    "editing_live": false,
+    "hook": "100 hours in a box",
+    "id": 8,
+    "layout": "fit",
+    "moment_id": 8,
+    "platforms_posted": [],
+    "preview_url": "/api/files/clip/8/preview",
+    "score": 71.0,
+    "status": "in_review",
+    "thumb_url": "/api/files/clip/8/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 0
+   },
+   "decision": "pending",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": false,
+   "reason": "Heatmap peak at 9:07; quoted in 6 comments",
+   "reviewer": null,
+   "source_range": [
+    547.0,
+    605.0
+   ],
+   "via": null
+  },
+  {
+   "captions": {
+    "instagram": "The worst gift ever @mrbeast",
+    "tiktok": "the worst gift ever #mrbeast #shorts",
+    "youtube": "The worst gift ever | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "bold-pop",
+    "decision": "approved",
+    "duration": 26.0,
+    "editing_live": false,
+    "hook": "The worst gift ever",
+    "id": 9,
+    "layout": "crop",
+    "moment_id": 9,
+    "platforms_posted": [
+     "youtube"
+    ],
+    "preview_url": "/api/files/clip/9/preview",
+    "score": 68.0,
+    "status": "approved",
+    "thumb_url": "/api/files/clip/9/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 46317
+   },
+   "decision": "approved",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 10:08; quoted in 3 comments",
+   "reviewer": "ahad",
+   "source_range": [
+    608.0,
+    634.0
+   ],
+   "via": "dashboard"
+  },
+  {
+   "captions": {
+    "instagram": "Chandler's face says it all @mrbeast",
+    "tiktok": "chandler's face says it all #mrbeast #shorts",
+    "youtube": "Chandler's face says it all | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "clean",
+    "decision": "rejected",
+    "duration": 31.0,
+    "editing_live": false,
+    "hook": "Chandler's face says it all",
+    "id": 10,
+    "layout": "split",
+    "moment_id": 10,
+    "platforms_posted": [],
+    "preview_url": "/api/files/clip/10/preview",
+    "score": 66.0,
+    "status": "rejected",
+    "thumb_url": "/api/files/clip/10/thumb",
+    "variant_label": null,
+    "version": 2,
+    "views": 0
+   },
+   "decision": "rejected",
+   "decision_reason": "bad hook",
+   "platforms": [
+    "youtube",
+    "tiktok"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 11:09; quoted in 4 comments",
+   "reviewer": "ahad",
+   "source_range": [
+    669.0,
+    700.0
+   ],
+   "via": "discord"
+  },
+  {
+   "captions": {
+    "instagram": "Nobody expected the ending @mrbeast",
+    "tiktok": "nobody expected the ending #mrbeast #shorts",
+    "youtube": "Nobody expected the ending | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "boxed",
+    "decision": "pending",
+    "duration": 39.0,
+    "editing_live": false,
+    "hook": "Nobody expected the ending",
+    "id": 11,
+    "layout": "crop",
+    "moment_id": 11,
+    "platforms_posted": [],
+    "preview_url": "/api/files/clip/11/preview",
+    "score": 63.0,
+    "status": "in_review",
+    "thumb_url": "/api/files/clip/11/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 0
+   },
+   "decision": "pending",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 12:10; quoted in 5 comments",
+   "reviewer": null,
+   "source_range": [
+    730.0,
+    769.0
+   ],
+   "via": null
+  },
+  {
+   "captions": {
+    "instagram": "He almost quit here @mrbeast",
+    "tiktok": "he almost quit here #mrbeast #shorts",
+    "youtube": "He almost quit here | full video on MrBeast"
+   },
+   "clip": {
+    "campaign_id": 1,
+    "campaign_title": "MrBeast #42 clipping",
+    "caption_style": "karaoke",
+    "decision": "pending",
+    "duration": 55.0,
+    "editing_live": false,
+    "hook": "He almost quit here",
+    "id": 12,
+    "layout": "fit",
+    "moment_id": 12,
+    "platforms_posted": [],
+    "preview_url": "/api/files/clip/12/preview",
+    "score": 62.0,
+    "status": "in_review",
+    "thumb_url": "/api/files/clip/12/thumb",
+    "variant_label": null,
+    "version": 1,
+    "views": 0
+   },
+   "decision": "pending",
+   "decision_reason": null,
+   "platforms": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "platforms_allowed": [
+    "youtube",
+    "tiktok",
+    "instagram"
+   ],
+   "qa_ok": true,
+   "reason": "Heatmap peak at 13:11; quoted in 6 comments",
+   "reviewer": null,
+   "source_range": [
+    791.0,
+    846.0
+   ],
+   "via": null
+  }
+ ]
+}

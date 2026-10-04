@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "cloud/**", "claude/**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg fonts-dejavu-core
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv python install 3.12
+      - run: uv sync --all-packages --frozen
+      - name: Ruff
+        run: |
+          uv run ruff check .
+          uv run ruff format --check .
+      - name: Pyright
+        run: uv run pyright
+      - name: Pytest
+        run: uv run pytest -q
+
+  js:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: TS client matches the OpenAPI schema
+        run: |
+          pnpm --filter @clipper/desktop run gen:api
+          git diff --exit-code apps/desktop/src/api/schema.d.ts
+      - run: pnpm -r run lint
+      - run: pnpm -r run typecheck
+      - run: pnpm -r run test
+      - run: pnpm -r run build
+      - name: Install Playwright Chromium
+        run: pnpm --filter @clipper/desktop exec playwright install --with-deps chromium
+      - name: Playwright e2e + screenshots
+        run: pnpm --filter @clipper/desktop exec playwright test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: screenshots
+          path: |
+            docs/screenshots
+            apps/desktop/test-results
+            apps/desktop/playwright-report
+          if-no-files-found: ignore
+
+  tauri-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tauri Linux deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev libsoup-3.0-dev libjavascriptcoregtk-4.1-dev librsvg2-dev libayatana-appindicator3-dev libxdo-dev
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+      - name: Placeholder sidecars (the real core binary is built on Windows)
+        run: |
+          touch apps/desktop/src-tauri/binaries/clipper-core-x86_64-unknown-linux-gnu
+          touch apps/desktop/src-tauri/binaries/clipper-core-x86_64-pc-windows-msvc.exe
+      - name: cargo check (Linux)
+        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked
+      - name: cargo check (Windows target)
+        run: cargo check --manifest-path apps/desktop/src-tauri/Cargo.toml --locked --target x86_64-pc-windows-msvc

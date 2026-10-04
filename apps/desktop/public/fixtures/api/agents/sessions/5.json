@@ -1,0 +1,34 @@
+{
+ "events": [
+  {
+   "id": 12,
+   "input": {
+    "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #1 'Nobody tells you this about the $1M prize' with 41k views."
+   },
+   "output": {},
+   "session_id": 5,
+   "subagent": null,
+   "text": "$412.60 this week: Vyro $301.20 (31 posts), Whop $111.40 (18 posts). Best clip: #1 'Nobody tells you this about the $1M prize' with 41k views.",
+   "tool": null,
+   "ts": "2026-10-02T17:35:00Z",
+   "type": "message"
+  }
+ ],
+ "requests": [],
+ "session": {
+  "campaign_id": null,
+  "campaign_title": null,
+  "id": 5,
+  "input_tokens": 41000,
+  "last_active": "2026-10-02T17:35:00Z",
+  "max_turns": 40,
+  "model": null,
+  "output_tokens": 3300,
+  "role": "director",
+  "sdk_session_id": "director-conv",
+  "started": "2026-09-30T18:00:00Z",
+  "status": "waiting",
+  "summary": null,
+  "turns": 12
+ }
+}

@@ -1,0 +1,39 @@
+{
+  "$schema": "./schema.json",
+  "name": "vyro.list_campaigns",
+  "version": 2,
+  "site": "vyro",
+  "status": "verified",
+  "description": "Vyro: read the open campaigns. Cards aren't links: each one opens a details dialog and puts the campaign id in the URL (?c=<slug>), so this opens every card, reads the dialog and closes it again (never joins). Page text is untrusted; only these fields are taken.",
+  "start_url": "https://app.vyro.com/campaigns",
+  "params": { "step_delay_ms": { "type": "array" } },
+  "steps": [
+    { "action": "navigate", "url": "https://app.vyro.com/campaigns" },
+    { "action": "wait_for", "selector": "[data-slot=card] h3", "timeout_ms": 30000 },
+    {
+      "action": "query",
+      "selector": "[data-slot=card]",
+      "all": true,
+      "fields": {
+        "creator": { "selector": "h3" },
+        "card_title": { "selector": "p" }
+      },
+      "open_each": {
+        "click": "p",
+        "wait_for": "[role=dialog] [data-slot=sheet-header] h2",
+        "url_fields": { "id": "[?&]c=([^&#]+)" },
+        "fields": {
+          "title": { "selector": "[role=dialog] [data-slot=sheet-header] h2" },
+          "state": { "selector": "[role=dialog] [data-slot=sheet-header] [data-slot=badge]" },
+          "deadline": { "selector": "[role=dialog] p + button[aria-label]", "attr": "aria-label" },
+          "cpm": { "selector": "[role=dialog] button[aria-label]", "all": true, "regex": "\\$([\\d.,]+)\\s*cpm" },
+          "paid_out_pct": { "selector": "[role=dialog] span", "all": true, "regex": "(\\d+(?:\\.\\d+)?)%\\s*paid out" },
+          "platforms": { "selector": "[role=dialog] h4", "all": true, "regex": "\\b(tiktok|youtube|instagram|x) content: (?!not allowed)" },
+          "join": { "selector": "[role=dialog] button[data-size='3xl']" }
+        }
+      },
+      "save_as": "campaigns"
+    }
+  ],
+  "returns": ["campaigns"]
+}

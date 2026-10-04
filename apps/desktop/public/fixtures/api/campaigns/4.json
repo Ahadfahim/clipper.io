@@ -1,0 +1,45 @@
+{
+ "campaign": {
+  "brand": "Acquisition.com",
+  "budget_left": 2100.0,
+  "budget_total": 6000.0,
+  "clips_posted": 0,
+  "content_type": "clipping",
+  "cpm": 3.2,
+  "creator": "Alex Hormozi",
+  "deadline": "2026-10-05T18:00:00Z",
+  "disabled_reason": null,
+  "earned": 0.0,
+  "id": 4,
+  "marketplace": "vyro",
+  "matching_accounts": [],
+  "platforms": [
+   "tiktok",
+   "instagram"
+  ],
+  "runs_out_at": null,
+  "score": 74.0,
+  "status": "suggested",
+  "title": "Hormozi gym launch"
+ },
+ "money": {
+  "earnings": 0.0,
+  "posts": 0,
+  "submissions": {},
+  "views": 0
+ },
+ "payout": {
+  "cap_per_post": null,
+  "cpm": 3.2,
+  "deliverable": "link",
+  "min_views_to_pay": null,
+  "tracking_window_days": null
+ },
+ "rules_raw": "",
+ "score_reason": "High CPM but only $2.1k left and a 3-day deadline.",
+ "session_id": null,
+ "sources": [],
+ "spec": null,
+ "timeline": [],
+ "url": null
+}

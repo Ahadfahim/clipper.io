@@ -1,0 +1,250 @@
+{
+ "pairing_token": null,
+ "secrets_present": {
+  "discord_bot_token": false,
+  "extension_pairing_token": false,
+  "hf_token": false
+ },
+ "settings": {
+  "agents": {
+   "cli_path": null,
+   "fallback_model": "claude-sonnet-5-5",
+   "min_free_ram_gb": 2.0,
+   "model": "claude-opus-5-5",
+   "prompts_dir": null,
+   "reserve_p0_slot": true,
+   "roles": {
+    "analyst": {
+     "effort": "medium",
+     "max_turns": 60,
+     "model": null
+    },
+    "campaign": {
+     "effort": "high",
+     "max_turns": 80,
+     "model": null
+    },
+    "director": {
+     "effort": "high",
+     "max_turns": 40,
+     "model": null
+    },
+    "scout": {
+     "effort": "low",
+     "max_turns": 40,
+     "model": null
+    }
+   },
+   "slots": 2,
+   "subagents": {
+    "brief-reader": {
+     "effort": "high",
+     "max_turns": 10,
+     "model": null
+    },
+    "browser-fixer": {
+     "effort": "medium",
+     "max_turns": 30,
+     "model": null
+    },
+    "copywriter": {
+     "effort": "medium",
+     "max_turns": 15,
+     "model": null
+    },
+    "cutter": {
+     "effort": "high",
+     "max_turns": 60,
+     "model": null
+    },
+    "editor": {
+     "effort": "high",
+     "max_turns": 40,
+     "model": null
+    },
+    "qa-checker": {
+     "effort": "low",
+     "max_turns": 20,
+     "model": null
+    },
+    "research": {
+     "effort": "medium",
+     "max_turns": 20,
+     "model": null
+    }
+   }
+  },
+  "api": {
+   "fixture_mode": false,
+   "host": "127.0.0.1",
+   "port": 8765
+  },
+  "browser": {
+   "action_timeout_s": 90.0,
+   "autostart_profiles": [
+    "main"
+   ],
+   "domain_allowlist": {
+    "instagram": [
+     "instagram.com"
+    ],
+    "tiktok": [
+     "tiktok.com"
+    ],
+    "vyro": [
+     "vyro.com"
+    ],
+    "whop": [
+     "whop.com"
+    ],
+    "x": [
+     "x.com"
+    ],
+    "youtube": [
+     "studio.youtube.com",
+     "youtube.com"
+    ]
+   },
+   "keep_running": true,
+   "start_hidden": true,
+   "ws_host": "127.0.0.1",
+   "ws_port": 8766
+  },
+  "discord": {
+   "channels": {
+    "alerts": null,
+    "campaigns": null,
+    "clip_review": null,
+    "control": null,
+    "published": null
+   },
+   "core_url": "http://127.0.0.1:8765",
+   "enabled": true,
+   "guild_id": null,
+   "reviewer_role_id": null,
+   "reviewer_role_name": "Clipper"
+  },
+  "dry_run_default": true,
+  "marketplaces": {
+   "vyro": {
+    "min_cpm": 1.0
+   },
+   "whop": {
+    "auto_join_free": true,
+    "include_ugc": false,
+    "min_cpm": 0.5,
+    "use_bounty_api": false
+   }
+  },
+  "media": {
+   "default_caption_style": "bold-pop",
+   "discord_preview_mb": 9.5,
+   "encoder": "nvenc",
+   "final_bitrate": "14M",
+   "final_height": 1920,
+   "final_width": 1080,
+   "fps": 30,
+   "loudness_lufs": -14.0,
+   "max_concurrent_downloads": 2,
+   "max_concurrent_encodes": 3,
+   "max_concurrent_transcribes": 1,
+   "nvenc_preset": "p5",
+   "proxy_height": 640,
+   "silence_threshold_db": -35.0,
+   "true_peak_db": -1.5,
+   "whisper_language": null,
+   "whisper_model": "large-v3"
+  },
+  "notify": {
+   "ntfy_topic": null,
+   "ntfy_url": null
+  },
+  "paths": {
+   "backups_dir": null,
+   "chrome_exe": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+   "chrome_profiles_dir": "D:/Clipper.io/data/chrome",
+   "clips_dir": null,
+   "data_dir": "D:/Clipper.io/data",
+   "db_path": null,
+   "ffmpeg_bin": "C:\\ffmpeg\\bin",
+   "gpu_python": "C:\\ClipperData\\envs\\gpu\\Scripts\\python.exe",
+   "logs_dir": null,
+   "models_dir": "C:\\ClipperData\\models",
+   "previews_dir": null,
+   "screenshots_dir": null,
+   "sources_dir": null,
+   "work_dir": null,
+   "yt_dlp": "yt-dlp"
+  },
+  "posting": {
+   "default_daily_cap": 3,
+   "min_gap_min": 120,
+   "step_delay_ms": [
+    600,
+    2200
+   ],
+   "warmup": {
+    "week1_daily_cap": 1,
+    "week2_daily_cap": 2
+   }
+  },
+  "retention": {
+   "backups_keep": 14,
+   "failure_screenshots_days": 30,
+   "logs_days": 14,
+   "nightly_backup_at": "03:30",
+   "sources_days_after_end": 14
+  },
+  "review": {
+   "approve_all_threshold": 80,
+   "auto_approve_offer_min_decisions": 100,
+   "auto_approve_offer_min_rate": 0.95,
+   "auto_approve_tier": null,
+   "timeout_action": "ship_approved",
+   "timeout_hours": 0.0
+  },
+  "scout": {
+   "auto_take_min_score": 85,
+   "min_score_to_post_card": 55,
+   "mode": "suggest",
+   "prefetch_sources": true
+  },
+  "switches": {
+   "marketplaces": {
+    "vyro": true,
+    "whop": true
+   },
+   "socials": {
+    "instagram": true,
+    "tiktok": true,
+    "x": false,
+    "youtube": true
+   }
+  },
+  "triggers": {
+   "analyst_daily_at": "09:00",
+   "scout_every_min": 15,
+   "timezone": "America/New_York",
+   "wakeup_poll_s": 30,
+   "watchdog_stale_min": 180
+  },
+  "ui": {
+   "accent": null,
+   "density": "compact",
+   "theme": "system"
+  },
+  "usage": {
+   "auto_resume_after_reset": true,
+   "daily_agent_run_cap": 300,
+   "p01_only_at": 0.9,
+   "shrink_steps": {
+    "0.6": 3,
+    "0.8": 2
+   },
+   "slow_first": [
+    "scout",
+    "analyst"
+   ]
+  }
+ }
+}

@@ -1,0 +1,9 @@
+:root { color-scheme: light dark; font: 12px "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; }
+body { margin: 0; background: Canvas; color: CanvasText; }
+main { max-width: 420px; padding: 16px; }
+h1 { font-size: 16px; margin: 0 0 8px; }
+form { display: grid; gap: 4px; margin: 12px 0; }
+label { margin-top: 8px; opacity: 0.8; }
+input { height: 28px; padding: 0 8px; border: 1px solid #8a8a8a; border-radius: 4px; font: inherit; }
+button { margin-top: 12px; height: 28px; border: 0; border-radius: 4px; background: #005fb8; color: #fff; font: inherit; cursor: pointer; }
+.muted { opacity: 0.75; }

@@ -1,0 +1,47 @@
+{
+ "campaign": {
+  "brand": "Lex Fridman",
+  "budget_left": 0.0,
+  "budget_total": 5000.0,
+  "clips_posted": 14,
+  "content_type": "clipping",
+  "cpm": 2.0,
+  "creator": "Lex Fridman",
+  "deadline": null,
+  "disabled_reason": null,
+  "earned": 452.26,
+  "id": 6,
+  "marketplace": "vyro",
+  "matching_accounts": [],
+  "platforms": [
+   "youtube"
+  ],
+  "runs_out_at": null,
+  "score": 77.0,
+  "status": "ended",
+  "title": "Lex Fridman #410"
+ },
+ "money": {
+  "earnings": 452.26,
+  "posts": 14,
+  "submissions": {
+   "approved": 7,
+   "paid": 7
+  },
+  "views": 150759
+ },
+ "payout": {
+  "cap_per_post": null,
+  "cpm": 2.0,
+  "deliverable": "link",
+  "min_views_to_pay": null,
+  "tracking_window_days": null
+ },
+ "rules_raw": "",
+ "score_reason": null,
+ "session_id": null,
+ "sources": [],
+ "spec": null,
+ "timeline": [],
+ "url": null
+}

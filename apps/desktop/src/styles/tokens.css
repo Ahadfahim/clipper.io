@@ -1,0 +1,139 @@
+/*
+ * Clipper design tokens (UI.md §1, "Utility" prototypes).
+ * Windows utility look: neutral grays, color only for status, Segoe UI Variable 12px,
+ * Cascadia Mono for numbers/IDs/logs, 4px corners, compact rows.
+ *
+ * Theme: follows the OS light/dark setting; `data-theme="light|dark"` on <html> overrides it.
+ * Accent: `--accent` defaults to the Windows 11 default accent; the desktop shell sets the user's
+ * Windows accent at runtime (src/lib/theme.ts) and Settings → General can override it.
+ * Density: `data-density="comfortable"` on <html> loosens rows and buttons.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* surfaces */
+  --bg: #f3f3f3; /* document area */
+  --chrome: #ebebeb; /* menu bar, toolbar, status bar */
+  --panel: #fbfbfb; /* tree, grids, property panes */
+  --panel-2: #f0f0f0; /* grid headers, secondary buttons */
+  --line: #e0e0e0; /* borders, separators */
+  --line-soft: #ebebeb; /* row separators */
+  --media: #e5e5e5; /* behind video */
+
+  /* ink */
+  --fg: #1b1b1b;
+  --muted: #5d5d5d;
+  --faint: #8a8a8a; /* disabled */
+
+  /* accent (Windows accent color) */
+  --accent: #005fb8;
+  --accent-ink: #ffffff;
+  --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+  --accent-row: color-mix(in srgb, var(--accent) 9%, var(--panel));
+
+  /* status: dot + text only */
+  --ok: #0f7b0f;
+  --warn: #9d5d00;
+  --warn-strong: #e8a800; /* bars and fills only, never text */
+  --bad: #c42b1c;
+  --agent: #6b4fbb; /* Claude agent activity */
+  --agent-soft: color-mix(in srgb, var(--agent) 12%, transparent);
+  --warn-soft: color-mix(in srgb, var(--warn-strong) 16%, transparent);
+  --bad-soft: color-mix(in srgb, var(--bad) 10%, transparent);
+
+  /* data series (validated with the dataviz palette checker against --panel) */
+  --series-1: #2a78d6; /* Vyro / first series */
+  --series-2: #eb6834; /* Whop / second series */
+  --series-muted: #b8b8b8; /* de-emphasis, sparklines */
+  --grid: #e8e8e8;
+  --emph: #8a6d00; /* emphasized caption words in previews */
+
+  /* type */
+  --font-ui: "Segoe UI Variable Text", "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Mono", "Cascadia Code", Consolas, ui-monospace, monospace;
+  --font-voice: "Georgia", "Cambria", serif; /* Director replies ("Claude voice") */
+  --text: 12px;
+  --text-sm: 11px;
+  --text-lg: 14px;
+  --text-xl: 16px;
+
+  /* geometry */
+  --radius: 4px;
+  --row: 28px;
+  --row-tight: 26px;
+  --control: 28px;
+  --control-sm: 24px;
+  --bar: 32px; /* toolbar height */
+  --status: 24px;
+  --gap: 8px;
+}
+
+:root[data-density="comfortable"] {
+  --row: 34px;
+  --row-tight: 30px;
+  --control: 32px;
+  --control-sm: 28px;
+  --text: 13px;
+}
+
+/* dark: the OS setting, unless the user picked light */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #1c1c1c;
+    --chrome: #202020;
+    --panel: #272727;
+    --panel-2: #2d2d2d;
+    --line: #3b3b3b;
+    --line-soft: #333333;
+    --media: #111111;
+    --fg: #f3f3f3;
+    --muted: #adadad;
+    --faint: #7a7a7a;
+    --accent: #4cc2ff;
+    --accent-ink: #000000;
+    --ok: #6ccb5f;
+    --warn: #fce100;
+    --warn-strong: #fce100;
+    --bad: #ff99a4;
+    --agent: #b4a0ff;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-muted: #5a5a5a;
+    --grid: #333333;
+    --emph: #fce100;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1c1c1c;
+  --chrome: #202020;
+  --panel: #272727;
+  --panel-2: #2d2d2d;
+  --line: #3b3b3b;
+  --line-soft: #333333;
+  --media: #111111;
+  --fg: #f3f3f3;
+  --muted: #adadad;
+  --faint: #7a7a7a;
+  --accent: #4cc2ff;
+  --accent-ink: #000000;
+  --ok: #6ccb5f;
+  --warn: #fce100;
+  --warn-strong: #fce100;
+  --bad: #ff99a4;
+  --agent: #b4a0ff;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-muted: #5a5a5a;
+  --grid: #333333;
+  --emph: #fce100;
+}
+
+/* a user-picked or Windows accent (set as --accent-user by theme.ts) wins over the defaults */
+:root[data-accent="user"] {
+  --accent: var(--accent-user);
+  --accent-ink: var(--accent-user-ink);
+}

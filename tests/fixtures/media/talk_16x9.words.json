@@ -1,0 +1,107 @@
+{
+ "language": "en",
+ "words": [
+  {
+   "text": "Nobody",
+   "start": 0.2,
+   "end": 0.434,
+   "speaker": "S1"
+  },
+  {
+   "text": "tells",
+   "start": 0.475,
+   "end": 0.709,
+   "speaker": "S1"
+  },
+  {
+   "text": "you",
+   "start": 0.75,
+   "end": 0.984,
+   "speaker": "S1"
+  },
+  {
+   "text": "this",
+   "start": 1.025,
+   "end": 1.259,
+   "speaker": "S1"
+  },
+  {
+   "text": "um",
+   "start": 2.2,
+   "end": 2.434,
+   "speaker": "S1"
+  },
+  {
+   "text": "the",
+   "start": 2.475,
+   "end": 2.709,
+   "speaker": "S1"
+  },
+  {
+   "text": "money",
+   "start": 2.75,
+   "end": 2.984,
+   "speaker": "S1"
+  },
+  {
+   "text": "is",
+   "start": 3.025,
+   "end": 3.259,
+   "speaker": "S1"
+  },
+  {
+   "text": "in",
+   "start": 4.2,
+   "end": 4.512,
+   "speaker": "S1"
+  },
+  {
+   "text": "the",
+   "start": 4.567,
+   "end": 4.878,
+   "speaker": "S1"
+  },
+  {
+   "text": "edit",
+   "start": 4.933,
+   "end": 5.245,
+   "speaker": "S1"
+  },
+  {
+   "text": "really",
+   "start": 6.2,
+   "end": 6.512,
+   "speaker": "S1"
+  },
+  {
+   "text": "really",
+   "start": 6.567,
+   "end": 6.878,
+   "speaker": "S1"
+  },
+  {
+   "text": "fast",
+   "start": 6.933,
+   "end": 7.245,
+   "speaker": "S1"
+  },
+  {
+   "text": "watch",
+   "start": 8.2,
+   "end": 8.512,
+   "speaker": "S1"
+  },
+  {
+   "text": "what",
+   "start": 8.567,
+   "end": 8.878,
+   "speaker": "S1"
+  },
+  {
+   "text": "happens",
+   "start": 8.933,
+   "end": 9.245,
+   "speaker": "S1"
+  }
+ ]
+}

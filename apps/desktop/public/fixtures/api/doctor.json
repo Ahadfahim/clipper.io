@@ -1,0 +1,56 @@
+[
+ {
+  "detail": "Python 3.12.14 (uv)",
+  "fix": "",
+  "name": "python",
+  "status": "ok"
+ },
+ {
+  "detail": "No API key in the environment; agents use the plan login",
+  "fix": "",
+  "name": "claude-billing-env",
+  "status": "ok"
+ },
+ {
+  "detail": "Logged in with a Claude Max plan",
+  "fix": "",
+  "name": "claude-login",
+  "status": "ok"
+ },
+ {
+  "detail": "D:/Clipper.io/data writable, 79 GB free",
+  "fix": "",
+  "name": "data-dir",
+  "status": "ok"
+ },
+ {
+  "detail": "at 0001_initial",
+  "fix": "",
+  "name": "database",
+  "status": "ok"
+ },
+ {
+  "detail": "nvenc=yes x264=yes libass=yes",
+  "fix": "",
+  "name": "ffmpeg",
+  "status": "ok"
+ },
+ {
+  "detail": "2026.03.17",
+  "fix": "",
+  "name": "yt-dlp",
+  "status": "ok"
+ },
+ {
+  "detail": "2.8.0+cu128 True 12.8",
+  "fix": "",
+  "name": "gpu-env",
+  "status": "ok"
+ },
+ {
+  "detail": "missing: hf_token",
+  "fix": "Save them in Settings: Discord (bot token), Accounts and browser (pairing token), Media and captions (Hugging Face token for speaker labels).",
+  "name": "secrets",
+  "status": "warn"
+ }
+]

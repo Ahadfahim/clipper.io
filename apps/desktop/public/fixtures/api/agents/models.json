@@ -1,0 +1,94 @@
+{
+ "catalogue": [
+  {
+   "id": "claude-opus-5-5",
+   "label": "Opus 5.5",
+   "usage": "most",
+   "use_for": "hardest judgment: planning, talking to you"
+  },
+  {
+   "id": "claude-sonnet-5-5",
+   "label": "Sonnet 5.5",
+   "usage": "medium",
+   "use_for": "the main work: rules, picking moments, editing"
+  },
+  {
+   "id": "claude-haiku-4-5-20251001",
+   "label": "Haiku 4.5",
+   "usage": "least",
+   "use_for": "frequent simple jobs: scouting, checks, captions"
+  }
+ ],
+ "default": "claude-opus-5-5",
+ "fallback": "claude-sonnet-5-5",
+ "file_default": "claude-opus-5-5",
+ "parents": {
+  "brief-reader": "campaign",
+  "browser-fixer": "campaign",
+  "copywriter": "campaign",
+  "cutter": "campaign",
+  "editor": "campaign",
+  "qa-checker": "campaign",
+  "research": "analyst"
+ },
+ "preset": null,
+ "presets": {
+  "balanced": {
+   "default": "claude-sonnet-5-5",
+   "roles": {
+    "director": "claude-opus-5-5",
+    "scout": "claude-haiku-4-5-20251001"
+   },
+   "subagents": {
+    "copywriter": "claude-haiku-4-5-20251001",
+    "qa-checker": "claude-haiku-4-5-20251001",
+    "research": "claude-haiku-4-5-20251001"
+   }
+  },
+  "best_quality": {
+   "default": "claude-opus-5-5",
+   "roles": {},
+   "subagents": {}
+  },
+  "save_usage": {
+   "default": "claude-sonnet-5-5",
+   "roles": {
+    "scout": "claude-haiku-4-5-20251001"
+   },
+   "subagents": {
+    "copywriter": "claude-haiku-4-5-20251001",
+    "qa-checker": "claude-haiku-4-5-20251001",
+    "research": "claude-haiku-4-5-20251001"
+   }
+  }
+ },
+ "resolved": {
+  "analyst": "claude-opus-5-5",
+  "analyst/research": "claude-opus-5-5",
+  "campaign": "claude-opus-5-5",
+  "campaign/brief-reader": "claude-opus-5-5",
+  "campaign/browser-fixer": "claude-opus-5-5",
+  "campaign/copywriter": "claude-opus-5-5",
+  "campaign/cutter": "claude-opus-5-5",
+  "campaign/editor": "claude-opus-5-5",
+  "campaign/qa-checker": "claude-opus-5-5",
+  "director": "claude-opus-5-5",
+  "scout": "claude-opus-5-5"
+ },
+ "roles": {
+  "analyst": null,
+  "campaign": null,
+  "director": null,
+  "scout": null
+ },
+ "subagents": {
+  "brief-reader": null,
+  "browser-fixer": null,
+  "copywriter": null,
+  "cutter": null,
+  "editor": null,
+  "qa-checker": null,
+  "research": null
+ },
+ "tested": []
+}

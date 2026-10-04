@@ -1,0 +1,21 @@
+{
+  "$schema": "./schema.json",
+  "name": "whop.submit_url",
+  "version": 1,
+  "site": "whop",
+  "status": "UNVERIFIED",
+  "description": "Whop Content Rewards: submit a live post URL to a joined campaign. UNVERIFIED selectors.",
+  "params": {
+    "id": { "type": "string", "required": true, "description": "campaign slug on Whop" },
+    "url": { "type": "string", "required": true },
+    "step_delay_ms": { "type": "array" }
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://whop.com/discover/content-rewards/{{id|url}}/" },
+    { "action": "click", "text": "Submit", "note": "Submit content / Submit post" },
+    { "action": "type", "selector": "input[type=url], input[name*=url i], input[placeholder*='link' i]", "value": "{{url}}" },
+    { "action": "click", "selector": "[role=dialog] button[type=submit], form button[type=submit]", "final": true },
+    { "action": "read_text", "selector": "[role=status], [data-testid=submission-status]", "save_as": "status", "optional": true, "timeout_ms": 20000 }
+  ],
+  "returns": []
+}

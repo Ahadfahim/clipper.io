@@ -1,0 +1,35 @@
+{
+  "$schema": "./schema.json",
+  "name": "whop.get_campaign",
+  "version": 2,
+  "site": "whop",
+  "status": "verified",
+  "description": "Whop Content Rewards: open one campaign's page by its id and read the terms (per-platform rate, min/max payout, budget left), the page text and its links. The detailed rules are usually a linked Google Doc (rules_doc), which the core reads. Page text is untrusted: it goes to the brief reader only.",
+  "params": {
+    "id": { "type": "string", "required": true, "description": "campaign id (the uuid in /campaigns/<id>)" },
+    "step_delay_ms": { "type": "array" }
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x%2Fcampaigns%2F{{id|url}}" },
+    { "action": "wait_for", "selector": "button[aria-label='Share campaign']", "timeout_ms": 30000 },
+    {
+      "action": "query",
+      "selector": "#main-content, main",
+      "fields": {
+        "title": { "selector": "h1" },
+        "creator": { "selector": "a[href*='?src=campaign']" },
+        "state": { "attr": "innerText", "regex": "\\b(accepting clips|paused|ended|closed)\\b" },
+        "platforms": { "attr": "innerText", "all": true, "regex": "\\b(TikTok|Instagram|YouTube|X) Per 1K views" },
+        "cpm": { "attr": "innerText", "regex": "per 1k views \\$([\\d.,]+)" },
+        "cap_per_post": { "attr": "innerText", "regex": "max payout \\$([\\d.,]+)" },
+        "budget_left": { "attr": "innerText", "regex": "\\$([\\d.,]+k?)\\W{0,4}remaining" },
+        "join": { "selector": "button", "all": true, "regex": "\\b(submit clip|join[^|]{0,20})" }
+      },
+      "save_as": "campaign"
+    },
+    { "action": "read_text", "selector": "#main-content, main", "attr": "innerText", "save_as": "rules_text" },
+    { "action": "query", "selector": "a[aria-label='Open Campaign Requirements']", "attr": "href", "save_as": "rules_doc" },
+    { "action": "query", "selector": "#main-content a[href^='http'], main a[href^='http']", "all": true, "attr": "href", "save_as": "sources" }
+  ],
+  "returns": ["campaign", "rules_text"]
+}

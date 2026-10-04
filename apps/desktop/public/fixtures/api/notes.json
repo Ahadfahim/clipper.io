@@ -1,0 +1,22 @@
+[
+ {
+  "author": "user",
+  "created_at": "2026-10-02T16:00:00Z",
+  "id": 1,
+  "pinned": true,
+  "response": null,
+  "scope": "global",
+  "scope_id": null,
+  "text": "Focus on Whop campaigns today"
+ },
+ {
+  "author": "user",
+  "created_at": "2026-10-02T17:46:00Z",
+  "id": 2,
+  "pinned": false,
+  "response": "Got it: hook cut to 1.2s",
+  "scope": "clip",
+  "scope_id": "3",
+  "text": "Hook shorter"
+ }
+]

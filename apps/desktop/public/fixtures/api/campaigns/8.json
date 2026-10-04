@@ -1,0 +1,45 @@
+{
+ "campaign": {
+  "brand": "TechCo",
+  "budget_left": 4000.0,
+  "budget_total": 4000.0,
+  "clips_posted": 0,
+  "content_type": "clipping",
+  "cpm": 2.2,
+  "creator": null,
+  "deadline": null,
+  "disabled_reason": null,
+  "earned": 0.0,
+  "id": 8,
+  "marketplace": "whop",
+  "matching_accounts": [],
+  "platforms": [
+   "youtube",
+   "tiktok"
+  ],
+  "runs_out_at": null,
+  "score": 72.0,
+  "status": "needs_user",
+  "title": "Gadget review shorts"
+ },
+ "money": {
+  "earnings": 0.0,
+  "posts": 0,
+  "submissions": {},
+  "views": 0
+ },
+ "payout": {
+  "cap_per_post": null,
+  "cpm": 2.2,
+  "deliverable": "link",
+  "min_views_to_pay": null,
+  "tracking_window_days": null
+ },
+ "rules_raw": "",
+ "score_reason": "Paid join ($29): needs you.",
+ "session_id": null,
+ "sources": [],
+ "spec": null,
+ "timeline": [],
+ "url": null
+}

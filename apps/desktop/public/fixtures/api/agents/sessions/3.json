@@ -1,0 +1,45 @@
+{
+ "events": [
+  {
+   "id": 11,
+   "input": {
+    "text": "Found 2 new campaigns: DOAC (81) and Hormozi (74). Posted a card for DOAC."
+   },
+   "output": {},
+   "session_id": 3,
+   "subagent": null,
+   "text": "Found 2 new campaigns: DOAC (81) and Hormozi (74). Posted a card for DOAC.",
+   "tool": null,
+   "ts": "2026-10-02T17:52:00Z",
+   "type": "message"
+  }
+ ],
+ "requests": [
+  {
+   "campaign_id": null,
+   "campaign_title": null,
+   "kind": "trigger.fired",
+   "merged": 0,
+   "priority": 3,
+   "queued_at": "2026-10-02T17:59:00Z",
+   "request_id": 4,
+   "role": "scout"
+  }
+ ],
+ "session": {
+  "campaign_id": null,
+  "campaign_title": null,
+  "id": 3,
+  "input_tokens": 26000,
+  "last_active": "2026-10-02T17:53:00Z",
+  "max_turns": 40,
+  "model": null,
+  "output_tokens": 2900,
+  "role": "scout",
+  "sdk_session_id": "scout-run-0931",
+  "started": "2026-10-02T17:51:00Z",
+  "status": "done",
+  "summary": "2 new campaigns scored; 1 card posted",
+  "turns": 14
+ }
+}

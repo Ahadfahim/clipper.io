@@ -1,0 +1,32 @@
+{
+  "$schema": "./schema.json",
+  "name": "tiktok.upload",
+  "version": 1,
+  "site": "tiktok",
+  "status": "UNVERIFIED",
+  "description": "TikTok Studio: upload, caption with hashtags, post (or schedule), then read the newest video link from the profile. UNVERIFIED selectors.",
+  "start_url": "https://www.tiktok.com/tiktokstudio/upload",
+  "params": {
+    "file_url": { "type": "string", "required": true },
+    "file_name": { "type": "string" },
+    "title": { "type": "string" },
+    "caption": { "type": "string", "required": true },
+    "hashtags": { "type": "array" },
+    "schedule_at": { "type": "string" },
+    "handle": { "type": "string", "required": true, "description": "@handle of the posting account" },
+    "step_delay_ms": { "type": "array" }
+  },
+  "steps": [
+    { "action": "navigate", "url": "https://www.tiktok.com/tiktokstudio/upload" },
+    { "action": "attach_file", "selector": "input[type=file][accept*=video]", "file": "{{file_url}}", "name": "{{file_name}}" },
+    { "action": "wait_for", "selector": "div[contenteditable=true].public-DraftEditor-content, [data-e2e=caption-editor] [contenteditable=true]", "timeout_ms": 180000 },
+    { "action": "type", "selector": "div[contenteditable=true].public-DraftEditor-content, [data-e2e=caption-editor] [contenteditable=true]", "value": "{{caption}} {{hashtags|tags}}" },
+    { "action": "click", "text": "Schedule", "when": "schedule_at", "optional": true },
+    { "action": "wait_for", "selector": "button[data-e2e=post_video_button]:not([disabled])", "timeout_ms": 300000, "note": "enabled once the upload finishes processing" },
+    { "action": "click", "selector": "button[data-e2e=post_video_button]", "final": true },
+    { "action": "wait_for", "text": "Your video has been uploaded", "timeout_ms": 120000, "optional": true },
+    { "action": "navigate", "url": "https://www.tiktok.com/@{{handle|noat}}" },
+    { "action": "read_text", "selector": "[data-e2e=user-post-item] a[href*='/video/']", "attr": "href", "save_as": "post_url", "timeout_ms": 30000 }
+  ],
+  "returns": ["post_url"]
+}

@@ -60,7 +60,7 @@ Prototypes: [Clipper.io theme prototypes](https://claude.ai/artifact/DdWqpUC3FyG
 ```
 
 - **Menu bar:** every action is reachable from a menu with its shortcut shown (File · Edit · View · Agents · Campaigns · Tools · Help). Agents menu: Pause all, Resume, Interrupt session, Dry run, Slot count. Tools: Run scout, Clipper doctor, Open Chrome profile, Open data folder.
-- **Toolbar:** Pause all, **Dry run** checkbox, Scout now, Review queue (count), Ship approved, then the **on/off checkboxes for marketplaces (Vyro, Whop) and socials (YouTube, TikTok, Instagram, X)** (PLAN §15), and the search/command box.
+- **Toolbar:** Pause all, **Dry run** checkbox, Scout now, Review queue (count), Ship approved, **Show browser / Hide browser** (Clipper's own Chrome runs hidden; also in the status bar, Tools menu and Ctrl+Shift+B), then the **on/off checkboxes for marketplaces (Vyro, Whop) and socials (YouTube, TikTok, Instagram, X)** (PLAN §15), and the search/command box.
 - **Dry run on** also adds a thin yellow bar under the toolbar so it's impossible to miss.
 - **Stop everything:** `Agents → Stop all` (Ctrl+Shift+Esc-style confirm dialog) and the tray menu. No hold button needed in a native app; a confirm dialog is the Windows convention.
 - **Tree (left):** the navigation. Selecting a node opens it in the document area. Running agent sessions appear under Agents; accounts appear under Publishing with their status ("paused" in yellow).

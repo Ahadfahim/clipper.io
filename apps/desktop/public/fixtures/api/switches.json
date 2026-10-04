@@ -1,0 +1,80 @@
+{
+ "accounts": [
+  {
+   "enabled": true,
+   "handle": "@clipsdaily",
+   "id": 1,
+   "paused_reason": "verification needed",
+   "platform": "tiktok",
+   "status": "paused"
+  },
+  {
+   "enabled": true,
+   "handle": "@podcastcuts",
+   "id": 2,
+   "paused_reason": null,
+   "platform": "youtube",
+   "status": "active"
+  },
+  {
+   "enabled": true,
+   "handle": "@podcastcuts.reels",
+   "id": 3,
+   "paused_reason": null,
+   "platform": "instagram",
+   "status": "active"
+  },
+  {
+   "enabled": true,
+   "handle": "@beastmoments",
+   "id": 4,
+   "paused_reason": null,
+   "platform": "youtube",
+   "status": "active"
+  },
+  {
+   "enabled": true,
+   "handle": "@shortsfactory",
+   "id": 5,
+   "paused_reason": null,
+   "platform": "tiktok",
+   "status": "active"
+  }
+ ],
+ "marketplaces": {
+  "vyro": {
+   "enabled": true,
+   "mode": "suggest",
+   "name": "Vyro",
+   "session_ok": true
+  },
+  "whop": {
+   "enabled": true,
+   "mode": "suggest",
+   "name": "Whop Content Rewards",
+   "session_ok": true
+  }
+ },
+ "socials": {
+  "instagram": {
+   "accounts": 1,
+   "enabled": true,
+   "name": "Instagram Reels"
+  },
+  "tiktok": {
+   "accounts": 2,
+   "enabled": true,
+   "name": "TikTok"
+  },
+  "x": {
+   "accounts": 0,
+   "enabled": false,
+   "name": "X"
+  },
+  "youtube": {
+   "accounts": 2,
+   "enabled": true,
+   "name": "YouTube Shorts"
+  }
+ }
+}

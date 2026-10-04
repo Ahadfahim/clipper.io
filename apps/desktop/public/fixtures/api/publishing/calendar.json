@@ -1,0 +1,226 @@
+{
+ "accounts": [
+  {
+   "cap_today": 3,
+   "chrome_profile": "main",
+   "enabled": true,
+   "extension_connected": true,
+   "handle": "@clipsdaily",
+   "id": 1,
+   "min_gap_min": 120,
+   "niche_tags": [
+    "gaming",
+    "podcast"
+   ],
+   "paused_reason": "verification needed",
+   "platform": "tiktok",
+   "posts_today": 0,
+   "status": "paused",
+   "warmup_week": null
+  },
+  {
+   "cap_today": 3,
+   "chrome_profile": "main",
+   "enabled": true,
+   "extension_connected": true,
+   "handle": "@podcastcuts",
+   "id": 2,
+   "min_gap_min": 120,
+   "niche_tags": [
+    "podcast-business"
+   ],
+   "paused_reason": null,
+   "platform": "youtube",
+   "posts_today": 0,
+   "status": "active",
+   "warmup_week": null
+  },
+  {
+   "cap_today": 1,
+   "chrome_profile": "main",
+   "enabled": true,
+   "extension_connected": true,
+   "handle": "@podcastcuts.reels",
+   "id": 3,
+   "min_gap_min": 120,
+   "niche_tags": [
+    "podcast-business"
+   ],
+   "paused_reason": null,
+   "platform": "instagram",
+   "posts_today": 0,
+   "status": "active",
+   "warmup_week": 1
+  },
+  {
+   "cap_today": 3,
+   "chrome_profile": "beast",
+   "enabled": true,
+   "extension_connected": true,
+   "handle": "@beastmoments",
+   "id": 4,
+   "min_gap_min": 120,
+   "niche_tags": [
+    "mrbeast-style"
+   ],
+   "paused_reason": null,
+   "platform": "youtube",
+   "posts_today": 1,
+   "status": "active",
+   "warmup_week": null
+  },
+  {
+   "cap_today": 2,
+   "chrome_profile": "beast",
+   "enabled": true,
+   "extension_connected": true,
+   "handle": "@shortsfactory",
+   "id": 5,
+   "min_gap_min": 120,
+   "niche_tags": [
+    "mrbeast-style"
+   ],
+   "paused_reason": null,
+   "platform": "tiktok",
+   "posts_today": 2,
+   "status": "active",
+   "warmup_week": 2
+  }
+ ],
+ "platforms_enabled": {
+  "instagram": true,
+  "tiktok": true,
+  "x": false,
+  "youtube": true
+ },
+ "posts": [
+  {
+   "account_id": 4,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 48.7,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 33,
+   "platform": "youtube",
+   "posted_at": "2026-10-01T18:00:00Z",
+   "scheduled_at": "2026-10-01T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@beastmoments/1",
+   "views": 16235
+  },
+  {
+   "account_id": 2,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 23.06,
+   "error": null,
+   "handle": "@podcastcuts",
+   "id": 34,
+   "platform": "youtube",
+   "posted_at": "2026-10-01T18:00:00Z",
+   "scheduled_at": "2026-10-01T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://example.invalid/@podcastcuts/1",
+   "views": 9224
+  },
+  {
+   "account_id": 4,
+   "clip_id": 1,
+   "dry_run": false,
+   "earnings": 123.6,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 1,
+   "platform": "youtube",
+   "posted_at": "2026-10-01T22:00:00Z",
+   "scheduled_at": "2026-10-01T22:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/1/thumb",
+   "url": "https://youtube.com/shorts/Abc123def45",
+   "views": 41200
+  },
+  {
+   "account_id": 5,
+   "clip_id": 2,
+   "dry_run": false,
+   "earnings": 38.4,
+   "error": null,
+   "handle": "@shortsfactory",
+   "id": 2,
+   "platform": "tiktok",
+   "posted_at": "2026-10-02T09:00:00Z",
+   "scheduled_at": "2026-10-02T09:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/2/thumb",
+   "url": "https://www.tiktok.com/@shortsfactory/video/7420000000000000001",
+   "views": 12800
+  },
+  {
+   "account_id": 4,
+   "clip_id": 4,
+   "dry_run": false,
+   "earnings": 0.0,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 3,
+   "platform": "youtube",
+   "posted_at": null,
+   "scheduled_at": "2026-10-02T20:10:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/4/thumb",
+   "url": null,
+   "views": 0
+  },
+  {
+   "account_id": 5,
+   "clip_id": 6,
+   "dry_run": false,
+   "earnings": 0.0,
+   "error": null,
+   "handle": "@shortsfactory",
+   "id": 4,
+   "platform": "tiktok",
+   "posted_at": null,
+   "scheduled_at": "2026-10-02T23:00:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/6/thumb",
+   "url": null,
+   "views": 0
+  },
+  {
+   "account_id": 3,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 0.0,
+   "error": null,
+   "handle": "@podcastcuts.reels",
+   "id": 5,
+   "platform": "instagram",
+   "posted_at": null,
+   "scheduled_at": "2026-10-03T05:00:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": null,
+   "views": 0
+  },
+  {
+   "account_id": 4,
+   "clip_id": 6,
+   "dry_run": false,
+   "earnings": 0.0,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 6,
+   "platform": "youtube",
+   "posted_at": null,
+   "scheduled_at": "2026-10-03T13:00:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/6/thumb",
+   "url": null,
+   "views": 0
+  }
+ ]
+}

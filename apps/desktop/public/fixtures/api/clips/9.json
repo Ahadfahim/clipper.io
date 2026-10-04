@@ -1,0 +1,375 @@
+{
+ "clip": {
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "caption_style": "bold-pop",
+  "decision": "approved",
+  "duration": 26.0,
+  "editing_live": false,
+  "hook": "The worst gift ever",
+  "id": 9,
+  "layout": "crop",
+  "moment_id": 9,
+  "platforms_posted": [
+   "youtube"
+  ],
+  "preview_url": "/api/files/clip/9/preview",
+  "score": 68.0,
+  "status": "approved",
+  "thumb_url": "/api/files/clip/9/thumb",
+  "variant_label": null,
+  "version": 1,
+  "views": 46317
+ },
+ "payoff": "Reaction at 0:12",
+ "posts": [
+  {
+   "account_id": 3,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 0.0,
+   "error": null,
+   "handle": "@podcastcuts.reels",
+   "id": 5,
+   "platform": "instagram",
+   "posted_at": null,
+   "scheduled_at": "2026-10-03T05:00:00Z",
+   "status": "scheduled",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": null,
+   "views": 0
+  },
+  {
+   "account_id": 4,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 18.81,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 7,
+   "platform": "youtube",
+   "posted_at": "2026-09-18T18:00:00Z",
+   "scheduled_at": "2026-09-18T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": "https://example.invalid/@beastmoments/14",
+   "views": 6271
+  },
+  {
+   "account_id": 2,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 7.19,
+   "error": null,
+   "handle": "@podcastcuts",
+   "id": 8,
+   "platform": "youtube",
+   "posted_at": "2026-09-18T18:00:00Z",
+   "scheduled_at": "2026-09-18T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": "https://example.invalid/@podcastcuts/14",
+   "views": 2874
+  },
+  {
+   "account_id": 4,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 28.96,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 17,
+   "platform": "youtube",
+   "posted_at": "2026-09-23T18:00:00Z",
+   "scheduled_at": "2026-09-23T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": "https://example.invalid/@beastmoments/9",
+   "views": 9654
+  },
+  {
+   "account_id": 2,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 15.09,
+   "error": null,
+   "handle": "@podcastcuts",
+   "id": 18,
+   "platform": "youtube",
+   "posted_at": "2026-09-23T18:00:00Z",
+   "scheduled_at": "2026-09-23T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": "https://example.invalid/@podcastcuts/9",
+   "views": 6037
+  },
+  {
+   "account_id": 4,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 40.13,
+   "error": null,
+   "handle": "@beastmoments",
+   "id": 27,
+   "platform": "youtube",
+   "posted_at": "2026-09-28T18:00:00Z",
+   "scheduled_at": "2026-09-28T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": "https://example.invalid/@beastmoments/4",
+   "views": 13378
+  },
+  {
+   "account_id": 2,
+   "clip_id": 9,
+   "dry_run": false,
+   "earnings": 20.26,
+   "error": null,
+   "handle": "@podcastcuts",
+   "id": 28,
+   "platform": "youtube",
+   "posted_at": "2026-09-28T18:00:00Z",
+   "scheduled_at": "2026-09-28T18:00:00Z",
+   "status": "live",
+   "thumb_url": "/api/files/clip/9/thumb",
+   "url": "https://example.invalid/@podcastcuts/4",
+   "views": 8103
+  }
+ ],
+ "qa": {
+  "checks": [
+   {
+    "detail": "first word at 0.20s",
+    "limit": 0.5,
+    "name": "speech_start",
+    "ok": true,
+    "value": 0.2
+   },
+   {
+    "detail": "face in frame 96% of the time",
+    "limit": 0.9,
+    "name": "face_in_frame",
+    "ok": true,
+    "value": 0.96
+   },
+   {
+    "detail": "captions inside the tiktok safe area",
+    "limit": null,
+    "name": "captions_safe_zone",
+    "ok": true,
+    "value": null
+   }
+  ],
+  "ok": true
+ },
+ "reason": "Heatmap peak at 10:08; quoted in 3 comments",
+ "review": {
+  "batch_id": 1,
+  "captions": {
+   "instagram": "The worst gift ever @mrbeast",
+   "tiktok": "the worst gift ever #mrbeast #shorts",
+   "youtube": "The worst gift ever | full video on MrBeast"
+  },
+  "decision": "approved",
+  "platforms": [
+   "youtube",
+   "tiktok",
+   "instagram"
+  ],
+  "reason": null,
+  "reviewer": "ahad",
+  "via": "dashboard"
+ },
+ "scores": {
+  "hook": 70,
+  "novelty": 78,
+  "payoff": 65,
+  "signals": 67
+ },
+ "signals": {
+  "duration": 1260.0,
+  "energy_spikes": [
+   {
+    "lufs": -9.1,
+    "t": 751.0,
+    "z": 2.4
+   }
+  ],
+  "heatmap": [
+   0.214,
+   0.153,
+   0.178,
+   0.172,
+   0.224,
+   0.218,
+   0.239,
+   0.159,
+   0.192,
+   0.153,
+   0.172,
+   0.201,
+   0.853,
+   0.87,
+   0.215,
+   0.204,
+   0.172,
+   0.209,
+   0.231,
+   0.151,
+   0.231,
+   0.22,
+   0.184,
+   0.166,
+   0.246,
+   0.184,
+   0.159,
+   0.16,
+   0.235,
+   0.21,
+   0.231,
+   0.923,
+   0.204,
+   0.247,
+   0.188,
+   0.205,
+   0.233,
+   0.212,
+   0.236,
+   0.208,
+   0.22,
+   0.155,
+   0.173,
+   0.179,
+   0.858,
+   0.173,
+   0.16,
+   0.178,
+   0.214,
+   0.186,
+   0.187,
+   0.171,
+   0.177,
+   0.244,
+   0.215,
+   0.211,
+   0.167,
+   0.223,
+   0.166,
+   0.188
+  ],
+  "heatmap_peaks": [
+   {
+    "end": 140.0,
+    "start": 120.0,
+    "value": 0.93
+   }
+  ],
+  "scene_cuts": [
+   12.4,
+   31.0,
+   75.2
+  ],
+  "silences": [
+   [
+    1.4,
+    2.0
+   ]
+  ],
+  "source_duration": 1260.0,
+  "words": 17
+ },
+ "source_id": 1,
+ "source_range": [
+  608.0,
+  634.0
+ ],
+ "source_title": "I Gave Away $1,000,000",
+ "transcript": [
+  {
+   "end": 0.434,
+   "t": 0.2,
+   "text": "Nobody"
+  },
+  {
+   "end": 0.709,
+   "t": 0.475,
+   "text": "tells"
+  },
+  {
+   "end": 0.984,
+   "t": 0.75,
+   "text": "you"
+  },
+  {
+   "end": 1.259,
+   "t": 1.025,
+   "text": "this"
+  },
+  {
+   "end": 2.434,
+   "t": 2.2,
+   "text": "um"
+  },
+  {
+   "end": 2.709,
+   "t": 2.475,
+   "text": "the"
+  },
+  {
+   "end": 2.984,
+   "t": 2.75,
+   "text": "money"
+  },
+  {
+   "end": 3.259,
+   "t": 3.025,
+   "text": "is"
+  },
+  {
+   "end": 4.512,
+   "t": 4.2,
+   "text": "in"
+  },
+  {
+   "end": 4.878,
+   "t": 4.567,
+   "text": "the"
+  },
+  {
+   "end": 5.245,
+   "t": 4.933,
+   "text": "edit"
+  },
+  {
+   "end": 6.512,
+   "t": 6.2,
+   "text": "really"
+  },
+  {
+   "end": 6.878,
+   "t": 6.567,
+   "text": "really"
+  },
+  {
+   "end": 7.245,
+   "t": 6.933,
+   "text": "fast"
+  },
+  {
+   "end": 8.512,
+   "t": 8.2,
+   "text": "watch"
+  },
+  {
+   "end": 8.878,
+   "t": 8.567,
+   "text": "what"
+  },
+  {
+   "end": 9.245,
+   "t": 8.933,
+   "text": "happens"
+  }
+ ],
+ "variants": []
+}

@@ -1,0 +1,44 @@
+{
+ "campaign": {
+  "brand": "GlowCo",
+  "budget_left": 2100.0,
+  "budget_total": 3000.0,
+  "clips_posted": 0,
+  "content_type": "ugc",
+  "cpm": 6.0,
+  "creator": null,
+  "deadline": null,
+  "disabled_reason": null,
+  "earned": 0.0,
+  "id": 5,
+  "marketplace": "whop",
+  "matching_accounts": [],
+  "platforms": [
+   "tiktok"
+  ],
+  "runs_out_at": null,
+  "score": 12.0,
+  "status": "skipped",
+  "title": "GlowCo skincare UGC"
+ },
+ "money": {
+  "earnings": 0.0,
+  "posts": 0,
+  "submissions": {},
+  "views": 0
+ },
+ "payout": {
+  "cap_per_post": null,
+  "cpm": 6.0,
+  "deliverable": "link",
+  "min_views_to_pay": null,
+  "tracking_window_days": null
+ },
+ "rules_raw": "",
+ "score_reason": "UGC needs on-camera content we don't make.",
+ "session_id": null,
+ "sources": [],
+ "spec": null,
+ "timeline": [],
+ "url": null
+}

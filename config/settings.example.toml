@@ -1,0 +1,209 @@
+# Clipper.io settings. Copy to config/settings.toml (gitignored) and edit.
+# Every key below is optional; the value shown is the built-in default.
+# Secrets (Discord bot token, extension pairing token, Hugging Face token) are NOT stored here:
+# the setup wizard saves them in Windows Credential Manager (service "clipper.io").
+
+# New installs start in dry-run: publish and submit tools only log what they would have done.
+dry_run_default = true
+
+[paths]
+data_dir = 'D:\Clipper.io\data'            # DB, clips, previews, logs (gitignored)
+# Large source videos can live elsewhere (D: has ~79 GB free). Each defaults to <data_dir>\<name>.
+sources_dir = 'C:\ClipperData\sources'
+# work_dir = 'D:\Clipper.io\data\work'
+# clips_dir = 'D:\Clipper.io\data\clips'
+# previews_dir = 'D:\Clipper.io\data\previews'
+# db_path = 'D:\Clipper.io\data\clipper.sqlite'
+# logs_dir = 'D:\Clipper.io\data\logs'
+# screenshots_dir = 'D:\Clipper.io\data\screenshots'
+# backups_dir = 'D:\Clipper.io\data\backups'
+models_dir = 'C:\ClipperData\models'        # HF_HOME / TORCH_HOME (no symlinks needed)
+ffmpeg_bin = 'C:\ffmpeg\bin'
+yt_dlp = "yt-dlp"
+gpu_python = 'C:\ClipperData\envs\gpu\Scripts\python.exe'  # isolated CUDA env for WhisperX
+chrome_exe = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+chrome_profiles_dir = 'C:\ClipperData\chrome'
+
+[api]
+host = "127.0.0.1"   # loopback only; anything else is rejected
+port = 8765
+fixture_mode = false # true serves seeded demo data and starts no agents
+
+[agents]
+model = "claude-opus-5-5"            # default model; Settings → Agents can pick one per agent (no restart)
+fallback_model = "claude-sonnet-5-5" # used when a session's model isn't available
+slots = 2                # agent sessions at once; 0 = unlimited (grows with the campaigns). 2 suits Claude Pro
+reserve_p0_slot = true   # one slot always free for you (Director chat, answers, notes)
+min_free_ram_gb = 2.0    # don't start background sessions below this much free RAM; 0 = off
+# prompts_dir = 'D:\Clipper.io\core\clipper\agents\prompts'
+# cli_path = ''          # Claude Code CLI; default is the one bundled with claude-agent-sdk
+
+[agents.roles.scout]
+effort = "low"
+max_turns = 40
+# model = "claude-haiku-4-5-20251001"   # any role or subagent can set its own model
+
+[agents.roles.campaign]
+effort = "high"
+max_turns = 80
+
+[agents.roles.analyst]
+effort = "medium"
+max_turns = 60
+
+[agents.roles.director]
+effort = "high"
+max_turns = 40
+
+[agents.subagents.brief-reader]
+effort = "high"
+max_turns = 10
+
+[agents.subagents.research]
+effort = "medium"
+max_turns = 20
+
+[agents.subagents.editor]
+effort = "high"
+max_turns = 40
+
+[agents.subagents.cutter]
+effort = "high"
+max_turns = 60
+
+[agents.subagents.qa-checker]
+effort = "low"
+max_turns = 20
+
+[agents.subagents.copywriter]
+effort = "medium"
+max_turns = 15
+
+[agents.subagents.browser-fixer]
+effort = "medium"
+max_turns = 30
+
+[triggers]
+scout_every_min = 15
+analyst_daily_at = "09:00"
+watchdog_stale_min = 180   # resume a campaign with "status check" after this long without events
+wakeup_poll_s = 30
+timezone = "America/New_York"
+
+[usage]
+# Claude plan usage pacing. There is no $ tracking: agents run on your Claude plan login.
+daily_agent_run_cap = 300        # 0 = no daily cap
+p01_only_at = 0.9                    # at >= 90% of the usage window only P0/P1 work runs
+slow_first = ["scout", "analyst"]
+auto_resume_after_reset = true
+
+[usage.shrink_steps]                 # usage fraction -> max slots
+"0.6" = 3
+"0.8" = 2
+
+[posting]
+default_daily_cap = 3      # per account, after warm-up
+min_gap_min = 120          # minimum minutes between two posts on one account
+step_delay_ms = [600, 2200]
+
+[posting.warmup]
+week1_daily_cap = 1
+week2_daily_cap = 2
+
+[switches.marketplaces]    # first-run values; the DB holds the live switches
+vyro = true
+whop = true
+
+[switches.socials]
+youtube = true
+tiktok = true
+instagram = true
+x = false                  # X upload recipe arrives in Phase 5
+
+[marketplaces.vyro]
+min_cpm = 1.0
+
+[marketplaces.whop]
+min_cpm = 0.5
+include_ugc = false        # UGC needs on-camera content we don't make
+auto_join_free = true      # paid joins are never automatic
+use_bounty_api = false
+
+[scout]
+mode = "suggest"           # suggest | auto
+auto_take_min_score = 85
+min_score_to_post_card = 55
+prefetch_sources = true
+
+[review]
+timeout_hours = 0          # 0 = batches never time out
+timeout_action = "ship_approved"   # ship_approved | reject_rest
+approve_all_threshold = 80
+auto_approve_offer_min_decisions = 100
+auto_approve_offer_min_rate = 0.95
+# auto_approve_tier = 90   # opt-in only, after the dashboard offers it
+
+[media]
+encoder = "nvenc"          # nvenc (RTX 5080) | x264 (CPU fallback)
+nvenc_preset = "p5"
+final_bitrate = "14M"
+final_width = 1080
+final_height = 1920
+fps = 30
+proxy_height = 640
+loudness_lufs = -14.0
+true_peak_db = -1.5
+discord_preview_mb = 9.5
+whisper_model = "large-v3"
+# whisper_language = "en"
+max_concurrent_encodes = 3
+max_concurrent_transcribes = 1
+max_concurrent_downloads = 2
+default_caption_style = "bold-pop"
+silence_threshold_db = -35.0
+
+[discord]
+enabled = true
+# guild_id = 0
+# reviewer_role_id = 0
+reviewer_role_name = "Clipper"
+core_url = "http://127.0.0.1:8765"
+
+[discord.channels]
+# control = 0
+# campaigns = 0
+# clip_review = 0          # must be a Forum channel
+# published = 0
+# alerts = 0
+
+[browser]
+ws_host = "127.0.0.1"
+ws_port = 8766
+action_timeout_s = 90.0
+start_hidden = true             # Clipper's own Chrome runs hidden; use Show browser to see it
+autostart_profiles = ["main"]   # Chrome profiles (paths.chrome_profiles_dir) started with Clipper
+keep_running = true              # relaunch a profile's Chrome (hidden) if it closes
+
+[browser.domain_allowlist]  # further limited to the switches that are on
+vyro = ["vyro.com"]
+whop = ["whop.com"]
+youtube = ["studio.youtube.com", "youtube.com"]
+tiktok = ["tiktok.com"]
+instagram = ["instagram.com"]
+x = ["x.com"]
+
+[retention]
+sources_days_after_end = 14
+failure_screenshots_days = 30
+logs_days = 14
+backups_keep = 14
+nightly_backup_at = "03:30"
+
+[notify]
+# ntfy_url = "https://ntfy.sh"
+# ntfy_topic = ""
+
+[ui]
+theme = "system"           # system | light | dark
+density = "compact"        # compact | comfortable
+# accent = "#0067c0"       # default: follow the Windows accent color

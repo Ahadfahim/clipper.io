@@ -49,3 +49,7 @@ Thumbs.db
 
 # claude local
 .claude/settings.local.json
+
+# build info
+*.tsbuildinfo
+apps/extension/dist/

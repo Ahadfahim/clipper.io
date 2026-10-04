@@ -1,0 +1,42 @@
+[
+ {
+  "active": true,
+  "created_at": "2026-09-23T18:00:00Z",
+  "created_by": "agent",
+  "entity_id": null,
+  "evidence_ref": "12 rejections with reason 'too short'",
+  "id": 4,
+  "note": "User rejects clips under 20s.",
+  "scope": "global"
+ },
+ {
+  "active": true,
+  "created_at": "2026-09-24T18:00:00Z",
+  "created_by": "agent",
+  "entity_id": "tiktok.upload",
+  "evidence_ref": "recipe run 41, step 3",
+  "id": 3,
+  "note": "Upload button moved into a 'Post' menu; new selector [data-e2e=post_video_button].",
+  "scope": "recipe"
+ },
+ {
+  "active": true,
+  "created_at": "2026-09-20T18:00:00Z",
+  "created_by": "agent",
+  "entity_id": "whop",
+  "evidence_ref": "payouts 2026-09-01..09-28",
+  "id": 2,
+  "note": "Whop campaign payouts arrive ~10 days after tracking ends.",
+  "scope": "marketplace"
+ },
+ {
+  "active": true,
+  "created_at": "2026-09-29T18:00:00Z",
+  "created_by": "agent",
+  "entity_id": "MrBeast",
+  "evidence_ref": "review clip 18 (rejected: off-brief)",
+  "id": 1,
+  "note": "Rejects clips with added background music.",
+  "scope": "creator"
+ }
+]

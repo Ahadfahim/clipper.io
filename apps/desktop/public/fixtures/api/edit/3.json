@@ -1,0 +1,392 @@
+{
+ "clip": {
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "caption_style": "boxed",
+  "decision": "pending",
+  "duration": 47.0,
+  "editing_live": true,
+  "hook": "He thought it was a prank",
+  "id": 3,
+  "layout": "crop",
+  "moment_id": 3,
+  "platforms_posted": [],
+  "preview_url": "/api/files/clip/3/preview",
+  "score": 84.0,
+  "status": "in_review",
+  "thumb_url": "/api/files/clip/3/thumb",
+  "variant_label": null,
+  "version": 1,
+  "views": 0
+ },
+ "duration": 7.8,
+ "edl": {
+  "audio": {
+   "denoise": false,
+   "duck_music": false,
+   "fade_ms": 30,
+   "gain_db": 0.0,
+   "loudness": -14.0,
+   "true_peak": -1.5
+  },
+  "camera": [
+   {
+    "focus2_x": null,
+    "focus_x": 0.5,
+    "focus_y": 0.5,
+    "layout": "crop",
+    "t": 0.0,
+    "zoom": 1.0
+   },
+   {
+    "focus2_x": 0.7,
+    "focus_x": 0.3,
+    "focus_y": 0.5,
+    "layout": "split",
+    "t": 2.44,
+    "zoom": 1.0
+   },
+   {
+    "focus2_x": null,
+    "focus_x": 0.5,
+    "focus_y": 0.5,
+    "layout": "crop",
+    "t": 3.48,
+    "zoom": 1.0
+   },
+   {
+    "focus2_x": 0.7,
+    "focus_x": 0.3,
+    "focus_y": 0.5,
+    "layout": "split",
+    "t": 3.92,
+    "zoom": 1.0
+   },
+   {
+    "focus2_x": null,
+    "focus_x": 0.5,
+    "focus_y": 0.5,
+    "layout": "crop",
+    "t": 4.38,
+    "zoom": 1.0
+   }
+  ],
+  "captions": {
+   "enabled": true,
+   "face_box": null,
+   "max_words_per_line": 3,
+   "position": "auto",
+   "profanity_mask": false,
+   "safe_zone": "tiktok",
+   "style": "bold-pop",
+   "words": [
+    {
+     "emphasis": false,
+     "end": 0.434,
+     "speaker": null,
+     "t": 0.2,
+     "text": "Nobody"
+    },
+    {
+     "emphasis": false,
+     "end": 0.709,
+     "speaker": null,
+     "t": 0.475,
+     "text": "tells"
+    },
+    {
+     "emphasis": false,
+     "end": 0.984,
+     "speaker": null,
+     "t": 0.75,
+     "text": "you"
+    },
+    {
+     "emphasis": false,
+     "end": 1.259,
+     "speaker": null,
+     "t": 1.025,
+     "text": "this"
+    },
+    {
+     "emphasis": false,
+     "end": 2.434,
+     "speaker": null,
+     "t": 2.2,
+     "text": "um"
+    },
+    {
+     "emphasis": false,
+     "end": 2.709,
+     "speaker": null,
+     "t": 2.475,
+     "text": "the"
+    },
+    {
+     "emphasis": true,
+     "end": 2.984,
+     "speaker": null,
+     "t": 2.75,
+     "text": "money"
+    },
+    {
+     "emphasis": false,
+     "end": 3.259,
+     "speaker": null,
+     "t": 3.025,
+     "text": "is"
+    },
+    {
+     "emphasis": false,
+     "end": 4.512,
+     "speaker": null,
+     "t": 4.2,
+     "text": "in"
+    },
+    {
+     "emphasis": false,
+     "end": 4.878,
+     "speaker": null,
+     "t": 4.567,
+     "text": "the"
+    },
+    {
+     "emphasis": false,
+     "end": 5.245,
+     "speaker": null,
+     "t": 4.933,
+     "text": "edit"
+    },
+    {
+     "emphasis": false,
+     "end": 6.512,
+     "speaker": null,
+     "t": 6.2,
+     "text": "really"
+    },
+    {
+     "emphasis": false,
+     "end": 6.878,
+     "speaker": null,
+     "t": 6.567,
+     "text": "really"
+    },
+    {
+     "emphasis": false,
+     "end": 7.245,
+     "speaker": null,
+     "t": 6.933,
+     "text": "fast"
+    },
+    {
+     "emphasis": false,
+     "end": 8.512,
+     "speaker": null,
+     "t": 8.2,
+     "text": "watch"
+    },
+    {
+     "emphasis": false,
+     "end": 8.878,
+     "speaker": null,
+     "t": 8.567,
+     "text": "what"
+    },
+    {
+     "emphasis": false,
+     "end": 9.245,
+     "speaker": null,
+     "t": 8.933,
+     "text": "happens"
+    }
+   ]
+  },
+  "hook": {
+   "range": null,
+   "text": "Nobody tells you this",
+   "type": "text"
+  },
+  "output": {
+   "fps": 30,
+   "height": 1920,
+   "width": 1080
+  },
+  "overlays": [
+   {
+    "id": "hook_text",
+    "props": {
+     "text": "Nobody tells you this"
+    },
+    "t_in": 0.0,
+    "t_out": 2.0,
+    "type": "hook_text"
+   }
+  ],
+  "range": {
+   "end": 10.0,
+   "start": 0.0
+  },
+  "schema_version": 1,
+  "segments": [
+   {
+    "end": 1.48,
+    "kind": "main",
+    "start": 0.0
+   },
+   {
+    "end": 2.44,
+    "kind": "main",
+    "start": 1.92
+   },
+   {
+    "end": 3.48,
+    "kind": "main",
+    "start": 2.44
+   },
+   {
+    "end": 4.38,
+    "kind": "main",
+    "start": 3.92
+   },
+   {
+    "end": 5.48,
+    "kind": "main",
+    "start": 4.38
+   },
+   {
+    "end": 7.48,
+    "kind": "main",
+    "start": 5.92
+   },
+   {
+    "end": 9.48,
+    "kind": "main",
+    "start": 7.92
+   },
+   {
+    "end": 10.0,
+    "kind": "main",
+    "start": 9.92
+   }
+  ],
+  "source": {
+   "duration": 10.0,
+   "fps": 30.0,
+   "has_audio": true,
+   "height": 540,
+   "path": "D:/Clipper.io/tests/fixtures/media/talk_16x9.mp4",
+   "source_id": 1,
+   "width": 960
+  },
+  "variant": null
+ },
+ "history": [
+  {
+   "actor": "system",
+   "id": 1,
+   "op": "init",
+   "reason": "first cut of moment 3",
+   "ts": "2026-10-02T17:49:00Z",
+   "undone": false,
+   "version": 1
+  },
+  {
+   "actor": "session:1",
+   "id": 2,
+   "op": "set_hook",
+   "reason": "cold open from 0:31",
+   "ts": "2026-10-02T17:50:00Z",
+   "undone": false,
+   "version": 2
+  },
+  {
+   "actor": "session:1",
+   "id": 3,
+   "op": "remove_silences",
+   "reason": "remove silences (medium): 5 gaps, 2.2s",
+   "ts": "2026-10-02T17:51:00Z",
+   "undone": false,
+   "version": 3
+  },
+  {
+   "actor": "user",
+   "id": 4,
+   "op": "trim",
+   "reason": "trim end -1.2s",
+   "ts": "2026-10-02T17:52:00Z",
+   "undone": false,
+   "version": 4
+  },
+  {
+   "actor": "session:1",
+   "id": 5,
+   "op": "set_layout",
+   "reason": "split layout 2.00-3.50s",
+   "ts": "2026-10-02T17:53:00Z",
+   "undone": false,
+   "version": 5
+  },
+  {
+   "actor": "session:1",
+   "id": 6,
+   "op": "remove_fillers",
+   "reason": "remove fillers: 2 words",
+   "ts": "2026-10-02T17:54:00Z",
+   "undone": false,
+   "version": 6
+  }
+ ],
+ "live_range": [
+  2.0,
+  5.0
+ ],
+ "live_status": "Removing filler words 0:02-0:05\u2026",
+ "locked_by": null,
+ "notes": [
+  {
+   "author": "user",
+   "created_at": "2026-10-02T17:46:00Z",
+   "id": 2,
+   "pinned": false,
+   "response": "Got it: hook cut to 1.2s",
+   "scope": "clip",
+   "scope_id": "3",
+   "text": "Hook shorter"
+  }
+ ],
+ "plan": [
+  {
+   "id": 1,
+   "result": null,
+   "status": "done",
+   "text": "Cold open from 0:31"
+  },
+  {
+   "id": 2,
+   "result": null,
+   "status": "done",
+   "text": "Remove silences"
+  },
+  {
+   "id": 3,
+   "result": null,
+   "status": "in_progress",
+   "text": "Remove filler words"
+  },
+  {
+   "id": 4,
+   "result": null,
+   "status": "queued",
+   "text": "Captions with emphasis"
+  },
+  {
+   "id": 5,
+   "result": null,
+   "status": "queued",
+   "text": "QA"
+  }
+ ],
+ "proxy_url": "/api/files/clip/3/proxy",
+ "variants": [],
+ "version": 6
+}

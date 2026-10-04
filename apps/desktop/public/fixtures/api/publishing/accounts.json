@@ -1,0 +1,88 @@
+[
+ {
+  "cap_today": 3,
+  "chrome_profile": "main",
+  "enabled": true,
+  "extension_connected": true,
+  "handle": "@clipsdaily",
+  "id": 1,
+  "min_gap_min": 120,
+  "niche_tags": [
+   "gaming",
+   "podcast"
+  ],
+  "paused_reason": "verification needed",
+  "platform": "tiktok",
+  "posts_today": 0,
+  "status": "paused",
+  "warmup_week": null
+ },
+ {
+  "cap_today": 3,
+  "chrome_profile": "main",
+  "enabled": true,
+  "extension_connected": true,
+  "handle": "@podcastcuts",
+  "id": 2,
+  "min_gap_min": 120,
+  "niche_tags": [
+   "podcast-business"
+  ],
+  "paused_reason": null,
+  "platform": "youtube",
+  "posts_today": 0,
+  "status": "active",
+  "warmup_week": null
+ },
+ {
+  "cap_today": 1,
+  "chrome_profile": "main",
+  "enabled": true,
+  "extension_connected": true,
+  "handle": "@podcastcuts.reels",
+  "id": 3,
+  "min_gap_min": 120,
+  "niche_tags": [
+   "podcast-business"
+  ],
+  "paused_reason": null,
+  "platform": "instagram",
+  "posts_today": 0,
+  "status": "active",
+  "warmup_week": 1
+ },
+ {
+  "cap_today": 3,
+  "chrome_profile": "beast",
+  "enabled": true,
+  "extension_connected": true,
+  "handle": "@beastmoments",
+  "id": 4,
+  "min_gap_min": 120,
+  "niche_tags": [
+   "mrbeast-style"
+  ],
+  "paused_reason": null,
+  "platform": "youtube",
+  "posts_today": 1,
+  "status": "active",
+  "warmup_week": null
+ },
+ {
+  "cap_today": 2,
+  "chrome_profile": "beast",
+  "enabled": true,
+  "extension_connected": true,
+  "handle": "@shortsfactory",
+  "id": 5,
+  "min_gap_min": 120,
+  "niche_tags": [
+   "mrbeast-style"
+  ],
+  "paused_reason": null,
+  "platform": "tiktok",
+  "posts_today": 2,
+  "status": "active",
+  "warmup_week": 2
+ }
+]

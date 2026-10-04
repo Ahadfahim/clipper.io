@@ -1,0 +1,15 @@
+{
+  "$schema": "./schema.json",
+  "name": "vyro.session_check",
+  "version": 2,
+  "site": "vyro",
+  "status": "verified",
+  "description": "Vyro: is this Chrome profile logged in? The app (app.vyro.com) sends a logged-out visitor to its login page, which ends the run as a 'login' challenge.",
+  "params": { "step_delay_ms": { "type": "array" } },
+  "steps": [
+    { "action": "navigate", "url": "https://app.vyro.com/" },
+    { "action": "wait_for", "selector": "a[href='/campaigns']", "timeout_ms": 30000 },
+    { "action": "query", "selector": "a[href='/earnings']", "exists": true, "save_as": "logged_in" }
+  ],
+  "returns": ["logged_in"]
+}
