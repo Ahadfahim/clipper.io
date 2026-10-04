@@ -41,6 +41,7 @@
  "paths": [
   "api/agents/board.json",
   "api/agents/director/messages.json",
+  "api/agents/models.json",
   "api/agents/sessions.json",
   "api/agents/sessions/1.json",
   "api/agents/sessions/2.json",
