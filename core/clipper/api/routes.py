@@ -592,6 +592,7 @@ def browser_open(core: CoreDep, body: S.OpenUrlIn) -> S.BrowserProfileOut:
         running=state.running,
         visible=state.visible,
         hung=state.hung,
+        shown_for_s=state.shown_for_s,
         extension_connected=connected,
     )
 
@@ -617,7 +618,12 @@ def browser_window(
         raise HTTPException(500, f"couldn't start Chrome: {exc}") from exc
     connected = profile in core.adapters.browser.connected_profiles()
     return S.BrowserProfileOut(
-        name=state.name, running=state.running, visible=state.visible, extension_connected=connected
+        name=state.name,
+        running=state.running,
+        visible=state.visible,
+        hung=state.hung,
+        shown_for_s=state.shown_for_s,
+        extension_connected=connected,
     )
 
 

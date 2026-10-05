@@ -93,7 +93,15 @@ Prototypes: [Clipper.io theme prototypes](https://claude.ai/artifact/DdWqpUC3FyG
 └──────────────────────────────────────────────────────────────────────────────────┘
 ┌ Next 24h posts ───────────────── (timeline strip per account) ──────────────────┐
 ```
-- The **Needs you** list is ranked by urgency: blocked accounts first, then review batches nearing their timeout, then campaign picks, then failures. Each row has its action right there.
+- The **Needs you** list is ranked by urgency: blocked accounts, questions and footage first, then things that look stuck and campaigns waiting for you to join, then review batches (sooner if one times out within two hours), then campaign picks, alerts and failures. A row says what it is in one or two lines, shows how long it has waited, and offers at most two buttons.
+- **Open a row** (click, Enter or →; one is open at a time, Esc or ← closes it; `?item=<key>` opens one directly) to see everything about it: the full text, the facts, what the agent said just before asking, the evidence (error, full output, screenshot), every option, a box for your own words, and "Hide for 1 hour / 4 hours / 1 day". Items you can dismiss (alerts, failures) have Dismiss; the ones waiting for you (a question, a blocked account, a review) can only be snoozed.
+- The kinds, each with its own panel:
+  - **Question:** every option as a numbered button (1–9 answers from the keyboard), and "Something else" for an answer in your own words (the agent is told none of its options fit).
+  - **Footage:** a source Clipper can't download (a Frame.io or WeTransfer share page, a refused download). "Open link" opens the page in your own browser, "Copy link" copies it. Drop the video file on the box, choose it with the system dialog, paste its path, or pick one of the videos you downloaded in the last 48 hours. A file that looks wrong (under a minute, shorter than the campaign's minimum, no audio) is shown back before it is used. The copy runs as a job with progress on the row. Retry (or "Try the download anyway" for a share page), Skip source.
+  - **Stuck:** a hung agent turn, a campaign waiting on nothing, a request that can't start, a job that stopped moving or waits for a slot, a late post, an upload that never finished. The panel shows the evidence and the way out first (Restart turn, Run now, Release lease, Cancel and retry, Show jobs…), then "Nudge with a message".
+  - **Join:** a campaign Clipper can't join for you: "Open on Vyro/Whop", "I've joined", Skip.
+  - **Review, Campaign, Alert, Failure, Blocked:** as before, plus the campaign's page link.
+  - Every item about a campaign has a link to that campaign's page on its marketplace (Vyro: the campaign's dialog; Whop: the campaign inside Whop's app).
 - Each campaign row shows a **marketplace badge** (Vyro / Whop), a **stage progress bar**, and a **budget bar** with a marker for when it's predicted to run out.
 - Earned-today tile shows a split by marketplace on hover.
 - **Agent questions** (`notify.ask_user`) appear here with their answer buttons, e.g. "Rules unclear: can we use the trailer footage? [Yes] [No] [Skip campaign]". Answering resumes the agent.
@@ -105,28 +113,37 @@ Three panes, plus a chat box at the bottom:
 
 | Sessions (left, 260px) | Live transcript (center) | Context (right, 300px) |
 |---|---|---|
-| Grouped: **Running** · **Waiting on event** · **Done today**. Each row: role icon, campaign, turns, tokens, last active | A stream of event rows: agent message · **tool call** (name, collapsed input/output, duration, ✓/✗) · **subagent** block (nested and collapsible) · **guard hook blocked** (red, shows the rule that blocked it) · thinking summary (grey italic) | Linked campaign, timeline of events → resumes, turns used vs. `max_turns`, buttons: **Interrupt · Nudge · Resume · Fork** |
+| Grouped: **Running** · **Waiting on event** · **Done today**. Each row: role icon, campaign, turns, tokens, last active | A stream of event rows: agent message · **tool call** (name, collapsed input/output, duration, ✓/✗) · **subagent** block (nested and collapsible) · **guard hook blocked** (red, shows the rule that blocked it) · thinking summary (grey italic) | Linked campaign, timeline of events → resumes, turns this run vs. `max_turns` (and the total), buttons: **Interrupt · Nudge** |
 
-- **Director chat** at the bottom: the same conversation as `#control` in Discord. Replies use the serif "Claude voice" font to set them apart from system text.
+- **Nudge** opens a small popover with an optional message. The agent reads it first in line (P0), as "You look stuck" or your own words. It works for every role, not only campaign agents.
+- A slot whose agent has been quiet for longer than `stalls.session_quiet_min` shows "quiet 12m" in amber with a Nudge button. A queued request that can't start says why under its name (paused, usage high, slots busy, a lease held…).
+- **Director chat** at the bottom: the same conversation as `#control` in Discord. Replies use the serif "Claude voice" font to set them apart from system text. It folds down to its input row (the chevron in its header) and keeps at least 16% of the height.
 - Filters: role, campaign, "only errors", "only blocked by rules".
 - Each tool call has a **Replay in dry-run** action, for debugging.
 
 ### 3.3 Campaigns
 - **Table:** marketplace badge (Vyro / Whop) · score (colored chip) · brand/title · CPM · budget bar + runs-out date · deadline · matching account(s) · status · clips posted · earned
 - Filter tabs: **Suggested · Active · Ended · Skipped**, plus marketplace chips (**All · Vyro · Whop**) and a content-type filter (clipping / UGC).
+- Every row has a **link button** to the campaign's page (Vyro, Whop). It opens in Clipper's own logged-in Chrome (Settings → General can switch that to your default browser). A warning icon replaces it when the marketplace said the page isn't there. Right-click: Open, Open brief, Take, Pause, Skip, **Nudge agent**, Open on the marketplace, Copy link, Copy title.
+- Skipping a campaign with live posts that aren't submitted yet asks first: "Skip and keep submitting", "Skip anyway" or "Cancel".
+- A campaign you took that Clipper can't join (paid, or a login wall) shows **Join** state: Open on the marketplace, I've joined, Skip.
 - Campaigns from a marketplace that's switched off are greyed out with a "Vyro is off" label.
 - Campaigns limited to socials that are all switched off show "No enabled socials". Plus a **Paste campaign URL** button for manual mode
 - **Detail drawer** (right, 560px) with tabs:
+  - **Header:** the link button, **Nudge agent** (while the campaign is active), the status. A campaign whose stage bar is red looks stuck: hover for why, or open it from Needs you
   - **Overview:** the agent's score breakdown and reasoning; payout terms (CPM, caps, minimum views, tracking window, link/upload); Take / Skip / Pause; **Socials for this campaign** (switches, limited to globally enabled ones)
   - **Brief:** the raw text, under a banner "Written by a third party, treated as untrusted"
   - **Spec:** the ClipSpec as a form you can edit (duration range, required text, banned list, platforms). Saving resumes the Campaign agent with "spec updated"
-  - **Sources:** each source with its download/analysis status and the heatmap shown as a sparkline
+  - **Sources:** each source with its download/analysis status and the heatmap shown as a sparkline. A source that needs footage shows why, the link, retry, skip and the same drop box as the Needs you item
   - **Clips:** grid filtered to this campaign
   - **Timeline:** every event and agent session for the campaign, in order
   - **Money:** earnings, views and payout status for the campaign
 
 ### 3.4 Library
 - **Grid** of 9:16 thumbnail cards: score badge, length, status color, platform icons once posted, view count. Plays on hover
+- **Select like Explorer:** click, Ctrl+click, Shift+click, Ctrl+A, Esc. **Delete** (or right-click → Scrap) throws the selected clips away. A clip that is posted or scheduled can't be scrapped; the dialog says why and doesn't count it. Hook variants can be scrapped with their original. Scrapping asks for a reason (optional, and the agents learn from it), then shows an **Undo** bar (Ctrl+Z). Files are deleted after `retention.scrapped_clip_days` (7); until then **Restore** brings a clip back.
+- **Views:** the status filter is built from the real clip statuses, plus **Scrapped** (restorable, with the days left) and **Hidden**. "Any status" leaves scrapped and hidden clips out.
+- **Clean up…** lists what is worth throwing away, with the space each would free (clips that never passed review, old versions, hidden clips) and scraps a group in one go.
 - Filters: campaign, status, score range, layout, caption style, posted/not; sort by score / views / date
 - **Clip detail** (full page):
   - Left: player with frame stepping
@@ -253,8 +270,12 @@ Left sub-nav:
 | `StatusPill` | shell, sessions, accounts | running/paused/blocked/dry-run |
 | `KpiTile` | Home, Earnings | value + change + sparkline |
 | `BudgetBurnBar` | Home, Campaigns | budget left + predicted run-out marker |
-| `StageStepper` | Home, Campaigns | Brief → Sources → Analyze → Clips → Review → Post → Submit |
-| `NeedsYouItem` | Home | icon, text, inline actions, urgency order |
+| `StageStepper` | Home | Brief → Sources → Analyze → Clips → Review → Post → Submit; the current stage turns red and says "stuck" when the campaign is stuck |
+| `NeedsYouItem` | Home | icon, text, inline actions, urgency order; opens into `NeedsYouPanel` (what happened, what to do, your own words, snooze) |
+| `FootageDrop` | Needs you (footage), Campaigns → Sources | drop box (Tauri drag-drop, DPI-aware), Choose file…, paste path, recent downloads, move or copy, a check before a wrong-looking file is used, copy progress |
+| `NudgeButton` | Agents, Campaigns | popover with an optional message; the agent reads it first in line |
+| `CampaignLinkButton` | Campaigns, Home, drawer | opens the campaign's page on its marketplace; warns when the page is gone |
+| `ScrapDialog`, `CleanupDialog` | Library, clip detail | what scrapping a selection does (blocked clips, scheduled posts, variants, space); what is worth cleaning up |
 | `ClipCard` | Library, Review queue | 9:16 thumbnail, score, status, hover play |
 | `ClipPlayer` | Review, Library | frame step, trim handles, keyboard |
 | `EdlPreview` | Edit, Review | proxy video + captions/crop/overlays drawn live from the EDL, no render |
@@ -292,6 +313,9 @@ Left sub-nav:
 | Review: `A` `R` `E` `C` `Space` `←` `→` `Shift+A` | approve, reject, edit, re-cut, play, prev, next, approve all ≥ threshold |
 | Edit: `Space` `I` `O` `S` `Del` `Ctrl+Z` `N` `T` | play, set in, set out, split, delete range, undo, new note, take over / hand back |
 | Library: `/` | search |
+| Library: click · `Ctrl`/`Shift`+click · `Ctrl+A` · `Delete` · `Ctrl+Z` · `Esc` | select · add to / extend the selection · select all · scrap the selection · undo the last scrap · clear |
+| Needs you: `↑` `↓` · `Enter`/`→` · `Esc`/`←` · `1`…`9` | move between rows · open a row · close it · answer the open question with option N |
+| Needs you → "Nudge with a message", Nudge popover: `Ctrl+Enter` | send |
 
 ---
 

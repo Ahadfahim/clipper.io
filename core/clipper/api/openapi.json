@@ -989,6 +989,17 @@
       "title": "Running",
       "type": "boolean"
      },
+     "shown_for_s": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Shown For S"
+     },
      "visible": {
       "title": "Visible",
       "type": "boolean"
@@ -999,7 +1010,8 @@
      "running",
      "visible",
      "extension_connected",
-     "hung"
+     "hung",
+     "shown_for_s"
     ],
     "title": "BrowserProfileOut",
     "type": "object"

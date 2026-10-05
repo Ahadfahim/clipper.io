@@ -249,7 +249,12 @@ def status(core: Core, fixture_mode: bool) -> S.StatusOut:
             .where(col(Campaign.status).in_(["active", "suggested", "paused", "ending", "needs_user"]))
             .group_by(Campaign.marketplace)
         ).all()
-        library = s.exec(select(func.count()).select_from(Clip)).one()
+        # what the Library page lists: not the clips you scrapped or hid
+        library = s.exec(
+            select(func.count())
+            .select_from(Clip)
+            .where(Clip.status != "scrapped", col(Clip.hidden).is_(False))
+        ).one()
     usage = core.usage.as_dict()
     heartbeat = kv_get(core.db, "discord.heartbeat")
     discord_online = bool(heartbeat) and now - datetime.fromisoformat(str(heartbeat)) < timedelta(minutes=3)
@@ -563,6 +568,7 @@ def browser_profiles(core: Core) -> list[S.BrowserProfileOut]:
             running=p.running,
             visible=p.visible,
             hung=p.hung,
+            shown_for_s=p.shown_for_s,
             extension_connected=p.name in connected,
         )
         for p in core.chrome.states()

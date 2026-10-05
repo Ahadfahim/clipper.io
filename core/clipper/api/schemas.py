@@ -67,6 +67,7 @@ class BrowserProfileOut(M):
     visible: bool
     extension_connected: bool
     hung: bool = False  # its window has not responded for 30 s
+    shown_for_s: int | None = None  # how long its window has been showing; None while hidden
 
 
 class StatusOut(M):

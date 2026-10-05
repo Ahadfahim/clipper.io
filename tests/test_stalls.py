@@ -112,6 +112,7 @@ def test_waiting_on_something_is_not_waiting_on_nothing() -> None:
     for extra in (
         {"waiting_on_you": {1}},  # a question, a review batch or footage
         {"pending_wakeups": {1}},
+        {"tracking": {1}},  # live posts still being tracked for payouts
         {"jobs": [job(progress_at=ago(1))]},
         {"requests": [RequestView(1, "campaign", 1, "queued", ago(1), None, 2, "x", None, None)]},
         {"posts": [PostView(5, 1, 2, "youtube", NOW + timedelta(hours=3), "scheduled", False)]},

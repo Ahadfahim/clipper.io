@@ -49,6 +49,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::accent_color,
             commands::pop_out,
+            commands::popout_ready,
             commands::notify,
             commands::open_url,
             commands::open_path,

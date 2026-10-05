@@ -2326,6 +2326,8 @@ export interface components {
             name: string;
             /** Running */
             running: boolean;
+            /** Shown For S */
+            shown_for_s: number | null;
             /** Visible */
             visible: boolean;
         };

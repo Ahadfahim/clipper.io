@@ -36,16 +36,16 @@ const screens: Shot[] = [
       await p.getByRole("button", { name: "Add file…" }).click();
       await p.getByRole("group", { name: "Drop the video file here" }).waitFor();
     } },
-  { name: "library", path: "/library", ready: "12 of 12 clips" },
+  { name: "library", path: "/library", ready: "11 of 11 clips" },
   { name: "library-scrapped", path: "/library?status=scrapped", ready: "Deleted in 5 days" },
-  { name: "library-scrap", path: "/library", ready: "12 of 12 clips", then: async (p) => {
+  { name: "library-scrap", path: "/library", ready: "11 of 11 clips", then: async (p) => {
       const cards = p.getByRole("group", { name: "Clips" }).getByRole("button", { name: /^Clip \d+/ });
       await cards.nth(1).click();
       await cards.nth(3).click({ modifiers: ["Control"] });
       await p.keyboard.press("Delete");
       await p.getByRole("dialog", { name: "Scrap 2 clips?" }).waitFor();
     } },
-  { name: "library-cleanup", path: "/library", ready: "12 of 12 clips", then: async (p) => {
+  { name: "library-cleanup", path: "/library", ready: "11 of 11 clips", then: async (p) => {
       await p.getByRole("button", { name: "Clean up…" }).click();
       await p.getByRole("dialog", { name: "Clean up the Library" }).waitFor();
     } },

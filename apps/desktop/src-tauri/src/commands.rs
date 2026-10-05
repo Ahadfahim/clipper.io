@@ -1,5 +1,6 @@
 //! Commands the web layer calls through `invoke` (src/lib/tauri.ts). Each is a no-op in a browser.
 
+use std::time::Duration;
 use tauri::{
     AppHandle, Manager, PhysicalPosition, PhysicalSize, WebviewUrl, WebviewWindow,
     WebviewWindowBuilder,
@@ -57,12 +58,44 @@ pub async fn pop_out(app: AppHandle, kind: String, id: u32, path: String) -> Res
         .title(title)
         .inner_size(w, h)
         .min_inner_size(720.0, 760.0)
+        .background_color(popout_background(&app))
         .visible(false)
         .build()
         .map_err(|e| e.to_string())?;
     place_popout(&win, &kind);
-    win.show().map_err(|e| e.to_string())?;
-    win.set_focus().map_err(|e| e.to_string())
+    // The window stays hidden until the page has drawn its first frame (it calls `popout_ready`), so a
+    // pop-out never shows up as a blank rectangle on the portrait monitor. If the page never answers
+    // (a crash while loading), it is shown after two seconds anyway so it can be seen and closed.
+    let fallback = win.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_secs(2));
+        if !fallback.is_visible().unwrap_or(true) {
+            let _ = fallback.show();
+            let _ = fallback.set_focus();
+        }
+    });
+    Ok(())
+}
+
+/// The page has painted: show its window and bring it forward.
+#[tauri::command]
+pub fn popout_ready(window: WebviewWindow) -> Result<(), String> {
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())
+}
+
+/// The window's own background until the page paints: the app's theme, so nothing flashes white or black.
+fn popout_background(app: &AppHandle) -> tauri::window::Color {
+    let dark = app
+        .get_webview_window("main")
+        .and_then(|w| w.theme().ok())
+        .map(|t| t == tauri::Theme::Dark)
+        .unwrap_or(true);
+    if dark {
+        tauri::window::Color(0x20, 0x20, 0x20, 0xff)
+    } else {
+        tauri::window::Color(0xf3, 0xf3, 0xf3, 0xff)
+    }
 }
 
 /// Review is a 9:16 workspace, so it fills a portrait monitor when one is attached (UI.md §2: the

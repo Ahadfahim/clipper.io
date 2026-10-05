@@ -7,6 +7,7 @@
    "hung": false,
    "name": "beast",
    "running": false,
+   "shown_for_s": null,
    "visible": false
   },
   {
@@ -14,6 +15,7 @@
    "hung": false,
    "name": "main",
    "running": false,
+   "shown_for_s": null,
    "visible": false
   }
  ],
@@ -38,7 +40,7 @@
  "gpu_util": null,
  "jobs_queued": 1,
  "jobs_running": 3,
- "library_count": 12,
+ "library_count": 11,
  "needs_you": 12,
  "review_pending": 5,
  "usage": {

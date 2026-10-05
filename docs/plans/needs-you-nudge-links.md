@@ -1,6 +1,6 @@
 # Plan: Needs you details, nudges, campaign links, and stuck-work fixes
 
-Status: planned 2026-10-04. M0, M1, M2, M2b, M3, M4 and M5 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
+Status: planned 2026-10-04. All milestones (M0 to M6) are implemented (see the commit log). What was left out on purpose is listed under each milestone's "As built" and in HANDOFF §5 item 12. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
 
 This plan is for whoever implements it. Read CLAUDE.md first: agents run on the plan login only, safety rules live in code, and UI work follows the routine (frontend-design skill, shadcn MCP, utility style, check dark and light at 1280×800 and 1920×1080).
 
@@ -695,6 +695,8 @@ Each milestone ends with `just lint`, `just test`, the e2e run and the screensho
 - 7.17, the pop-out show-when-ready (§5.7), and a review pass against UI.md.
 - Update UI.md §3.1 (Needs you expansion, kinds, keys), §3.2 (Nudge popover, no Resume/Fork), §3.3 (link column, join), §3.4 (Library selection, context menu, Scrap, Clean up, Scrapped view), §5 (new components: `NeedsYouDetail`, `FileDropZone`, `NudgeMenu`, `LinkRow`, `ScrapDialog`, `CleanupDialog`) and §6 (new keys: Delete and Ctrl+Z in the Library, Ctrl+A to select all).
 - Update HANDOFF §5 and §6.
+- As built: a pop-out window is created hidden with the theme's background and shows once its page has drawn two frames (`popout_ready`), or after 2 s if the page never answers (7 in §5); the status bar says "Browser shown for N min · hide" after 30 minutes (7.17; it can't tell whether a recipe is running, so it doesn't look); UI.md §3.1–3.4, §5 and §6 and HANDOFF §4–§6 are updated; all screenshots are regenerated and reduced to a 256-colour palette (pngquant isn't installed, so a small Pillow script did it).
+- Also fixed on the way: the navigation's Library count included scrapped and hidden clips; a campaign whose posts are still tracked for payouts is no longer called "waiting on nothing"; `tsc --noEmit` alone checks nothing in this repo (use `tsc -b --noEmit`, the `typecheck` script).
 
 ## 11. LOCAL-VERIFY rows to add to HANDOFF §4
 | What | How | Expected |

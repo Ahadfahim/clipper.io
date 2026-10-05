@@ -31,6 +31,11 @@ export async function popOut(kind: "review" | "edit", id: number): Promise<void>
   }
 }
 
+/** A pop-out window stays hidden until its page has drawn: call this once the first frame is on screen. */
+export async function popoutReady(): Promise<void> {
+  await call("popout_ready");
+}
+
 /** Windows toast (tauri-plugin-notification); the browser build logs instead. */
 export async function toast(title: string, body: string): Promise<void> {
   if (!IN_TAURI) return;

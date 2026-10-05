@@ -44,6 +44,7 @@ class ProfileState:
     running: bool
     visible: bool
     hung: bool = False
+    shown_for_s: int | None = None  # how long its window has been showing (None while hidden)
 
 
 class ChromeManager:
@@ -67,6 +68,7 @@ class ChromeManager:
         self._claim: dict[str, bool] = {}  # the next new window of this profile is one you asked for
         self._opened: dict[str, set[int]] = {}  # windows opened for you: they stay visible
         self._hung_since: dict[str, float] = {}
+        self._shown_since: dict[str, float] = {}  # profile -> when its window was first seen showing
         self._hung_reported: set[str] = set()
         self._ticks = 0
         self._stop = threading.Event()
@@ -311,11 +313,18 @@ class ChromeManager:
     def _refresh(self, profile: str) -> ProfileState:
         pid = self._pids.get(profile)
         hwnds = self.ops.windows(pid) if pid is not None else []
+        visible = any(self.ops.visible(h) for h in hwnds)
+        if visible:
+            self._shown_since.setdefault(profile, self._clock())
+        else:
+            self._shown_since.pop(profile, None)
+        shown = self._shown_since.get(profile)
         state = ProfileState(
             profile,
             pid is not None,
-            any(self.ops.visible(h) for h in hwnds),
+            visible,
             profile in self._hung_reported,
+            int(self._clock() - shown) if shown is not None else None,
         )
         self._state[profile] = state
         return state

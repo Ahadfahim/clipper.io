@@ -29,6 +29,7 @@ from clipper.db.models import (
     Question,
     ReviewBatch,
     Source,
+    Submission,
     Wakeup,
 )
 from clipper.settings import StallSettings
@@ -145,6 +146,9 @@ class Snapshot:
         default_factory=lambda: set()
     )  # campaigns with a question, review or footage open
     pending_wakeups: set[int] = field(default_factory=lambda: set())
+    tracking: set[int] = field(
+        default_factory=lambda: set()
+    )  # campaigns whose live posts are still being tracked
     posts: list[PostView] = field(default_factory=lambda: [])
     paused_accounts: set[int] = field(default_factory=lambda: set())
     leases: dict[str, tuple[str, datetime]] = field(
@@ -210,7 +214,7 @@ def detect_stalls(snap: Snapshot, cfg: StallSettings) -> list[Stall]:
     # a campaign that waits on nothing
     busy_campaigns = {r.campaign_id for r in snap.requests if r.campaign_id is not None}
     busy_campaigns |= {j.campaign_id for j in snap.jobs if j.campaign_id is not None}
-    busy_campaigns |= snap.waiting_on_you | snap.pending_wakeups
+    busy_campaigns |= snap.waiting_on_you | snap.pending_wakeups | snap.tracking
     busy_campaigns |= {p.campaign_id for p in snap.posts if p.campaign_id is not None}
     if not (snap.paused or snap.kill_switch):
         for c in snap.campaigns.values():
@@ -461,6 +465,10 @@ def build_snapshot(core: Core) -> Snapshot:
         for c in camps:
             if c.status == "needs_user" and c.id is not None:
                 snap.waiting_on_you.add(c.id)
+        for sub_ in s.exec(select(Submission)).all():
+            # a submitted post is tracked until its window ends: the campaign waits for payouts, not for nothing
+            if sub_.tracking_ends is None or sub_.tracking_ends > now:
+                snap.tracking.add(sub_.campaign_id)
         for w in s.exec(select(Wakeup).where(Wakeup.status == "pending")).all():
             if w.campaign_id is not None:
                 snap.pending_wakeups.add(w.campaign_id)

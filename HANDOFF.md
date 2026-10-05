@@ -184,6 +184,13 @@ just build                      # desktop web build + extension into apps/extens
 | `core/clipper/core.py:69` (`Adapters.real`) | wiring of all Windows adapters | `just dev-api` with a real config | starts without errors; doctor all OK/WARN |
 | `apps/bot/clipper_bot/run.py:37`, `apps/bot/clipper_bot/gateway.py:91`, `apps/bot/clipper_bot/bot.py:42` | live Discord bot | enable the Message Content intent in the Developer Portal; invite the bot; `just dev-bot` | channels/forum created once; review batch posts; buttons work after a bot restart; old alerts not re-posted |
 | `core/clipper/evaluation.py:67` | `clipper eval` on real runs | needs the golden set and a picker (section 7) | score printed; exit 1 below baseline |
+| `core/clipper/browser/windows.py` (`show`, `_ShowWatcher`), `tests/local/test_chrome_windows.py` (T) | Clipper's Chrome shows painted, new windows of a hidden profile are hidden before they paint | `just local-verify`; then Show browser and Hide browser ten times, trigger a recipe run while hidden and show it, open a Frame.io link that opens a popup, close every Chrome window and let the extension recreate its tab | never a flat dark window; the status bar keeps updating |
+| `core/clipper/marketplaces/links.py` | the Whop deep link and the Vyro campaign link | open a Whop campaign's link and a Vyro campaign's link from the Campaigns grid | Whop lands on that campaign inside the app (verified by probe on 2026-10-05); Vyro opens the campaign's dialog |
+| `apps/desktop/src/lib/filedrop.ts` | file drop onto a footage item | drag a video from Explorer onto the drop box of a Needs you footage item at 100% and 125% scaling, on both monitors; drop it beside the box; choose it with Choose file… | the box lights up under the pointer; the copy runs with progress; analysis starts; the item goes away |
+| `core/clipper/media/download.py` (`YtDlpDownloader.download`, `parse_progress`) | yt-dlp progress and cancel | download a long YouTube source, watch Jobs; press Cancel on it | Jobs shows bytes, speed and time left; Cancel kills yt-dlp and ffmpeg (check Task Manager) |
+| `apps/desktop/src-tauri/src/commands.rs` (`pop_out`, `popout_ready`) | a pop-out opens only once its page has drawn | Review → Pop out, then Edit → Pop out, on the portrait monitor | no blank rectangle; the window shows with the page already drawn (a stuck page still shows after 2 s) |
+| `apps/desktop/src/shell/StatusBar.tsx` | the "Browser shown for N min · hide" reminder | show the browser and leave it for 30 minutes | the segment turns amber and clicking it hides the browser |
+| `apps/desktop/src/lib/tauri.ts` (`toast`) | clicking a toast opens the item | trigger an alert, click the toast | the main window opens on that item, or the toast says where to look (not done: the notification plugin on Windows may not report clicks) |
 
 ## 5. Known gaps and TODOs
 1. Recipes the core calls that don't exist yet (`get_campaign` now exists for both): `vyro|whop.join_campaign`, `.submission_status`, `.earnings` (`core/clipper/marketplaces/browser.py:132`–`:163`), `<platform>.account_health` (`core/clipper/publishing/browser.py:71`) and `x.post_video` (`core/clipper/publishing/base.py:60`, phase 5). Calls fail with a clear `MarketplaceError` until they exist. All 9 shipped recipes are UNVERIFIED (`apps/extension/recipes/*.json`).
@@ -193,10 +200,15 @@ just build                      # desktop web build + extension into apps/extens
 5. Core sidecar packaging not built (`apps/desktop/src-tauri/binaries/README.md`); the installer is untested.
 6. Payout dates not tracked: Earnings shows the payout delay as unknown (`core/clipper/api/views.py:1309`) until an `earnings` recipe exists.
 7. Discord `#published` posts once on `post.live` and is not updated with view counts (`apps/bot/clipper_bot/relay.py:101`).
-8. Agents → Fork is disabled (`apps/desktop/src/screens/AgentsScreen.tsx:168`).
+8. Agents → Fork is gone from the Context pane (it was disabled); Resume went too, Nudge covers it.
 9. Active-speaker detection (PLAN §18.2) is not built; reframing uses the largest face (`core/clipper/media/faces.py`, `core/clipper/media/reframe.py`).
 10. GPU time is not metered (only live utilization in the status bar).
 11. Library grid is not virtualized (`apps/desktop/src/screens/LibraryScreen.tsx`); fine for a few thousand clips.
+12. From the Needs you / nudge / footage / scrap work (`docs/plans/needs-you-nudge-links.md` has the detail):
+    - Footage: no list of the video links inside a Google Doc source, no "Open in Clipper browser" for source links (`/api/browser/open` only opens sites Clipper works with), no dimming of every zone while you drag, no confirm for a file dropped outside any zone, no aspect-ratio warning, and a refused drop-folder file is one alert (shown once), not a footage item.
+    - Scrap: the Review screen and the campaign drawer have no Scrap button yet (the Library has).
+    - Stalls: `recipe_stuck` means "a post has been uploading for 10 minutes" (nothing records a recipe in flight); the face-tracking ffmpeg and the OCR calls aren't cancellable with a job.
+    - The tray tooltip doesn't show the Needs you count (Rust change); the Overview campaigns table has no right-click Nudge (the Campaigns grid has).
 
 ## 6. Decisions and deviations from PLAN.md / UI.md
 - Job queue: a durable `job` table + in-process worker threads instead of Huey. Heavy work already runs in subprocesses (ffmpeg, yt-dlp, WhisperX), and in-process jobs reach the supervisor's event bus without cross-process plumbing. Limits as PLAN §17.3 (1 transcribe, 3 encodes, 2 downloads).
@@ -213,6 +225,11 @@ just build                      # desktop web build + extension into apps/extens
 - Each Clipper Chrome profile is its own `--user-data-dir` under `paths.chrome_profiles_dir` (plain Chrome, no automation or fingerprint flags).
 - Discord: persistent components use discord.py `DynamicItem` on stable custom_ids; the bot keeps no state (message ids live in `discord_ref`). Switching off from Discord uses the gentle defaults (finish active campaigns, keep scheduled posts); the app's dialog offers the other choices.
 - UI fixture mode is a static export instead of a running fixture core, so Playwright and `dev:fixtures` need no Python.
+- Needs you items are computed on every read from the tables (nothing is stored per item); the `attention` table only remembers what you snoozed or dismissed. Keys are stable (`question:6`, `footage:5`, `stuck:job_stalled:2`), and addresses use dashes (`stuck-job_stalled-2`).
+- Agents see at most 25 tools: the campaign agent gained `media.need_footage`, so `state.get_clip` moved to its subagents (editor, qa-checker, copywriter).
+- Scrapping a clip never deletes its files at once: they go after `retention.scrapped_clip_days` (7), and a scrapped clip can't be approved, scheduled, posted or edited (checked in the guard, in `schedule_post`, in `run_due`, in the EDL service and in the renders).
+- Footage you supply is copied in as an `import` job with progress (move optional); a file shorter than the campaign's minimum clip is shown back before it is used.
+- A nudge is only an event and a resume; it goes through every guard like any other turn. Automatic checks (restart a hung turn, retry a stalled job) stop after `stalls.max_auto_nudges` and tell you once.
 - The bot does not replay history on restart: it starts at the newest event and re-posts only waiting work (open batches, suggested campaigns, open questions).
 
 ## 7. Interfaces the local side must implement or finish

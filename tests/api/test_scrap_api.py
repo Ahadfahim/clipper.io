@@ -77,3 +77,13 @@ def test_limits(client: TestClient) -> None:
     assert client.post("/api/clips/scrap", json={"clip_ids": []}).status_code == 422
     assert client.post("/api/clips/scrap", json={"clip_ids": list(range(501))}).status_code == 422
     assert client.post("/api/clips/scrap/preview", json={"clip_ids": [99999]}).json()["scrappable"] == 0
+
+
+def test_the_navigation_count_matches_what_the_library_lists(client: TestClient) -> None:
+    listed = len(_clips(client))
+    assert client.get("/api/status").json()["library_count"] == listed
+    cid = next(c["id"] for c in _clips(client) if c["status"] in ("ready", "in_review"))
+    assert client.post("/api/clips/scrap", json={"clip_ids": [cid]}).status_code == 200
+    assert client.get("/api/status").json()["library_count"] == listed - 1
+    assert client.post("/api/clips/restore", json={"clip_ids": [cid]}).status_code == 200
+    assert client.get("/api/status").json()["library_count"] == listed

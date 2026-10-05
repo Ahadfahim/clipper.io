@@ -1,5 +1,6 @@
 import { createRootRoute, createRoute, createRouter, Outlet, redirect, type RouterHistory } from "@tanstack/react-router";
 import { AppShell } from "@/shell/AppShell";
+import { PopoutShell } from "@/shell/PopoutShell";
 import { AgentsScreen } from "@/screens/AgentsScreen";
 import { CampaignsScreen } from "@/screens/CampaignsScreen";
 import { ClipDetailScreen } from "@/screens/ClipDetailScreen";
@@ -95,9 +96,21 @@ const gallery = createRoute({ getParentRoute: () => root, path: "/dev/gallery", 
 const popReview = createRoute({
   getParentRoute: () => root,
   path: "/popout/review/$batchId",
-  component: () => <ReviewScreen popout />,
+  component: () => (
+    <PopoutShell>
+      <ReviewScreen popout />
+    </PopoutShell>
+  ),
 });
-const popEdit = createRoute({ getParentRoute: () => root, path: "/popout/edit/$clipId", component: () => <EditScreen popout /> });
+const popEdit = createRoute({
+  getParentRoute: () => root,
+  path: "/popout/edit/$clipId",
+  component: () => (
+    <PopoutShell>
+      <EditScreen popout />
+    </PopoutShell>
+  ),
+});
 const notFound = createRoute({
   getParentRoute: () => root,
   path: "$",

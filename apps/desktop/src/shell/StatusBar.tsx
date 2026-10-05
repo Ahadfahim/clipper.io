@@ -11,6 +11,9 @@ import { Dot, type StatusTone } from "@/components/ui/status";
 import { UsageMeter } from "@/components/domain/meters";
 import { useUi } from "@/state/ui";
 
+/** How long Clipper's Chrome can sit on a monitor before the status bar says so (7.17). */
+export const FORGOTTEN_BROWSER_S = 30 * 60;
+
 function Seg({ tone, children, onClick, title }: { tone: StatusTone; children: ReactNode; onClick?: () => void; title?: string }) {
   const body = (
     <>
@@ -39,6 +42,8 @@ export function StatusBar() {
   const browser = useBrowserWindow();
   if (!s) return <footer className="h-6 shrink-0 border-t border-line bg-chrome" />;
   const mainBrowser = s.browser.find((b) => b.name === "main");
+  // a window that was shown to log in or to watch and then forgotten sits on a monitor for hours
+  const forgotten = mainBrowser?.visible === true && (mainBrowser.shown_for_s ?? 0) >= FORGOTTEN_BROWSER_S;
   const c = s.control;
   const run: { tone: StatusTone; text: string } = c.kill_switch
     ? { tone: "bad", text: "Stopped" }
@@ -90,11 +95,11 @@ export function StatusBar() {
       </Popover>
       {mainBrowser && (
         <Seg
-          tone={!mainBrowser.running ? "warn" : mainBrowser.visible ? "accent" : "muted"}
+          tone={!mainBrowser.running ? "warn" : forgotten ? "warn" : mainBrowser.visible ? "accent" : "muted"}
           onClick={() => browser.mutate({ profile: "main", action: "toggle" })}
-          title="Clipper's own Chrome · click to show or hide it (Ctrl+Shift+B)"
+          title={forgotten ? "Clipper's own Chrome has been showing for a while. Click to hide it (Ctrl+Shift+B)" : "Clipper's own Chrome · click to show or hide it (Ctrl+Shift+B)"}
         >
-          Browser {!mainBrowser.running ? "not running" : mainBrowser.visible ? "shown" : "hidden"}
+          Browser {!mainBrowser.running ? "not running" : forgotten ? `shown for ${Math.round((mainBrowser.shown_for_s ?? 0) / 60)} min · hide` : mainBrowser.visible ? "shown" : "hidden"}
         </Seg>
       )}
       <Seg tone={s.extension_profiles.length ? "ok" : "warn"} onClick={() => ui.openSettings("browser")} title="Chrome profiles with the Companion extension">

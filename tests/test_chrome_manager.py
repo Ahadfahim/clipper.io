@@ -281,3 +281,16 @@ def test_opening_a_page_starts_a_chrome_that_isnt_running(
     mgr, ops = chrome
     state = mgr.open_url("main", "https://app.vyro.com/campaigns")
     assert state.running and state.visible and len(ops.launched) == 2  # Chrome, then the page
+
+
+def test_how_long_the_window_has_been_showing(settings: Settings) -> None:
+    now = [1000.0]
+    ops = FakeWindowOps()
+    mgr = ChromeManager(settings, ops, clock=lambda: now[0])
+    assert mgr.show("main").shown_for_s == 0
+    now[0] += 31 * 60
+    mgr.tick()
+    assert next(s for s in mgr.states() if s.name == "main").shown_for_s == 31 * 60
+    assert mgr.hide("main").shown_for_s is None  # hidden: the clock stops
+    now[0] += 10
+    assert mgr.show("main").shown_for_s == 0  # shown again: it starts over
