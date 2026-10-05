@@ -18,7 +18,7 @@ from clipper.db.models import Attention, Event, Job, ReviewBatch
 from clipper.events.types import AttentionChanged, UserChat
 from clipper.services.base import Service, ServiceError
 
-KEY = re.compile(r"^(?:(?:challenge|question|review|campaign|alert):\d+|failure:job:\d+)$")
+KEY = re.compile(r"^(?:(?:challenge|question|join|review|campaign|alert):\d+|failure:job:\d+)$")
 # Only these can be dismissed. A question, a blocked account or a review that is waiting for you would
 # stay unanswered if it vanished, and an agent or a posting schedule would wait on it silently.
 DISMISSABLE = ("alert", "failure")
@@ -105,7 +105,7 @@ class AttentionService(Service):
         kind, _, rest = key.partition(":")
         ident = int(rest.rsplit(":", 1)[-1])
         with self.db.read() as s:
-            if kind == "campaign":
+            if kind in ("campaign", "join"):
                 return ident
             if kind == "review":
                 batch = s.get(ReviewBatch, ident)

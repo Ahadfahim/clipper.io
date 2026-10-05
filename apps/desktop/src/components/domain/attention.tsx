@@ -1,4 +1,4 @@
-import { ChevronDown16Regular, ChevronRight16Regular } from "@fluentui/react-icons";
+import { ChevronDown16Regular, ChevronRight16Regular, LinkSquare16Regular } from "@fluentui/react-icons";
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useDismiss, useReply, useSnooze } from "@/api/actions";
 import { useManifest, useNeedsYouDetail } from "@/api/queries";
@@ -11,17 +11,19 @@ import { cn } from "@/lib/cn";
 import { clock, relative } from "@/lib/format";
 import { age, inlineActions, snoozeLabel, type NeedsAction, type NeedsItem } from "@/lib/needsYou";
 import { nowMs } from "@/lib/now";
+import { openMarketplace } from "@/lib/tauri";
 
 const KIND: Record<NeedsItem["kind"], { label: string; tone: StatusTone }> = {
   challenge: { label: "Blocked", tone: "bad" },
   question: { label: "Question", tone: "agent" },
+  join: { label: "Join", tone: "accent" },
   review: { label: "Review", tone: "warn" },
   campaign: { label: "Campaign", tone: "accent" },
   alert: { label: "Alert", tone: "warn" },
   failure: { label: "Failed", tone: "bad" },
 };
 
-const PRIMARY = new Set(["review", "take", "resume_account", "retry_job"]);
+const PRIMARY = new Set(["review", "take", "resume_account", "retry_job", "open_link"]);
 const SOON_MS = 2 * 3_600_000;
 const REPLY: Record<Schemas["NeedsYouDetail"]["reply_to"], { label: string; placeholder: string; send: string; sent: string }> = {
   question: { label: "Something else", placeholder: "Answer in your own words", send: "Send answer", sent: "Answered." },
@@ -249,6 +251,16 @@ export function NeedsYouPanel({ item, onAction, onClose }: { item: NeedsItem; on
                 ),
               ])}
             />
+          )}
+          {item.links.length > 0 && (
+            <div className="mb-2.5 flex items-center gap-2">
+              <Button size="sm" icon={<LinkSquare16Regular />} onClick={() => void openMarketplace(item.links[0]!)}>
+                {item.links[0]!.label}
+              </Button>
+              <span className="num truncate-1 text-[11px] text-muted" title={item.links[0]!.url}>
+                {item.links[0]!.host}
+              </span>
+            </div>
           )}
           {d.agent && d.agent.messages.length > 0 && (
             <div className="mb-2.5">

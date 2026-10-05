@@ -308,3 +308,92 @@ def test_snoozed_items_are_still_found_by_key(fake_core: Core) -> None:
         assert (
             s.exec(select(Event).where(Event.type == "attention.changed")).one().payload["state"] == "snoozed"
         )
+
+
+def test_a_campaign_you_took_but_must_join_on_the_site_is_a_join_item(fake_core: Core) -> None:
+    core = fake_core
+    camp = make_campaign(
+        core.db,
+        status="needs_user",
+        taken_at=core.clock.now(),
+        marketplace="vyro",
+        title="5 Guys Face Their Crush",
+    )
+    other = make_campaign(core.db, status="needs_user", taken_at=None, title="Paid join ($29)", score=40.0)
+    core.test_clock.advance(timedelta(seconds=1))  # type: ignore[attr-defined]
+    _alert(
+        core,
+        "Campaign 5 Guys Face Their Crush needs you to join it (the user joins this campaign on the site)",
+        source="marketplace",
+        campaign_id=camp.id,
+    )
+    items = {i.key: i for i in needs_you.build(core)}
+    join = items[f"join:{camp.id}"]
+    assert join.kind == "join" and join.title == "Join 5 Guys Face Their Crush on Vyro"
+    assert [a.action for a in join.actions] == ["open_link", "mark_joined", "skip"]
+    assert join.links and join.links[0].host == "app.vyro.com"
+    assert not [k for k in items if k.startswith("alert:")]  # the join item says it already
+    assert f"campaign:{other.id}" in items  # a campaign you haven't taken is still just a pick
+    d = needs_you.detail(core, f"join:{camp.id}")
+    assert d is not None and "press I've joined" in d.body and d.reply_to == "campaign"
+
+
+def test_joining_makes_the_campaign_active_and_wakes_its_agent(fake_core: Core) -> None:
+    core = fake_core
+    camp = make_campaign(core.db, status="needs_user")
+    seen: list[EventEnvelope] = []
+    core.bus.add_listener(seen.append, types=["campaign.joined"])
+    core.campaigns.joined(camp.id or 0)
+    assert core.campaigns.get(camp.id or 0).status == "active"
+    assert f"join:{camp.id}" not in [i.key for i in needs_you.build(core)]
+    specs = route(seen[0], session_of=lambda _s: None, clip_campaign=lambda _c: None)
+    assert [(s.priority, s.role, s.campaign_id) for s in specs] == [(0, "campaign", camp.id)]
+    from clipper.supervisor.messages import describe
+
+    assert "joined campaign" in describe(compact(seen[0]))
+    with pytest.raises(ServiceError, match="isn't waiting for you to join"):
+        core.campaigns.joined(camp.id or 0)
+
+
+def test_skipping_a_campaign_with_live_posts_to_submit_can_keep_submitting(fake_core: Core) -> None:
+    from clipper.db.models import Post
+    from clipper.db.types import CampaignStatus
+    from tests.factories import make_account, make_clip, make_source
+
+    core = fake_core
+    camp = make_campaign(core.db)
+    src = make_source(core.db, camp.id or 0)
+    clip = make_clip(core.db, camp.id or 0, src.id or 0)
+    acct = make_account(core.db)
+
+    def add(tx: WriteTx) -> None:
+        tx.add(
+            Post(
+                clip_id=clip.id or 0,
+                account_id=acct.id or 0,
+                campaign_id=camp.id,
+                platform="youtube",
+                scheduled_at=core.clock.now(),
+                status="live",
+                url="https://youtube.com/shorts/x",
+            )
+        )
+
+    core.db.write(add)
+    assert core.campaigns.unsubmitted_posts(camp.id or 0) == 1
+    assert core.campaigns.skip(camp.id or 0, keep_submitting=True) == CampaignStatus.ENDING
+    assert core.campaigns.get(camp.id or 0).status == "ending"
+    assert core.campaigns.skip(camp.id or 0) == CampaignStatus.SKIPPED
+    other = make_campaign(core.db, external_id="two")
+    assert (
+        core.campaigns.skip(other.id or 0, keep_submitting=True) == CampaignStatus.SKIPPED
+    )  # nothing to finish
+
+
+def test_link_status_follows_what_the_page_did_when_read(fake_core: Core) -> None:
+    core = fake_core
+    camp = make_campaign(core.db)
+    assert core.campaigns.get(camp.id or 0).link_status == "unknown"
+    core.campaigns.set_link_status(camp.id or 0, "unavailable")
+    row = core.campaigns.get(camp.id or 0)
+    assert row.link_status == "unavailable" and row.link_checked_at is not None

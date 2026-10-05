@@ -219,3 +219,65 @@ def test_a_window_mostly_off_screen_is_moved_back() -> None:
     assert fit_on_monitor((-300, 50, 1080, 1372), work) is None  # most of it visible
     assert fit_on_monitor((-1000, -900, 1080, 1372), work) == (740, 14, 1080, 1372)  # mostly gone: centred
     assert fit_on_monitor((5000, 0, 3000, 2000), work) == (0, 0, 2560, 1400)  # too big: shrunk to fit
+
+
+# ---------------------------------------------------------------- opening a page for you
+
+
+def test_a_page_opened_for_you_is_the_only_window_that_shows(
+    chrome: tuple[ChromeManager, FakeWindowOps],
+) -> None:
+    mgr, ops = chrome
+    pid = mgr.ensure_running("main")
+    mgr.hide("main")
+    mgr.tick()
+    state = mgr.open_url("main", "https://app.vyro.com/campaigns?c=cinematic-edits")
+    assert state.visible
+    mine = [h for h in ops.windows(pid) if ops.visible(h)]
+    assert len(mine) == 1 and mine == ops.shows[-1:]  # the new window, shown and raised
+    assert [h for h in ops.windows(pid) if not ops.visible(h)]  # the rest of the profile stays hidden
+    mgr.tick()
+    assert ops.visible(mine[0])  # the loop that keeps the profile hidden leaves your window alone
+    assert "--new-window" in ops.launched[-1] and ops.launched[-1][-1].startswith("https://app.vyro.com")
+    popup = ops.open_window(pid, 7)  # a site's popup is still hidden
+    assert not ops.visible(popup)
+    mgr.hide("main")  # Hide browser takes every window away, yours included
+    assert not any(ops.visible(h) for h in ops.windows(pid))
+
+
+def test_a_closed_page_window_is_forgotten(chrome: tuple[ChromeManager, FakeWindowOps]) -> None:
+    mgr, ops = chrome
+    pid = mgr.ensure_running("main")
+    mgr.hide("main")
+    mgr.open_url("main", "https://whop.com/discover")
+    (mine,) = [h for h in ops.windows(pid) if ops.visible(h)]
+    del ops.shown[mine]  # you closed it
+    mgr.tick()
+    assert mgr._opened["main"] == set()  # pyright: ignore[reportPrivateUsage]
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "http://app.vyro.com/campaigns",  # not https
+        "https://evil.example/app.vyro.com",
+        "https://vyro.com.evil.example/",
+        "file:///C:/Windows/System32/calc.exe",
+        "javascript:alert(1)",
+    ],
+)
+def test_only_sites_clipper_works_with_can_be_opened(
+    chrome: tuple[ChromeManager, FakeWindowOps], url: str
+) -> None:
+    mgr, ops = chrome
+    with pytest.raises(ValueError, match="marketplace and platform"):
+        mgr.open_url("main", url)
+    assert ops.launched == []
+
+
+def test_opening_a_page_starts_a_chrome_that_isnt_running(
+    chrome: tuple[ChromeManager, FakeWindowOps],
+) -> None:
+    mgr, ops = chrome
+    state = mgr.open_url("main", "https://app.vyro.com/campaigns")
+    assert state.running and state.visible and len(ops.launched) == 2  # Chrome, then the page

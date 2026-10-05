@@ -128,6 +128,8 @@ min_cpm = 0.5
 include_ugc = false        # UGC needs on-camera content we don't make
 auto_join_free = true      # paid joins are never automatic
 use_bounty_api = false
+# the Content Rewards app inside your Whop community; campaign links open it at the campaign
+app_url = "https://b4e0vdqv6zgqeqj4pfgm.apps.whop.com/c/exp_zeADOv9rOOKk2x"
 
 [scout]
 mode = "suggest"           # suggest | auto
@@ -208,3 +210,4 @@ nightly_backup_at = "03:30"
 theme = "system"           # system | light | dark
 density = "compact"        # compact | comfortable
 # accent = "#0067c0"       # default: follow the Windows accent color
+open_marketplace_links_in = "clipper"   # clipper (logged-in browser) | default (your own browser)

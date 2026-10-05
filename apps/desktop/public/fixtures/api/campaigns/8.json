@@ -11,6 +11,14 @@
   "disabled_reason": null,
   "earned": 0.0,
   "id": 8,
+  "link": {
+   "host": "whop.com",
+   "kind": "marketplace",
+   "label": "Open Whop's campaigns",
+   "open_in": "clipper",
+   "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x"
+  },
+  "link_status": "unknown",
   "marketplace": "whop",
   "matching_accounts": [],
   "platforms": [

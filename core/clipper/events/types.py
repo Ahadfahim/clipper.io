@@ -65,6 +65,17 @@ class CampaignSkipped(EventPayload):
     via: str = "dashboard"
 
 
+class CampaignJoined(EventPayload):
+    """You joined the campaign on the marketplace's site (Clipper can't join most of them itself)."""
+
+    TYPE = "campaign.joined"
+    ENTITY = "campaign"
+    ENTITY_FIELD = "campaign_id"
+    campaign_id: int
+    by: str = "user"
+    via: str = "dashboard"
+
+
 class CampaignUpdated(EventPayload):
     TYPE = "campaign.updated"
     ENTITY = "campaign"

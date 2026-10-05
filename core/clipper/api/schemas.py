@@ -265,7 +265,7 @@ class Link(M):
 
 
 class NeedsYouItem(M):
-    kind: Literal["challenge", "question", "review", "campaign", "alert", "failure"]
+    kind: Literal["challenge", "question", "join", "review", "campaign", "alert", "failure"]
     urgency: int
     title: str
     detail: str
@@ -362,6 +362,7 @@ class ActiveCampaign(M):
     budget_total: float | None
     runs_out_at: datetime | None
     deadline: datetime | None
+    link: Link | None = None
 
 
 class UpcomingPost(M):
@@ -519,6 +520,8 @@ class CampaignRow(M):
     clips_posted: int
     earned: float
     disabled_reason: str | None
+    link: Link | None = None  # this campaign's page on its marketplace
+    link_status: str = "unknown"  # ok | unavailable | unknown: did the page open when last read
 
 
 class SourceOut(M):
@@ -530,6 +533,15 @@ class SourceOut(M):
     heatmap: list[float]
     path: str | None = None
     drop_folder: str | None = None  # put footage you downloaded yourself here; Clipper attaches it
+
+
+class SkipPreview(M):
+    live_unsubmitted: int  # live posts not yet submitted to the marketplace
+
+
+class OpenUrlIn(BaseModel):
+    url: str = Field(min_length=8, max_length=2000)
+    profile: str = "main"
 
 
 class AttachFileIn(BaseModel):
@@ -623,6 +635,7 @@ class ClipDetail(M):
     variants: list[ClipRow]
     transcript: list[WordOut]
     signals: dict[str, Any]
+    campaign_link: Link | None = None
 
 
 class BatchRow(M):

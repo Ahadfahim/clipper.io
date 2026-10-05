@@ -351,6 +351,16 @@
       "title": "Id",
       "type": "integer"
      },
+     "link": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Link"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "marketplace": {
       "title": "Marketplace",
       "type": "string"
@@ -392,7 +402,8 @@
      "budget_left",
      "budget_total",
      "runs_out_at",
-     "deadline"
+     "deadline",
+     "link"
     ],
     "title": "ActiveCampaign",
     "type": "object"
@@ -1213,6 +1224,21 @@
       "title": "Id",
       "type": "integer"
      },
+     "link": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Link"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "link_status": {
+      "default": "unknown",
+      "title": "Link Status",
+      "type": "string"
+     },
      "marketplace": {
       "title": "Marketplace",
       "type": "string"
@@ -1281,7 +1307,9 @@
      "matching_accounts",
      "clips_posted",
      "earned",
-     "disabled_reason"
+     "disabled_reason",
+     "link",
+     "link_status"
     ],
     "title": "CampaignRow",
     "type": "object"
@@ -1373,6 +1401,16 @@
    },
    "ClipDetail": {
     "properties": {
+     "campaign_link": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Link"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "clip": {
       "$ref": "#/components/schemas/ClipRow"
      },
@@ -1468,7 +1506,8 @@
      "posts",
      "variants",
      "transcript",
-     "signals"
+     "signals",
+     "campaign_link"
     ],
     "title": "ClipDetail",
     "type": "object"
@@ -3235,6 +3274,7 @@
       "enum": [
        "challenge",
        "question",
+       "join",
        "review",
        "campaign",
        "alert",
@@ -3461,6 +3501,26 @@
      "detail"
     ],
     "title": "OkOut",
+    "type": "object"
+   },
+   "OpenUrlIn": {
+    "properties": {
+     "profile": {
+      "default": "main",
+      "title": "Profile",
+      "type": "string"
+     },
+     "url": {
+      "maxLength": 2000,
+      "minLength": 8,
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "url"
+    ],
+    "title": "OpenUrlIn",
     "type": "object"
    },
    "OverviewOut": {
@@ -4793,6 +4853,19 @@
      }
     },
     "title": "ShipIn",
+    "type": "object"
+   },
+   "SkipPreview": {
+    "properties": {
+     "live_unsubmitted": {
+      "title": "Live Unsubmitted",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "live_unsubmitted"
+    ],
+    "title": "SkipPreview",
     "type": "object"
    },
    "SlotOut": {
@@ -6229,6 +6302,48 @@
     ]
    }
   },
+  "/api/browser/open": {
+   "post": {
+    "description": "Open a marketplace or platform page in Clipper's own Chrome (the logged-in one), in a window of\nits own. Only https pages on the sites Clipper works with.",
+    "operationId": "browser_open_api_browser_open_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/OpenUrlIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/BrowserProfileOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Browser Open",
+    "tags": [
+     "system"
+    ]
+   }
+  },
   "/api/browser/profiles": {
    "get": {
     "operationId": "browser_profiles_api_browser_profiles_get",
@@ -6565,6 +6680,49 @@
     ]
    }
   },
+  "/api/campaigns/{campaign_id}/joined": {
+   "post": {
+    "description": "You joined the campaign on the marketplace's site: its agent carries on.",
+    "operationId": "joined_api_campaigns__campaign_id__joined_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Joined",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
   "/api/campaigns/{campaign_id}/pause": {
    "post": {
     "operationId": "pause_campaign_api_campaigns__campaign_id__pause_post",
@@ -6609,6 +6767,7 @@
   },
   "/api/campaigns/{campaign_id}/skip": {
    "post": {
+    "description": "Skip a campaign. ``keep_submitting`` lets its agent finish submitting live posts first.",
     "operationId": "skip_api_campaigns__campaign_id__skip_post",
     "parameters": [
      {
@@ -6628,6 +6787,16 @@
        "default": "dashboard",
        "title": "Via",
        "type": "string"
+      }
+     },
+     {
+      "in": "query",
+      "name": "keep_submitting",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Keep Submitting",
+       "type": "boolean"
       }
      }
     ],
@@ -6654,6 +6823,49 @@
      }
     },
     "summary": "Skip",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/{campaign_id}/skip-preview": {
+   "get": {
+    "description": "What skipping would leave undone: live posts that haven't been submitted for payout yet.",
+    "operationId": "skip_preview_api_campaigns__campaign_id__skip_preview_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/SkipPreview"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Skip Preview",
     "tags": [
      "campaigns"
     ]

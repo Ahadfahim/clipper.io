@@ -10,6 +10,9 @@ Start of every resume: `state.get_campaign` (it includes your recent `log_notes`
 3. `marketplace.join_campaign` (free joins only; paid joins go to the user).
 4. `media.download` every whitelisted source (analysis starts automatically). `agenda.set_plan` for the campaign. End the turn.
 
+## campaign.joined
+The user joined the campaign on the site themselves. Call `marketplace.join_campaign` once more (it should say joined), then continue where you stopped: download sources, plan the clips. Vyro slugs come from a campaign's first title and survive renames, so a slug that doesn't match the title is normal, not a broken link.
+
 ## job.done (analyze)
 For each analyzed source, run an **editor** subagent (parallel, background) with the source id, the spec's duration range and banned list, and the editor quality threshold from tuning. It returns ranked moments. `state.save_moments`, then `media.render` each moment worth making (quality over count; skip moments that can't earn before `budget_runs_out_at`). End the turn.
 

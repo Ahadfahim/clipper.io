@@ -131,6 +131,11 @@ test("campaigns: drawer with untrusted brief and spec form", async ({ page }) =>
   await open(page, "/campaigns");
   await page.getByRole("grid", { name: "Campaigns" }).getByText("MrBeast #42 clipping").dblclick();
   const drawer = page.getByRole("complementary", { name: "Campaign detail" });
+  // every campaign links to its page on the marketplace: in the grid, in the drawer header and body
+  await expect(page.getByRole("grid", { name: "Campaigns" }).getByRole("button", { name: /^Open on / }).first()).toBeVisible();
+  await expect(drawer.getByRole("button", { name: /^Open on / }).first()).toBeVisible();
+  await expect(drawer.getByText("Page", { exact: true })).toBeVisible();
+  await expect(drawer.getByRole("button", { name: "Copy link" })).toBeVisible();
   await drawer.getByRole("tab", { name: "Brief" }).click();
   await expect(drawer.getByRole("note")).toContainText("untrusted");
   await drawer.getByRole("tab", { name: "Spec" }).click();

@@ -42,9 +42,13 @@ def campaign_card(
 ) -> tuple[discord.Embed, discord.ui.View]:
     c = detail["campaign"]
     status = str(c.get("status", "suggested"))
+    # the core builds the page's address from the marketplace and the campaign id; the stored URL
+    # came from a scraped page (and for Whop is an inner app address that doesn't open on its own)
+    link = c.get("link") or {}
+    href = link.get("url") or detail.get("url") or None
     e = discord.Embed(
         title=_cut(f"{MARKET_LABEL.get(c['marketplace'], c['marketplace'])} · {c['title']}", 256),
-        url=detail.get("url") or None,
+        url=href,
         colour=GREEN if status == "active" else GRAY if status in ("skipped", "ended") else BLUE,
         description=_cut(reasoning or detail.get("score_reason") or "", 4000) or None,
     )
@@ -77,8 +81,12 @@ def campaign_card(
             disabled=not open_,
         )
     )
-    if detail.get("url"):
-        v.add_item(discord.ui.Button(label="Details", style=discord.ButtonStyle.link, url=detail["url"]))
+    if href:
+        v.add_item(
+            discord.ui.Button(
+                label=_cut(link.get("label") or "Details", 80), style=discord.ButtonStyle.link, url=href
+            )
+        )
     return e, v
 
 

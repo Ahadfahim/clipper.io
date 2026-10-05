@@ -130,6 +130,7 @@
     "min_cpm": 1.0
    },
    "whop": {
+    "app_url": "https://b4e0vdqv6zgqeqj4pfgm.apps.whop.com/c/exp_zeADOv9rOOKk2x",
     "auto_join_free": true,
     "include_ugc": false,
     "min_cpm": 0.5,
@@ -232,6 +233,7 @@
   "ui": {
    "accent": null,
    "density": "compact",
+   "open_marketplace_links_in": "clipper",
    "theme": "system"
   },
   "usage": {

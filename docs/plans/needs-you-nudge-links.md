@@ -1,6 +1,6 @@
 # Plan: Needs you details, nudges, campaign links, and stuck-work fixes
 
-Status: planned 2026-10-04. M0 is implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
+Status: planned 2026-10-04. M0, M1 and M2 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
 
 This plan is for whoever implements it. Read CLAUDE.md first: agents run on the plan login only, safety rules live in code, and UI work follows the routine (frontend-design skill, shadcn MCP, utility style, check dark and light at 1280×800 and 1920×1080).
 
@@ -245,7 +245,7 @@ A nudge is only an event and a resume. It goes through the same guard hooks, app
 - Manual campaigns (pasted URL): the pasted URL, if its host is on the marketplace allowlist (`rules/urls.domain_allowed`).
 - Fallback: the marketplace's campaign list page. Every campaign then has **some** link, and a test enforces that.
 - The read models gain `link: Link`: `CampaignRow`, `CampaignDetail`, `ActiveCampaign`, `NeedsYouItem.campaign_link`, `ClipDetail.campaign_link`, `PostOut.campaign_link`, and the earnings rows.
-- LOCAL-VERIFY: Whop's launch URL accepts a deep `/campaigns/<uuid>` redirect and lands on that campaign while logged in. If it doesn't, link to `/discover` and say "Find the campaign on Whop" in the tooltip.
+- Verified 2026-10-05 in Clipper's logged-in Chrome (read-only probe): Whop's launch URL with a deep `/campaigns/<uuid>` redirect lands on that campaign's page, and a Vyro `?c=<slug>` link opens the campaign's dialog.
 
 ### C2. Open marketplace links in the logged-in Clipper browser
 - `POST /api/browser/open {url, profile?}` → `ChromeManager.open_url(profile, url)`:
@@ -680,8 +680,8 @@ Each milestone ends with `just lint`, `just test`, the e2e run and the screensho
 | What | How | Expected |
 |---|---|---|
 | Chrome shows painted | `just local-verify` (`test_clipper_chrome_show_paints`); manual steps in §5 | never a flat dark window; status bar stays live |
-| Whop deep link | open a Whop campaign's link from the grid | lands on that campaign in the Clipper Chrome |
-| Vyro link | same for Vyro | the campaign dialog opens |
+| Whop deep link | open a Whop campaign's link from the grid | lands on that campaign in the Clipper Chrome (verified by probe on 2026-10-05) |
+| Vyro link | same for Vyro | the campaign dialog opens (verified by probe on 2026-10-05) |
 | File drop | drag a video from Explorer onto a footage item at 100% and 125% scaling, on both monitors | the right zone lights up; import runs with progress |
 | yt-dlp progress | download a long YouTube source | Jobs shows bytes, speed and time left; Cancel kills yt-dlp |
 | Toast click | trigger an alert, click the toast | the main window opens on that item (or the limitation is noted) |

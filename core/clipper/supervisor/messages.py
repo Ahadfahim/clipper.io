@@ -33,6 +33,12 @@ def describe(ev: dict[str, Any]) -> str:
         case "post.live":
             dry = " (dry run: simulated)" if p.get("dry_run") else ""
             return f"Post {p['post_id']} of clip {p['clip_id']} is live on {p['platform']}{dry}: {p['url']}. Submit it."
+        case "campaign.joined":
+            return (
+                f"The user joined campaign {p['campaign_id']} on the marketplace's site. Call "
+                "marketplace.join_campaign once more (it should say already joined), then carry on: "
+                "download the sources and plan the clips."
+            )
         case "campaign.ending":
             return f"Campaign {p['campaign_id']} is ending ({p.get('reason')}). Finish submissions for live posts, then wrap up."
         case "recut.requested":

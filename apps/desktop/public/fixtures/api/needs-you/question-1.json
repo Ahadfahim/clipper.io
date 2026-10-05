@@ -72,7 +72,15 @@
   "dismissable": false,
   "key": "question:1",
   "kind": "question",
-  "links": [],
+  "links": [
+   {
+    "host": "app.vyro.com",
+    "kind": "marketplace",
+    "label": "Open on Vyro",
+    "open_in": "clipper",
+    "url": "https://app.vyro.com/campaigns?c=vyro-4242"
+   }
+  ],
   "options": [
    "Yes",
    "No",

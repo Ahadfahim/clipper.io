@@ -11,6 +11,14 @@
   "disabled_reason": null,
   "earned": 452.26,
   "id": 6,
+  "link": {
+   "host": "app.vyro.com",
+   "kind": "marketplace",
+   "label": "Open on Vyro",
+   "open_in": "clipper",
+   "url": "https://app.vyro.com/campaigns?c=vyro-3001"
+  },
+  "link_status": "unknown",
   "marketplace": "vyro",
   "matching_accounts": [],
   "platforms": [

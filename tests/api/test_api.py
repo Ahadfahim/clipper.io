@@ -305,3 +305,43 @@ def test_browser_probe_runs_read_only_steps_only(client: TestClient) -> None:
     assert [(s["action"], s["ok"]) for s in r.json()] == [("navigate", True), ("outline", True)]
     for refused in ({"action": "click", "selector": "#post"}, {"action": "outline", "up": 99}):
         assert client.post("/api/browser/profiles/main/probe", json={"steps": [refused]}).status_code == 422
+
+
+def test_a_marketplace_page_opens_in_clippers_browser_and_nothing_else_does(client: TestClient) -> None:
+    ok = client.post(
+        "/api/browser/open",
+        json={"url": "https://app.vyro.com/campaigns?c=cinematic-edits", "profile": "main"},
+    )
+    assert ok.status_code == 200 and ok.json()["visible"] is True and ok.json()["running"] is True
+    for bad in (
+        "https://evil.example/",
+        "http://app.vyro.com/",
+        "https://vyro.com.evil.example/",
+        "file:///C:/x",
+    ):
+        res = client.post("/api/browser/open", json={"url": bad})
+        assert res.status_code == 400, bad
+    assert (
+        client.post(
+            "/api/browser/open", json={"url": "https://app.vyro.com/x", "profile": "../x"}
+        ).status_code
+        == 400
+    )
+
+
+def test_every_campaign_row_carries_its_link(client: TestClient) -> None:
+    rows = client.get("/api/campaigns").json()
+    assert rows and all(r["link"]["url"].startswith("https://") and r["link"]["host"] for r in rows)
+    whop = next(r for r in rows if r["marketplace"] == "whop")
+    assert whop["link"]["host"] == "whop.com" and "launch" in whop["link"]["url"]
+    assert all(c["link"] for c in client.get("/api/overview").json()["active_campaigns"])
+
+
+def test_skip_preview_and_joined_answer_sensibly(client: TestClient) -> None:
+    assert (
+        client.get("/api/campaigns/1/skip-preview").json() == {"live_unsubmitted": 0}
+        or client.get("/api/campaigns/1/skip-preview").status_code == 200
+    )
+    assert client.get("/api/campaigns/9999/skip-preview").status_code == 404
+    res = client.post("/api/campaigns/1/joined")
+    assert res.status_code == 400 and "isn't waiting for you to join" in res.json()["detail"]

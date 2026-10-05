@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from sqlmodel import col, func, select
 
 from clipper.api import schemas as S  # noqa: N812
-from clipper.api.views import PLATFORM_NAMES, event_text, file_url
+from clipper.api.views import PLATFORM_NAMES, event_text, file_url, link_out
 from clipper.db.models import (
     Account,
     AgentEvent,
@@ -34,7 +34,7 @@ from clipper.services.attention import DISMISSABLE
 if TYPE_CHECKING:
     from clipper.core import Core
 
-URGENCY = {"challenge": 0, "question": 1, "review": 3, "campaign": 4, "alert": 5, "failure": 6}
+URGENCY = {"challenge": 0, "question": 1, "join": 2, "review": 3, "campaign": 4, "alert": 5, "failure": 6}
 SOON = timedelta(hours=2)  # a review batch that times out within this jumps ahead of campaign picks
 ALERT_AGE = timedelta(days=3)
 FAILURE_AGE = timedelta(days=7)
@@ -42,6 +42,7 @@ MERGE_WINDOW = timedelta(hours=1)
 MAX_ALERTS = 5
 MAX_FAILURES = 5
 SNOOZE_MINUTES = [60, 240, 1440]
+MARKET_NAMES = {"vyro": "Vyro", "whop": "Whop"}
 JOB_LABEL = {
     "download": "Download",
     "analyze": "Analysis",
@@ -69,7 +70,8 @@ def build(core: Core, *, include_hidden: bool = False) -> list[S.NeedsYouItem]:
     hidden: set[str] = set() if include_hidden else core.attention.hidden(now)
     items: list[S.NeedsYouItem] = []
     with core.db.read() as s:
-        titles = {c.id: c.title for c in s.exec(select(Campaign)).all()}
+        camps = {c.id: c for c in s.exec(select(Campaign)).all()}
+        titles = {cid: c.title for cid, c in camps.items()}
         sessions = {a.id: a for a in s.exec(select(AgentSession)).all()}
         paused = list(s.exec(select(Account).where(Account.status == "paused")).all())
         paused_at: dict[str, datetime] = {}
@@ -138,11 +140,37 @@ def build(core: Core, *, include_hidden: bool = False) -> list[S.NeedsYouItem]:
                     actions=[S.NeedsYouAction(label="Review", action="review", args={"batch_id": b.id})],
                 )
             )
+        joining: set[int] = set()  # campaigns you took that Clipper can't join for you
         for c in s.exec(
             select(Campaign)
             .where(col(Campaign.status).in_(["suggested", "needs_user"]))
             .order_by(col(Campaign.score).desc())
         ).all():
+            if c.status == "needs_user" and c.taken_at is not None and c.id is not None:
+                joining.add(c.id)
+                site = MARKET_NAMES.get(c.marketplace, c.marketplace.capitalize())
+                items.append(
+                    S.NeedsYouItem(
+                        kind="join",
+                        urgency=URGENCY["join"],
+                        key=f"join:{c.id}",
+                        title=f"Join {c.title} on {site}",
+                        detail="Clipper can't join this one for you",
+                        campaign_id=c.id,
+                        campaign_title=c.title,
+                        since=c.updated_at,
+                        actions=[
+                            S.NeedsYouAction(
+                                label=f"Open on {site}", action="open_link", args={"campaign_id": c.id}
+                            ),
+                            S.NeedsYouAction(
+                                label="I've joined", action="mark_joined", args={"campaign_id": c.id}
+                            ),
+                            S.NeedsYouAction(label="Skip", action="skip", args={"campaign_id": c.id}),
+                        ],
+                    )
+                )
+                continue
             if c.status == "suggested" and (c.score or 0) < core.settings.scout.min_score_to_post_card:
                 continue
             title = (
@@ -168,14 +196,18 @@ def build(core: Core, *, include_hidden: bool = False) -> list[S.NeedsYouItem]:
                     else [S.NeedsYouAction(label="Open", action="open_campaign", args={"campaign_id": c.id})],
                 )
             )
-        items += _alerts(core, s, now, titles, [a.handle for a in paused])
+        items += _alerts(core, s, now, titles, [a.handle for a in paused], joining)
         items += _failures(core, s, now, titles)
+    for i in items:
+        camp = camps.get(i.campaign_id)
+        if camp is not None:
+            i.links = [link_out(core, camp)]
     visible = [i for i in items if i.key not in hidden]
     return sorted(visible, key=lambda i: (i.urgency, i.since is None, i.since or now, i.key))
 
 
 def _alerts(
-    core: Core, s: Any, now: datetime, titles: dict[int | None, str], paused: list[str]
+    core: Core, s: Any, now: datetime, titles: dict[int | None, str], paused: list[str], joining: set[int]
 ) -> list[S.NeedsYouItem]:
     """Warnings and errors from the last three days, repeats merged, minus what is already shown
     another way (a paused account) or no longer true (a usage limit that has lifted)."""
@@ -191,6 +223,8 @@ def _alerts(
             continue  # the blocked account is listed on its own
         if text.startswith("Claude usage limit reached") and not rate_limited:
             continue
+        if p.get("campaign_id") in joining and "needs you to join" in text:
+            continue  # the join item says it
         groups[(str(p.get("source", "")), p.get("campaign_id"), text)].append(e)
     out: list[S.NeedsYouItem] = []
     for (source, campaign_id, text), events in groups.items():
@@ -362,6 +396,22 @@ def detail(core: Core, key: str) -> S.NeedsYouDetail | None:
                     url = file_url("thumb", r.clip_id, clip.thumb_path if clip else None)
                     if url:
                         thumbs.append(url)
+        elif kind == "join":
+            c = s.get(Campaign, ident)
+            if c is not None:
+                site = MARKET_NAMES.get(c.marketplace, c.marketplace.capitalize())
+                body = (
+                    f"Clipper can't join {site} campaigns for you. Open the campaign, press Join there, then "
+                    "come back and press I've joined: the campaign's agent carries on from there."
+                )
+                facts = [
+                    S.FactRow(label="Marketplace", value=site),
+                    S.FactRow(label="CPM", value=f"${c.cpm:g}"),
+                    S.FactRow(label="Deadline", value="no deadline")
+                    if c.deadline is None
+                    else S.FactRow(label="Deadline", value="", at=c.deadline),
+                    S.FactRow(label="Platforms", value=", ".join(c.platforms) or "any"),
+                ]
         elif kind == "campaign":
             c = s.get(Campaign, ident)
             if c is not None:

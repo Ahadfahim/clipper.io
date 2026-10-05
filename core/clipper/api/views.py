@@ -57,6 +57,14 @@ STAGES = ["Brief", "Sources", "Analyze", "Clips", "Review", "Post", "Submit"]
 PLATFORM_NAMES = {"youtube": "YouTube Shorts", "tiktok": "TikTok", "instagram": "Instagram Reels", "x": "X"}
 
 
+def link_out(core: Core, c: Campaign) -> S.Link:
+    """The campaign's page on its marketplace (never taken from the stored URL: see marketplaces/links.py)."""
+    from clipper.marketplaces.links import campaign_link
+
+    link = campaign_link(c.marketplace, c.external_id, c.url, core.settings)
+    return S.Link(label=link.label, url=link.url, kind=link.kind, host=link.host, open_in=link.open_in)
+
+
 def file_url(kind: str, clip_id: int, path: str | None) -> str | None:
     return f"/api/files/clip/{clip_id}/{kind}" if path else None
 
@@ -338,6 +346,7 @@ def overview(core: Core) -> S.OverviewOut:
                 budget_total=c.budget_total,
                 runs_out_at=c.budget_runs_out_at,
                 deadline=c.deadline,
+                link=link_out(core, c),
             )
             for c in sorted(active, key=lambda c: -(c.score or 0))
         ]
@@ -774,6 +783,8 @@ def campaign_rows(core: Core, *, status: str | None = None, market: str | None =
                 clips_posted=len(cposts),
                 earned=round(sum(metrics[p.id].earnings for p in cposts if p.id in metrics), 2),
                 disabled_reason=disabled,
+                link=link_out(core, c),
+                link_status=c.link_status,
             )
         )
     return rows
@@ -891,6 +902,8 @@ def clip_detail(core: Core, clip_id: int) -> S.ClipDetail | None:
             )
         ).all()
         variant_rows = clip_rows(core, s, [v for v in variants if v.id != clip_id])
+        camp = s.get(Campaign, c.campaign_id) if c.campaign_id is not None else None
+        campaign_link = link_out(core, camp) if camp is not None else None
     words = [
         w
         for w in load_words(analysis.transcript_path if analysis else None)
@@ -925,6 +938,7 @@ def clip_detail(core: Core, clip_id: int) -> S.ClipDetail | None:
         variants=variant_rows,
         transcript=[S.WordOut(t=w["start"], end=w["end"], text=w["text"]) for w in words],
         signals=signals,
+        campaign_link=campaign_link,
     )
 
 

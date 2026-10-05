@@ -20,6 +20,7 @@ from pathlib import Path
 
 from clipper.browser.launch import chrome_command
 from clipper.browser.windows import WindowOps
+from clipper.rules.urls import domain_allowed
 from clipper.settings import Settings
 
 log = logging.getLogger(__name__)
@@ -63,6 +64,8 @@ class ChromeManager:
         self._pids: dict[str, int] = {}
         self._state: dict[str, ProfileState] = {}
         self._watched: dict[str, int] = {}
+        self._claim: dict[str, bool] = {}  # the next new window of this profile is one you asked for
+        self._opened: dict[str, set[int]] = {}  # windows opened for you: they stay visible
         self._hung_since: dict[str, float] = {}
         self._hung_reported: set[str] = set()
         self._ticks = 0
@@ -127,6 +130,7 @@ class ChromeManager:
     def hide(self, profile: str) -> ProfileState:
         with self._lock:
             self._want_hidden[profile] = True
+            self._opened.pop(profile, None)
             pid = self._pid(profile, recheck=True)
             if pid is not None:
                 for hwnd in self.ops.windows(pid):
@@ -137,6 +141,40 @@ class ChromeManager:
         with self._lock:
             state = self._refresh(profile)
             return self.hide(profile) if state.visible else self.show(profile)
+
+    def open_url(self, profile: str, url: str, *, wait_s: float = 8.0) -> ProfileState:
+        """Open a page in this profile's Chrome, in a window of its own that stays visible while the
+        rest of the profile stays hidden. Meant for marketplace and platform pages: the profile is the
+        one that is logged in. Only https addresses on those sites."""
+        allowed = [d for domains in self.settings.browser.domain_allowlist.values() for d in domains]
+        if not url.startswith("https://") or not domain_allowed(url, allowed):
+            raise ValueError("Clipper only opens pages on the marketplace and platform sites")
+        with self._lock:
+            pid = self.ensure_running(profile)
+            before = set(self.ops.windows(pid))
+            self._claim[profile] = True
+        cmd = self.command(profile, url)
+        cmd.insert(len(cmd) - 1, "--new-window")
+        try:
+            self.ops.launch(cmd, hidden=False)  # a running Chrome takes it and opens the window itself
+            deadline = self._clock() + wait_s
+            hwnd: int | None = None
+            while hwnd is None:
+                with self._lock:
+                    fresh = [h for h in self.ops.windows(pid) if h not in before]
+                    opened = self._opened.get(profile, set())
+                    hwnd = next((h for h in fresh if h in opened), fresh[0] if fresh else None)
+                if hwnd is None:
+                    if self._clock() >= deadline:
+                        raise OSError("Chrome didn't open the page")
+                    time.sleep(0.05)
+        finally:
+            with self._lock:
+                self._claim[profile] = False
+        with self._lock:
+            self._opened.setdefault(profile, set()).add(hwnd)
+            self.ops.show(hwnd)
+            return self._refresh(profile)
 
     def restart(self, profile: str) -> ProfileState:
         """Close a Chrome that has stopped responding and start it again the way it was (shown or
@@ -178,9 +216,13 @@ class ChromeManager:
                     self._want_hidden[profile] = self.settings.browser.start_hidden
                     pid = self.ensure_running(profile)
                 self._watch(profile, pid)
+                windows = self.ops.windows(pid)
+                opened = self._opened.get(profile)
+                if opened:
+                    opened &= set(windows)  # you closed some of them
                 if self._want_hidden.get(profile, self.settings.browser.start_hidden):
-                    for hwnd in self.ops.windows(pid):
-                        if self.ops.visible(hwnd):
+                    for hwnd in windows:
+                        if self.ops.visible(hwnd) and hwnd not in (opened or ()):
                             self.ops.hide(hwnd)
                 self._check_hung(profile, pid)
                 self._refresh(profile)
@@ -234,7 +276,17 @@ class ChromeManager:
             return
         self._unwatch(profile)
         self._watched[profile] = pid
-        self.ops.watch(pid, lambda: self._want_hidden.get(profile, self.settings.browser.start_hidden))
+        self.ops.watch(pid, lambda hwnd: self._should_hide(profile, hwnd))
+
+    def _should_hide(self, profile: str, hwnd: int) -> bool:
+        """Asked (from the watcher's thread, so no lock) when a window of the profile appears."""
+        if self._claim.get(profile):  # the window you asked for: keep it, and remember which it is
+            self._claim[profile] = False
+            self._opened.setdefault(profile, set()).add(hwnd)
+            return False
+        if hwnd in self._opened.get(profile, ()):
+            return False
+        return self._want_hidden.get(profile, self.settings.browser.start_hidden)
 
     def _unwatch(self, profile: str) -> None:
         pid = self._watched.pop(profile, None)

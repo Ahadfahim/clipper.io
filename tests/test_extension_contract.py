@@ -241,3 +241,23 @@ def test_vyro_campaigns_at_100_percent_paid_out_have_ended() -> None:
     gone = card_from_row("vyro", {"id": "b", "paid_out_pct": "100", "cpm": "1.00"})
     assert gone.payouts_ended and gone.budget_left == 0
     assert card_from_row("vyro", {"id": "c", "state": "Payouts ended"}).payouts_ended
+
+
+async def test_a_campaign_you_already_joined_by_hand_is_not_asked_about_again() -> None:
+    bridge = FakeBrowserBridge()
+    bridge.recipes["vyro.join_campaign"] = RecipeResult(ok=False, error="unknown recipe vyro.join_campaign")
+    bridge.recipes["vyro.get_campaign"] = RecipeResult(
+        ok=True,
+        data={
+            "campaign": {"title": "5 Guys Face Their Crush", "cpm": "1.00"},
+            "rules_text": "You\u2019ve joined this campaign Kevin Langue 5 Guys Face Their Crush 1d ago",
+            "sources": [],
+        },
+    )
+    res = await RecipeMarketplace("vyro", bridge).join_campaign("5-guys-face-their-crush-4cvTnrw6")
+    assert res.status == "already" and "joined" in res.detail
+    bridge.recipes["vyro.get_campaign"] = RecipeResult(
+        ok=True,
+        data={"campaign": {"title": "x", "cpm": "1.00"}, "rules_text": "Join campaign", "sources": []},
+    )
+    assert (await RecipeMarketplace("vyro", bridge).join_campaign("x")).status == "needs_user"

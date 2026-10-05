@@ -49,7 +49,7 @@ class WindowOps(Protocol):
     def hung(self, hwnd: int) -> bool: ...
     def show(self, hwnd: int) -> None: ...
     def hide(self, hwnd: int) -> None: ...
-    def watch(self, pid: int, should_hide: Callable[[], bool]) -> None: ...
+    def watch(self, pid: int, should_hide: Callable[[int], bool]) -> None: ...
     def unwatch(self, pid: int) -> None: ...
     def kill(self, pid: int) -> None: ...
 
@@ -209,7 +209,7 @@ class _ShowWatcher(threading.Thread):
     """Hides a profile's new windows as soon as Windows reports them (EVENT_OBJECT_SHOW), instead of
     on the next poll. Needs its own message loop: out-of-context hooks are delivered to it."""
 
-    def __init__(self, user32: _User32, pid: int, should_hide: Callable[[], bool]) -> None:
+    def __init__(self, user32: _User32, pid: int, should_hide: Callable[[int], bool]) -> None:
         super().__init__(name=f"clipper-chrome-watch-{pid}", daemon=True)
         self.user32, self.pid, self.should_hide = user32, pid, should_hide
         self._halt = threading.Event()
@@ -229,7 +229,7 @@ class _ShowWatcher(threading.Thread):
                     id_object == OBJID_WINDOW
                     and id_child == 0
                     and hwnd
-                    and self.should_hide()
+                    and self.should_hide(hwnd)
                     and self.user32.is_browser_window(hwnd)
                 ):
                     u.ShowWindow(hwnd, SW_HIDE)
@@ -360,7 +360,7 @@ class Win32WindowOps:  # LOCAL-VERIFY
     def hide(self, hwnd: int) -> None:
         self.user32.u.ShowWindow(hwnd, SW_HIDE)
 
-    def watch(self, pid: int, should_hide: Callable[[], bool]) -> None:
+    def watch(self, pid: int, should_hide: Callable[[int], bool]) -> None:
         self.unwatch(pid)
         watcher = _ShowWatcher(self.user32, pid, should_hide)
         self._watchers[pid] = watcher
@@ -385,7 +385,7 @@ class FakeWindowOps:
     launched_hidden: list[bool] = field(default_factory=lambda: [])
     hung_windows: set[int] = field(default_factory=lambda: set())
     killed: list[int] = field(default_factory=lambda: [])
-    watchers: dict[int, Callable[[], bool]] = field(default_factory=lambda: {})
+    watchers: dict[int, Callable[[int], bool]] = field(default_factory=lambda: {})
     shows: list[int] = field(default_factory=lambda: [])  # hwnds in the order they were shown
     _next: int = 100
 
@@ -393,6 +393,12 @@ class FakeWindowOps:
         self.launched.append(list(cmd))
         self.launched_hidden.append(hidden)
         data_dir = next(a.split("=", 1)[1] for a in cmd if a.startswith("--user-data-dir="))
+        if data_dir.lower() in self.running:
+            # like the real thing: a second launch of a profile that is running hands over to it and
+            # opens a new window there (``--new-window <url>``)
+            pid = self.running[data_dir.lower()]
+            self.open_window(pid, 1 + max((h % 10 for h in self.shown if h // 10 == pid), default=0))
+            return pid
         self._next += 1
         self.running[data_dir.lower()] = self._next
         # a real Chrome can ignore the hidden start flag; a visible launch is shown on purpose
@@ -405,7 +411,7 @@ class FakeWindowOps:
         hwnd = pid * 10 + n
         self.shown[hwnd] = True
         hide = self.watchers.get(pid)
-        if hide is not None and hide():
+        if hide is not None and hide(hwnd):
             self.shown[hwnd] = False
         return hwnd
 
@@ -428,7 +434,7 @@ class FakeWindowOps:
     def hide(self, hwnd: int) -> None:
         self.shown[hwnd] = False
 
-    def watch(self, pid: int, should_hide: Callable[[], bool]) -> None:
+    def watch(self, pid: int, should_hide: Callable[[int], bool]) -> None:
         self.watchers[pid] = should_hide
 
     def unwatch(self, pid: int) -> None:

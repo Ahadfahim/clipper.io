@@ -243,6 +243,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/browser/open": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Browser Open
+         * @description Open a marketplace or platform page in Clipper's own Chrome (the logged-in one), in a window of
+         *     its own. Only https pages on the sites Clipper works with.
+         */
+        post: operations["browser_open_api_browser_open_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/browser/profiles": {
         parameters: {
             query?: never;
@@ -374,6 +395,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/campaigns/{campaign_id}/joined": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Joined
+         * @description You joined the campaign on the marketplace's site: its agent carries on.
+         */
+        post: operations["joined_api_campaigns__campaign_id__joined_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/campaigns/{campaign_id}/pause": {
         parameters: {
             query?: never;
@@ -400,8 +441,31 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Skip */
+        /**
+         * Skip
+         * @description Skip a campaign. ``keep_submitting`` lets its agent finish submitting live posts first.
+         */
         post: operations["skip_api_campaigns__campaign_id__skip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaign_id}/skip-preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Skip Preview
+         * @description What skipping would leave undone: live posts that haven't been submitted for payout yet.
+         */
+        get: operations["skip_preview_api_campaigns__campaign_id__skip_preview_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1750,6 +1814,7 @@ export interface components {
             deadline: string | null;
             /** Id */
             id: number;
+            link: components["schemas"]["Link"] | null;
             /** Marketplace */
             marketplace: string;
             /** Runs Out At */
@@ -2036,6 +2101,12 @@ export interface components {
             earned: number;
             /** Id */
             id: number;
+            link: components["schemas"]["Link"] | null;
+            /**
+             * Link Status
+             * @default unknown
+             */
+            link_status: string;
             /** Marketplace */
             marketplace: string;
             /** Matching Accounts */
@@ -2093,6 +2164,7 @@ export interface components {
         };
         /** ClipDetail */
         ClipDetail: {
+            campaign_link: components["schemas"]["Link"] | null;
             clip: components["schemas"]["ClipRow"];
             /** Payoff */
             payoff: string;
@@ -2734,7 +2806,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "challenge" | "question" | "review" | "campaign" | "alert" | "failure";
+            kind: "challenge" | "question" | "join" | "review" | "campaign" | "alert" | "failure";
             /** Links */
             links: components["schemas"]["Link"][];
             /** Options */
@@ -2800,6 +2872,16 @@ export interface components {
              * @default true
              */
             ok: boolean;
+        };
+        /** OpenUrlIn */
+        OpenUrlIn: {
+            /**
+             * Profile
+             * @default main
+             */
+            profile: string;
+            /** Url */
+            url: string;
         };
         /** OverviewOut */
         OverviewOut: {
@@ -3260,6 +3342,11 @@ export interface components {
              * @enum {string}
              */
             via: "dashboard" | "discord";
+        };
+        /** SkipPreview */
+        SkipPreview: {
+            /** Live Unsubmitted */
+            live_unsubmitted: number;
         };
         /** SlotOut */
         SlotOut: {
@@ -3983,6 +4070,39 @@ export interface operations {
             };
         };
     };
+    browser_open_api_browser_open_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenUrlIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BrowserProfileOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     browser_profiles_api_browser_profiles_get: {
         parameters: {
             query?: never;
@@ -4197,6 +4317,37 @@ export interface operations {
             };
         };
     };
+    joined_api_campaigns__campaign_id__joined_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     pause_campaign_api_campaigns__campaign_id__pause_post: {
         parameters: {
             query?: never;
@@ -4232,6 +4383,7 @@ export interface operations {
         parameters: {
             query?: {
                 via?: string;
+                keep_submitting?: boolean;
             };
             header?: never;
             path: {
@@ -4248,6 +4400,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    skip_preview_api_campaigns__campaign_id__skip_preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SkipPreview"];
                 };
             };
             /** @description Validation Error */

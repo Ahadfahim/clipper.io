@@ -111,3 +111,31 @@ def test_clip_message_embed() -> None:
     assert [o.default for o in select.options] == [True, False]
     _, shipped = render.clip_message(rc, shipped=True)
     assert all(getattr(c, "disabled", False) for c in shipped.children)
+
+
+def test_campaign_card_links_to_the_page_the_core_built() -> None:
+    camp = {
+        "campaign": {
+            "id": 9,
+            "title": "C",
+            "marketplace": "whop",
+            "status": "suggested",
+            "score": 81.0,
+            "cpm": 2.0,
+            "budget_left": None,
+            "deadline": None,
+            "matching_accounts": [],
+            "link": {
+                "label": "Open on Whop",
+                "url": "https://whop.com/core/app/launch/?redirect=x",
+                "host": "whop.com",
+            },
+        },
+        "url": "https://abc.apps.whop.com/c/exp_1/campaigns/u",  # the scraped address, which doesn't open on its own
+    }
+    embed, view = render.campaign_card(camp)
+    assert embed.url == "https://whop.com/core/app/launch/?redirect=x"
+    buttons = [c for c in view.children if isinstance(c, discord.ui.Button) and c.url]
+    assert [(b.label, b.url) for b in buttons] == [
+        ("Open on Whop", "https://whop.com/core/app/launch/?redirect=x")
+    ]

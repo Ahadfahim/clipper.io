@@ -44,6 +44,21 @@ export async function openUrl(url: string): Promise<void> {
   else window.open(url, "_blank", "noopener,noreferrer");
 }
 
+/** Open a marketplace page: in Clipper's own Chrome (the one that is logged in) when the link says so,
+ * in the default browser otherwise, and there too when Clipper's Chrome can't be reached. */
+export async function openMarketplace(link: { url: string; open_in: "clipper" | "default" }): Promise<void> {
+  if (link.open_in === "clipper") {
+    try {
+      const { api } = await import("@/api/client");
+      const res = await api.POST("/api/browser/open", { body: { url: link.url, profile: "main" } });
+      if (!res.error) return;
+    } catch {
+      /* the core isn't reachable: fall back to the default browser */
+    }
+  }
+  await openUrl(link.url);
+}
+
 export async function openPath(path: string): Promise<void> {
   await call("open_path", { path });
 }

@@ -18,13 +18,16 @@ from clipper.db.models import (
     Marketplace,
     Moment,
     Platform,
+    Post,
     Review,
     Source,
+    Submission,
 )
 from clipper.db.types import CampaignStatus
 from clipper.events.types import (
     CampaignEnding,
     CampaignFound,
+    CampaignJoined,
     CampaignSkipped,
     CampaignTaken,
     CampaignUpdated,
@@ -185,13 +188,69 @@ class CampaignService(Service):
 
         self.db.write(job)
 
-    def skip(self, campaign_id: int, *, by: str = "user", via: str = "dashboard") -> None:
-        def job(tx: WriteTx) -> None:
+    def unsubmitted_posts(self, campaign_id: int) -> int:
+        """Live posts of this campaign that haven't been submitted to the marketplace yet: skipping the
+        campaign now would drop what they could earn."""
+        with self.db.read() as s:
+            posts = s.exec(
+                select(Post).where(
+                    Post.campaign_id == campaign_id, Post.status == "live", col(Post.dry_run).is_(False)
+                )
+            ).all()
+            submitted = {
+                x.post_id
+                for x in s.exec(select(Submission).where(Submission.campaign_id == campaign_id)).all()
+            }
+        return sum(1 for p in posts if p.id not in submitted)
+
+    def skip(
+        self, campaign_id: int, *, by: str = "user", via: str = "dashboard", keep_submitting: bool = False
+    ) -> str:
+        """Skip a campaign. With ``keep_submitting`` and live posts still to submit, the campaign winds
+        down instead (its agent finishes the submissions, then ends it). Returns the new status."""
+        pending = self.unsubmitted_posts(campaign_id) if keep_submitting else 0
+
+        def job(tx: WriteTx) -> str:
             row = self._get(tx, campaign_id)
+            if pending:
+                row.status = CampaignStatus.ENDING
+                tx.add(row)
+                tx.publish(CampaignEnding(campaign_id=campaign_id, reason="skipped; finish the submissions"))
+                return CampaignStatus.ENDING
             row.status = CampaignStatus.SKIPPED
             tx.add(row)
             close_questions_tx(tx, campaign_id, "campaign skipped", self.now())
             tx.publish(CampaignSkipped(campaign_id=campaign_id, by=by, via=via))
+            return CampaignStatus.SKIPPED
+
+        return self.db.write(job)
+
+    def joined(self, campaign_id: int, *, by: str = "user", via: str = "dashboard") -> None:
+        """You joined the campaign on the site. It becomes active again and its agent carries on."""
+
+        def job(tx: WriteTx) -> None:
+            row = self._get(tx, campaign_id)
+            if row.status != CampaignStatus.NEEDS_USER:
+                raise ServiceError(
+                    f"campaign {campaign_id} isn't waiting for you to join it (it is {row.status})"
+                )
+            row.status = CampaignStatus.ACTIVE
+            row.taken_at = row.taken_at or self.now()
+            row.updated_at = self.now()
+            tx.add(row)
+            tx.publish(CampaignJoined(campaign_id=campaign_id, by=by, via=via))
+
+        self.db.write(job)
+
+    def set_link_status(self, campaign_id: int, status: str) -> None:
+        """Whether the campaign's page opened the last time we read it (ok | unavailable)."""
+        now = self.now()
+
+        def job(tx: WriteTx) -> None:
+            row = tx.session.get(Campaign, campaign_id)
+            if row is not None and (row.link_status != status or row.link_checked_at is None):
+                row.link_status, row.link_checked_at = status, now
+                tx.add(row)
 
         self.db.write(job)
 

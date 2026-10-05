@@ -12,6 +12,7 @@ import { PlatformTag, Score } from "@/components/domain/badges";
 import { compact, dayTime, duration, money } from "@/lib/format";
 import { useHotkeys } from "@/lib/hotkeys";
 import { openUrl } from "@/lib/tauri";
+import { CampaignLinkButton } from "@/components/domain/links";
 
 /** Clip detail: player with frame stepping; transcript, why this moment, versions, posts (UI.md §3.4). */
 export function ClipDetailScreen() {
@@ -45,6 +46,7 @@ export function ClipDetailScreen() {
         <span className="text-muted">/</span>
         <span className="font-semibold">Clip {c.id}</span>
         <span className="truncate-1 text-muted">· {c.campaign_title}</span>
+        <CampaignLinkButton link={d.campaign_link} />
         <StatusPill status={c.status} />
         <span className="flex-1" />
         <Button icon={<Edit16Regular />} shortcut="E" onClick={() => void navigate({ to: "/edit/$clipId", params: { clipId } })}>

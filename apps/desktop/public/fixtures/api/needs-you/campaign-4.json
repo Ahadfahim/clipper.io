@@ -64,7 +64,15 @@
   "dismissable": false,
   "key": "campaign:4",
   "kind": "campaign",
-  "links": [],
+  "links": [
+   {
+    "host": "app.vyro.com",
+    "kind": "marketplace",
+    "label": "Open on Vyro",
+    "open_in": "clipper",
+    "url": "https://app.vyro.com/campaigns?c=vyro-5150"
+   }
+  ],
   "options": [],
   "since": "2026-10-02T17:00:00Z",
   "timeout_at": null,

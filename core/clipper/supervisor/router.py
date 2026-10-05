@@ -66,6 +66,8 @@ def route(env: EventEnvelope, *, session_of: SessionLookup, clip_campaign: ClipC
         return campaign(P1, p.get("campaign_id"))
     if t == "campaign.ending":
         return campaign(P1, p["campaign_id"])
+    if t == "campaign.joined":
+        return campaign(P0, p["campaign_id"])  # you did what the agent was waiting for
     if t == "recut.requested":
         cid = p.get("campaign_id") or clip_campaign(int(p["clip_id"]))
         return campaign(P0, cid)

@@ -197,6 +197,9 @@ class WhopSettings(_Model):
     include_ugc: bool = False
     auto_join_free: bool = True
     use_bounty_api: bool = False
+    # Content Rewards runs as an app inside a community (here Clipping Culture). Links to a campaign
+    # open this app at the campaign. Another community has another address.
+    app_url: str = "https://b4e0vdqv6zgqeqj4pfgm.apps.whop.com/c/exp_zeADOv9rOOKk2x"
 
 
 class MarketplaceSettings(_Model):
@@ -296,6 +299,9 @@ class UiSettings(_Model):
     theme: Literal["system", "light", "dark"] = "system"
     density: Literal["compact", "comfortable"] = "compact"
     accent: str | None = None  # None = follow Windows accent
+    # Marketplace links open in Clipper's own Chrome (the one that is logged in to Vyro and Whop) or in
+    # your default browser. Links to file hosts (Frame.io, WeTransfer) always use the default one.
+    open_marketplace_links_in: Literal["clipper", "default"] = "clipper"
 
 
 class Settings(_Model):

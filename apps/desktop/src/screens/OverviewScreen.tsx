@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { useAddNote, useAnswer, useDeleteNote, useResumeAccount, useRetryJob, useSkipCampaign, useTakeCampaign } from "@/api/actions";
+import { useAddNote, useAnswer, useDeleteNote, useJoinedCampaign, useResumeAccount, useRetryJob, useTakeCampaign } from "@/api/actions";
 import { useBoard, useOverview, useStatus } from "@/api/queries";
 import type { Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,14 @@ import { TextField } from "@/components/ui/fields";
 import { SectionTitle, TitleRow } from "@/components/ui/misc";
 import { Dot, type StatusTone } from "@/components/ui/status";
 import { NeedsYouList } from "@/components/domain/attention";
+import { CampaignLinkButton, useSkipFlow } from "@/components/domain/links";
 import { AccountChip, MarketBadge } from "@/components/domain/badges";
 import { BudgetBurnBar, KpiTile, RunsOut, StageStepper } from "@/components/domain/meters";
 import { SlotBoard } from "@/components/domain/agents";
 import { cn } from "@/lib/cn";
 import { clock, money, relative, span } from "@/lib/format";
 import { nowMs } from "@/lib/now";
-import { openProfile } from "@/lib/tauri";
+import { openMarketplace, openProfile } from "@/lib/tauri";
 import { useUi } from "@/state/ui";
 
 const HEALTH_TONE: Record<string, StatusTone> = { ok: "ok", warn: "warn", fail: "bad", skip: "off" };
@@ -93,7 +94,10 @@ function CampaignsTable({ rows }: { rows: Schemas["ActiveCampaign"][] }) {
           <span role="cell" className="px-2">
             <MarketBadge market={c.marketplace} />
           </span>
-          <span role="cell" className="truncate-1 px-2">{c.title}</span>
+          <span role="cell" className="flex min-w-0 items-center gap-1 px-2">
+            <span className="truncate-1 min-w-0">{c.title}</span>
+            <CampaignLinkButton link={c.link} />
+          </span>
           <span role="cell" className="px-2">
             <StageStepper stages={c.stages} />
           </span>
@@ -219,14 +223,15 @@ export function OverviewScreen() {
   const navigate = useNavigate();
   const answer = useAnswer();
   const take = useTakeCampaign();
-  const skip = useSkipCampaign();
+  const skipFlow = useSkipFlow();
+  const joined = useJoinedCampaign();
   const resume = useResumeAccount();
   const retryJob = useRetryJob();
   // also rendered by /settings (the dialog opens over Overview), so don't insist on this route's search
   const search = useSearch({ strict: false }) as { item?: string };
   const openItem = search.item ?? null;
 
-  const onAction = (a: Schemas["NeedsYouAction"]) => {
+  const onAction = (a: Schemas["NeedsYouAction"], item: Schemas["NeedsYouItem"]) => {
     const args = a.args ?? {};
     switch (a.action) {
       case "open_profile":
@@ -245,7 +250,13 @@ export function OverviewScreen() {
         take.mutate(Number(args["campaign_id"]));
         break;
       case "skip":
-        skip.mutate(Number(args["campaign_id"]));
+        skipFlow.request(Number(args["campaign_id"]), item.campaign_title ?? undefined);
+        break;
+      case "mark_joined":
+        joined.mutate(Number(args["campaign_id"]));
+        break;
+      case "open_link":
+        if (item.links[0]) void openMarketplace(item.links[0]);
         break;
       case "open_campaign":
         void navigate({ to: "/campaigns", search: { open: Number(args["campaign_id"]) } });
@@ -306,6 +317,7 @@ export function OverviewScreen() {
         <Agenda entries={ov?.agenda ?? []} notes={ov?.notes ?? []} />
       </div>
       <Next24h posts={ov?.upcoming_posts ?? []} />
+      {skipFlow.dialog}
     </div>
   );
 }

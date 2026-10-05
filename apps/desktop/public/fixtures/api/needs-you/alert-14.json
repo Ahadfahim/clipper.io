@@ -45,7 +45,15 @@
   "dismissable": true,
   "key": "alert:14",
   "kind": "alert",
-  "links": [],
+  "links": [
+   {
+    "host": "whop.com",
+    "kind": "marketplace",
+    "label": "Open Whop's campaigns",
+    "open_in": "clipper",
+    "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x"
+   }
+  ],
   "options": [],
   "since": "2026-10-02T17:48:00Z",
   "timeout_at": null,

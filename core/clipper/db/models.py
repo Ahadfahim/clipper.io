@@ -85,6 +85,10 @@ class Campaign(SQLModel, table=True):
     found_at: datetime = _now_dt()
     taken_at: datetime | None = _dt()
     updated_at: datetime = _now_dt()
+    link_status: str = Field(
+        default="unknown", sa_column_kwargs={"server_default": "unknown"}
+    )  # ok | unavailable | unknown
+    link_checked_at: datetime | None = _dt()
 
 
 class Source(SQLModel, table=True):

@@ -45,7 +45,15 @@
   "dismissable": false,
   "key": "review:1",
   "kind": "review",
-  "links": [],
+  "links": [
+   {
+    "host": "app.vyro.com",
+    "kind": "marketplace",
+    "label": "Open on Vyro",
+    "open_in": "clipper",
+    "url": "https://app.vyro.com/campaigns?c=vyro-4242"
+   }
+  ],
   "options": [],
   "since": "2026-10-02T17:10:00Z",
   "timeout_at": "2026-10-02T23:00:00Z",

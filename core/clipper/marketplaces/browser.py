@@ -127,6 +127,10 @@ def card_from_row(market: str, row: dict[str, Any]) -> CampaignCard:
     )
 
 
+# the campaign dialog on Vyro starts with "You've joined this campaign" once you have
+JOINED = re.compile(r"you.ve joined this campaign", re.IGNORECASE)
+
+
 class RecipeMarketplace:
     """Generic recipe-backed adapter; Vyro and Whop differ only in recipe names and profile."""
 
@@ -191,6 +195,12 @@ class RecipeMarketplace:
             return JoinResult("already", "Whop Content Rewards has no join step; submit clips directly")
         res = await self.bridge.run_recipe(self.profile, f"{self.name}.join_campaign", {"id": external_id})
         if not res.ok and (res.error or "").startswith("unknown recipe"):
+            # no join recipe: but the page says whether you already joined (you did it by hand)
+            try:
+                if JOINED.search((await self.get_campaign(external_id)).rules_raw):
+                    return JoinResult("already", "the campaign's page says you have joined")
+            except MarketplaceError:
+                pass
             return JoinResult(
                 "needs_user",
                 f"Clipper can't join on {self.name} yet: the user joins this campaign on the site",

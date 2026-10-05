@@ -481,6 +481,26 @@ def browser_profiles(core: CoreDep) -> list[S.BrowserProfileOut]:
     return views.browser_profiles(core)
 
 
+@system.post("/browser/open", response_model=S.BrowserProfileOut)
+def browser_open(core: CoreDep, body: S.OpenUrlIn) -> S.BrowserProfileOut:
+    """Open a marketplace or platform page in Clipper's own Chrome (the logged-in one), in a window of
+    its own. Only https pages on the sites Clipper works with."""
+    try:
+        state = core.chrome.open_url(body.profile, body.url)
+    except ValueError as exc:
+        raise HTTPException(400, str(exc)) from exc
+    except OSError as exc:
+        raise HTTPException(500, f"couldn't open the page: {exc}") from exc
+    connected = body.profile in core.adapters.browser.connected_profiles()
+    return S.BrowserProfileOut(
+        name=state.name,
+        running=state.running,
+        visible=state.visible,
+        hung=state.hung,
+        extension_connected=connected,
+    )
+
+
 @system.post("/browser/profiles/{profile}/{action}", response_model=S.BrowserProfileOut)
 def browser_window(
     core: CoreDep, profile: str, action: Literal["show", "hide", "toggle", "open", "restart"]
@@ -623,9 +643,33 @@ def take(core: CoreDep, campaign_id: int, via: str = "dashboard") -> S.OkOut:
     return S.OkOut(id=campaign_id)
 
 
+@campaigns.get("/{campaign_id}/skip-preview", response_model=S.SkipPreview)
+def skip_preview(core: CoreDep, campaign_id: int) -> S.SkipPreview:
+    """What skipping would leave undone: live posts that haven't been submitted for payout yet."""
+    try:
+        core.campaigns.get(campaign_id)
+    except ServiceError as exc:
+        raise HTTPException(404, str(exc)) from exc
+    return S.SkipPreview(live_unsubmitted=core.campaigns.unsubmitted_posts(campaign_id))
+
+
 @campaigns.post("/{campaign_id}/skip", response_model=S.OkOut)
-def skip(core: CoreDep, campaign_id: int, via: str = "dashboard") -> S.OkOut:
-    core.campaigns.skip(campaign_id, by="user", via=via)
+def skip(core: CoreDep, campaign_id: int, via: str = "dashboard", keep_submitting: bool = False) -> S.OkOut:
+    """Skip a campaign. ``keep_submitting`` lets its agent finish submitting live posts first."""
+    try:
+        status = core.campaigns.skip(campaign_id, by="user", via=via, keep_submitting=keep_submitting)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(id=campaign_id, detail=status)
+
+
+@campaigns.post("/{campaign_id}/joined", response_model=S.OkOut)
+def joined(core: CoreDep, campaign_id: int) -> S.OkOut:
+    """You joined the campaign on the marketplace's site: its agent carries on."""
+    try:
+        core.campaigns.joined(campaign_id, via="dashboard")
+    except ServiceError as exc:
+        raise _fail(exc) from exc
     return S.OkOut(id=campaign_id)
 
 

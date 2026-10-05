@@ -1,7 +1,7 @@
 import { Dismiss16Regular, LinkSquare16Regular } from "@fluentui/react-icons";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useAttachFile, useManualCampaign, usePauseCampaign, useRetrySource, useSaveSpec, useSkipCampaign, useTakeCampaign } from "@/api/actions";
+import { useAttachFile, useJoinedCampaign, useManualCampaign, usePauseCampaign, useRetrySource, useSaveSpec, useTakeCampaign } from "@/api/actions";
 import { useCampaign, useCampaigns, useClips, useManifest, useSwitches } from "@/api/queries";
 import { fileUrl, type Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,12 @@ import { TabPanel, Tabs } from "@/components/ui/tabs";
 import { MarketBadge, PlatformTag, Score } from "@/components/domain/badges";
 import { BudgetBurnBar, RunsOut } from "@/components/domain/meters";
 import { ClipCard } from "@/components/domain/clip";
+import { CampaignLinkButton, useSkipFlow } from "@/components/domain/links";
 import { UntrustedBanner } from "@/components/domain/switches";
 import { cn } from "@/lib/cn";
 import { clock, compact, cpm, day, duration, money } from "@/lib/format";
 import { MARKET_LABEL, PLATFORM_LABEL, PLATFORM_ORDER } from "@/lib/platforms";
-import { openPath, openUrl } from "@/lib/tauri";
+import { openMarketplace, openPath } from "@/lib/tauri";
 import { useUi } from "@/state/ui";
 
 const NONE: never[] = [];
@@ -118,7 +119,8 @@ function Drawer({ id, onClose }: { id: number; onClose: () => void }) {
   const clips = useClips().data ?? [];
   const manifest = useManifest().data;
   const take = useTakeCampaign();
-  const skip = useSkipCampaign();
+  const skipFlow = useSkipFlow();
+  const joined = useJoinedCampaign();
   const pause = usePauseCampaign();
   const search = useSearch({ from: "/shell/campaigns" });
   const navigate = useNavigate();
@@ -133,6 +135,7 @@ function Drawer({ id, onClose }: { id: number; onClose: () => void }) {
       <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line px-3">
         <MarketBadge market={c.marketplace} />
         <span className="truncate-1 flex-1 font-semibold">{c.title}</span>
+        <CampaignLinkButton link={c.link} status={c.link_status} />
         <StatusPill status={c.status} />
         <button type="button" aria-label="Close detail" onClick={onClose} className="flex size-7 items-center justify-center rounded-[3px] hover:bg-panel-2">
           <Dismiss16Regular />
@@ -154,13 +157,25 @@ function Drawer({ id, onClose }: { id: number; onClose: () => void }) {
       >
         <TabPanel value="overview" className="overflow-auto">
           <div className="flex flex-wrap gap-1.5 p-3">
-            {(c.status === "suggested" || c.status === "needs_user") && (
+            {c.status === "needs_user" ? (
               <>
-                <Button variant="primary" onClick={() => take.mutate(c.id)}>
-                  Take
-                </Button>
-                <Button onClick={() => skip.mutate(c.id)}>Skip</Button>
+                {c.link && (
+                  <Button variant="primary" icon={<LinkSquare16Regular />} onClick={() => void openMarketplace(c.link!)}>
+                    {`${c.link.label} to join`}
+                  </Button>
+                )}
+                <Button onClick={() => joined.mutate(c.id)}>I've joined</Button>
+                <Button onClick={() => skipFlow.request(c.id, c.title)}>Skip</Button>
               </>
+            ) : (
+              c.status === "suggested" && (
+                <>
+                  <Button variant="primary" onClick={() => take.mutate(c.id)}>
+                    Take
+                  </Button>
+                  <Button onClick={() => skipFlow.request(c.id, c.title)}>Skip</Button>
+                </>
+              )
             )}
             {c.status === "active" && <Button onClick={() => pause.mutate(c.id)}>Pause</Button>}
             {c.status === "paused" && (
@@ -168,9 +183,9 @@ function Drawer({ id, onClose }: { id: number; onClose: () => void }) {
                 Resume
               </Button>
             )}
-            {d.url && (
-              <Button icon={<LinkSquare16Regular />} onClick={() => void openUrl(d.url ?? "")}>
-                Open in browser
+            {c.link && c.status !== "needs_user" && (
+              <Button icon={<LinkSquare16Regular />} onClick={() => void openMarketplace(c.link!)}>
+                {c.link.label}
               </Button>
             )}
           </div>
@@ -193,6 +208,17 @@ function Drawer({ id, onClose }: { id: number; onClose: () => void }) {
               ["Budget", <BudgetBurnBar key="b" left={c.budget_left} total={c.budget_total} runsOut={c.runs_out_at} deadline={c.deadline} />],
               ["Runs out", <RunsOut key="r" at={c.runs_out_at} deadline={c.deadline} />],
               ["Deadline", day(c.deadline)],
+              [
+                "Page",
+                c.link ? (
+                  <span key="pg" className="flex items-center gap-2">
+                    <span className="truncate-1 num min-w-0 flex-1 text-[11px]" title={c.link.url}>{c.link.host}</span>
+                    <Button size="sm" onClick={() => void navigator.clipboard?.writeText(c.link!.url)}>Copy link</Button>
+                  </span>
+                ) : (
+                  "—"
+                ),
+              ],
               ["Matching accounts", c.matching_accounts.join(", ") || "none"],
             ]}
           />
@@ -252,6 +278,7 @@ function Drawer({ id, onClose }: { id: number; onClose: () => void }) {
           />
         </TabPanel>
       </Tabs>
+      {skipFlow.dialog}
     </aside>
   );
 }
@@ -405,7 +432,7 @@ export function CampaignsScreen() {
   const switches = useSwitches().data;
   const ui = useUi();
   const take = useTakeCampaign();
-  const skip = useSkipCampaign();
+  const skipFlow = useSkipFlow();
   const pause = usePauseCampaign();
   const [type, setType] = useState<"all" | "clipping" | "ugc">("all");
   const tab: Tab = search.tab ?? (search.open ? (Object.entries(TAB_STATUSES).find(([, s]) => s.includes(rows.find((r) => r.id === search.open)?.status ?? ""))?.[0] as Tab | undefined) ?? ui.campaignTab : ui.campaignTab);
@@ -452,6 +479,13 @@ export function CampaignsScreen() {
         );
       },
     },
+    {
+      id: "link",
+      header: "",
+      size: 32,
+      enableSorting: false,
+      cell: (c) => <CampaignLinkButton link={c.row.original.link} status={c.row.original.link_status} />,
+    },
     { id: "cpm", header: "CPM", accessorKey: "cpm", size: 64, meta: { align: "right", mono: true }, cell: (c) => cpm(c.row.original.cpm) },
     {
       id: "budget",
@@ -468,7 +502,18 @@ export function CampaignsScreen() {
       accessorFn: (r) => r.matching_accounts.join(", "),
       size: 150,
       meta: { flex: 1 },
-      cell: (c) => <span className="text-muted">{c.row.original.matching_accounts.join(", ") || "none match"}</span>,
+      cell: (c) => {
+        const r = c.row.original;
+        const none = r.matching_accounts.length === 0;
+        return (
+          <span
+            className="text-muted"
+            title={none ? `No account fits this campaign: its socials are ${r.platforms.join(", ") || "any"}, and an account needs a niche tag that matches its creator or title. Add or edit accounts in Publishing.` : undefined}
+          >
+            {r.matching_accounts.join(", ") || "none match"}
+          </span>
+        );
+      },
     },
     {
       id: "platforms",
@@ -565,8 +610,10 @@ export function CampaignsScreen() {
               { label: "Open brief", onSelect: () => setSearch({ open: r.id, detail: "brief" }) },
               { label: "Take", onSelect: () => take.mutate(r.id), disabled: r.status === "active" },
               { label: "Pause", onSelect: () => pause.mutate(r.id), disabled: r.status !== "active" },
-              { label: "Skip", onSelect: () => skip.mutate(r.id), disabled: r.status === "skipped" || r.status === "ended" },
+              { label: "Skip", onSelect: () => skipFlow.request(r.id, r.title), disabled: r.status === "skipped" || r.status === "ended" },
               { kind: "separator" },
+              { label: r.link?.label ?? "Open on the marketplace", onSelect: () => r.link && void openMarketplace(r.link), disabled: !r.link },
+              { label: "Copy link", onSelect: () => r.link && void navigator.clipboard?.writeText(r.link.url), disabled: !r.link },
               { label: "Copy title", onSelect: () => void navigator.clipboard?.writeText(r.title) },
             ]}
             className="flex-1"
@@ -576,6 +623,7 @@ export function CampaignsScreen() {
       </div>
       {search.open !== undefined && <Drawer id={search.open} onClose={() => setSearch({ open: undefined, detail: undefined })} />}
       <PasteDialog open={Boolean(search.paste)} onClose={() => setSearch({ paste: undefined })} />
+      {skipFlow.dialog}
     </div>
   );
 }

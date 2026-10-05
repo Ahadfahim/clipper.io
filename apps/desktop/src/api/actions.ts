@@ -165,7 +165,7 @@ export const useCancelRequest = () =>
 function setCampaignStatus(qc: QueryClient, id: number, status: string) {
   qc.setQueryData<Schemas["CampaignRow"][]>(qk.campaigns, (rows) => rows?.map((r) => (r.id === id ? { ...r, status } : r)));
   qc.setQueryData<Schemas["OverviewOut"]>(qk.overview, (o) =>
-    o ? { ...o, needs_you: o.needs_you.filter((n) => !(n.kind === "campaign" && n.actions.some((a) => a.args?.["campaign_id"] === id))) } : o,
+    o ? { ...o, needs_you: o.needs_you.filter((n) => !((n.kind === "campaign" || n.kind === "join") && n.actions.some((a) => a.args?.["campaign_id"] === id))) } : o,
   );
 }
 
@@ -176,11 +176,21 @@ export const useTakeCampaign = () =>
     invalidate: (id) => [qk.campaigns, qk.campaign(id), qk.overview, qk.status],
   });
 
+/** Skip a campaign. `keepSubmitting` lets its agent submit the live posts first (the campaign winds down). */
 export const useSkipCampaign = () =>
   useAction({
-    run: (id: number) => unwrap(api.POST("/api/campaigns/{campaign_id}/skip", { params: { path: { campaign_id: id }, query: { via } } })),
-    optimistic: (id, qc) => setCampaignStatus(qc, id, "skipped"),
-    invalidate: (id) => [qk.campaigns, qk.campaign(id), qk.overview, qk.status],
+    run: (v: { id: number; keepSubmitting: boolean }) =>
+      unwrap(api.POST("/api/campaigns/{campaign_id}/skip", { params: { path: { campaign_id: v.id }, query: { via, keep_submitting: v.keepSubmitting } } })),
+    optimistic: (v, qc) => setCampaignStatus(qc, v.id, v.keepSubmitting ? "ending" : "skipped"),
+    invalidate: (v) => [qk.campaigns, qk.campaign(v.id), qk.overview, qk.status],
+  });
+
+/** You joined the campaign on the marketplace's site: its agent carries on. */
+export const useJoinedCampaign = () =>
+  useAction({
+    run: (id: number) => unwrap(api.POST("/api/campaigns/{campaign_id}/joined", { params: { path: { campaign_id: id } } })),
+    optimistic: (id, qc) => setCampaignStatus(qc, id, "active"),
+    invalidate: (id) => [qk.campaigns, qk.campaign(id), qk.overview, qk.status, qk.needsYouAll],
   });
 
 export const usePauseCampaign = () =>
