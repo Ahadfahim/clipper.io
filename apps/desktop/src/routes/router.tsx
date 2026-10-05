@@ -22,7 +22,13 @@ const str = (v: unknown): string | undefined => (typeof v === "string" && v ? v 
 const root = createRootRoute({ component: Outlet });
 const shell = createRoute({ getParentRoute: () => root, id: "shell", component: AppShell });
 
-const overview = createRoute({ getParentRoute: () => shell, path: "/", component: OverviewScreen });
+const overview = createRoute({
+  getParentRoute: () => shell,
+  path: "/",
+  // ?item=question:6 opens that Needs you item (toasts, the tray and the command box link to it)
+  validateSearch: (s: Record<string, unknown>): { item?: string } => ({ item: str(s["item"]) }),
+  component: OverviewScreen,
+});
 const agents = createRoute({
   getParentRoute: () => shell,
   path: "/agents",

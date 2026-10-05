@@ -428,6 +428,18 @@ class KV(SQLModel, table=True):
     updated_at: datetime = _now_dt()
 
 
+class Attention(SQLModel, table=True):
+    """What you did about a Needs you item: snoozed until a time, or dismissed. The items themselves
+    are computed from the other tables on every read; this row only hides one."""
+
+    key: str = Field(primary_key=True)  # "<kind>:<id>", e.g. "failure:job:2"
+    state: str  # snoozed | dismissed
+    snoozed_until: datetime | None = _dt()
+    note: str | None = None
+    by: str | None = None
+    updated_at: datetime = _now_dt()
+
+
 class DiscordRef(SQLModel, table=True):
     """Where the bot posted something, so it can edit it later (batch summary, previews, cards)."""
 

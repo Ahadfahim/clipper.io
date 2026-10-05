@@ -1,14 +1,16 @@
 import { ChevronDown16Regular } from "@fluentui/react-icons";
+import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef } from "react";
 import { cn } from "@/lib/cn";
 import { clock, relative } from "@/lib/format";
 import { describeEvent, TONE_VAR } from "@/api/describe";
 import { useLive } from "@/api/live";
 import { useRetryJob } from "@/api/actions";
-import { useJobs } from "@/api/queries";
+import { useJobs, useOverview } from "@/api/queries";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/misc";
-import { StatusPill } from "@/components/ui/status";
+import { Dot, StatusPill } from "@/components/ui/status";
+import { age } from "@/lib/needsYou";
 import { useUi, type OutputTab } from "@/state/ui";
 
 function LogRows({ filter }: { filter: (d: ReturnType<typeof describeEvent>) => boolean }) {
@@ -65,20 +67,78 @@ function JobRows() {
   );
 }
 
-const filters: Record<Exclude<OutputTab, "jobs">, (d: ReturnType<typeof describeEvent>) => boolean> = {
+const filters: Record<Exclude<OutputTab, "jobs" | "problems">, (d: ReturnType<typeof describeEvent>) => boolean> = {
   activity: (d) => !d.agentOutput || d.problem,
   agent: (d) => d.agentOutput,
-  problems: (d) => d.problem,
 };
+
+const isBlock = (d: ReturnType<typeof describeEvent>) => d.problem && d.source === "guard";
+const PROBLEM_KINDS = new Set(["challenge", "alert", "failure"]);
+
+/** What is wrong right now: the same unresolved items Overview lists (blocked accounts, alerts, failed
+ * jobs), plus the calls the safety rules blocked. A fixed problem leaves; it doesn't stay in a log. */
+function useProblems() {
+  const items = useOverview().data?.needs_you.filter((i) => PROBLEM_KINDS.has(i.kind)) ?? [];
+  const events = useLive((s) => s.events);
+  const blocks = useMemo(
+    () =>
+      events
+        .map((e) => ({ e, d: describeEvent(e) }))
+        .filter((r) => isBlock(r.d))
+        .reverse(),
+    [events],
+  );
+  return { items, blocks };
+}
+
+function ProblemRows() {
+  const navigate = useNavigate();
+  const { items, blocks } = useProblems();
+  if (!items.length && !blocks.length) return <div className="px-3 py-2 text-muted">No problems.</div>;
+  return (
+    <div className="flex flex-col py-1">
+      {items.map((i) => (
+        <button
+          key={i.key}
+          type="button"
+          onClick={() => void navigate({ to: "/", search: { item: i.key } })}
+          className="flex h-6 items-center gap-3 px-3 text-left hover:bg-panel-2"
+          title="Open it on Overview"
+        >
+          <span className="num w-10 shrink-0 text-muted">{age(i.since)}</span>
+          <span className="flex w-[120px] shrink-0 items-center gap-1.5">
+            <Dot tone={i.kind === "alert" ? "warn" : "bad"} />
+            {i.kind === "challenge" ? "Blocked" : i.kind === "alert" ? "Alert" : "Failed"}
+          </span>
+          <span className="truncate-1 min-w-0 flex-1">{i.title}</span>
+          {i.campaign_title && <span className="truncate-1 max-w-[200px] text-muted">{i.campaign_title}</span>}
+        </button>
+      ))}
+      {blocks.length > 0 && (
+        <div role="log" className="num flex flex-col gap-0.5 px-3 py-1 text-[12px]">
+          {blocks.map(({ e, d }) => (
+            <div key={e.id} className="flex gap-3 whitespace-nowrap">
+              <span className="text-muted">{clock(e.ts)}</span>
+              <span className="w-[120px] shrink-0 truncate-1" style={{ color: TONE_VAR[d.tone] }}>
+                {d.source}
+              </span>
+              <span className="selectable truncate-1 font-ui">{d.text}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /** Docked output panel (Ctrl+J): Activity · Agent output · Jobs · Problems. */
 export function OutputPanel() {
   const tab = useUi((s) => s.outputTab);
   const setTab = useUi((s) => s.setOutputTab);
   const toggle = useUi((s) => s.toggleOutput);
-  const events = useLive((s) => s.events);
   const jobs = useJobs().data ?? [];
-  const problems = useMemo(() => events.filter((e) => describeEvent(e).problem).length, [events]);
+  const { items: problemItems, blocks } = useProblems();
+  const problems = problemItems.length + blocks.length;
   const activeJobs = jobs.filter((j) => j.status === "running" || j.status === "queued").length;
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -111,7 +171,7 @@ export function OutputPanel() {
         </button>
       </div>
       <div ref={scroller} role="tabpanel" className="min-h-0 flex-1 overflow-auto">
-        {tab === "jobs" ? <JobRows /> : <LogRows filter={filters[tab]} />}
+        {tab === "jobs" ? <JobRows /> : tab === "problems" ? <ProblemRows /> : <LogRows filter={filters[tab]} />}
       </div>
     </section>
   );

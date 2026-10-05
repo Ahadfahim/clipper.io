@@ -1,6 +1,6 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { useAddNote, useAnswer, useDeleteNote, useResumeAccount, useSkipCampaign, useTakeCampaign } from "@/api/actions";
+import { useAddNote, useAnswer, useDeleteNote, useResumeAccount, useRetryJob, useSkipCampaign, useTakeCampaign } from "@/api/actions";
 import { useBoard, useOverview, useStatus } from "@/api/queries";
 import type { Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -15,21 +15,53 @@ import { cn } from "@/lib/cn";
 import { clock, money, relative, span } from "@/lib/format";
 import { nowMs } from "@/lib/now";
 import { openProfile } from "@/lib/tauri";
+import { useUi } from "@/state/ui";
 
 const HEALTH_TONE: Record<string, StatusTone> = { ok: "ok", warn: "warn", fail: "bad", skip: "off" };
 
+/** What clicking a health row does: open the place where the problem is fixed. */
+function healthFix(name: string): { title: string; run: (ui: ReturnType<typeof useUi.getState>, go: (to: "/agents") => void) => void } | null {
+  const n = name.toLowerCase();
+  if (n.startsWith("extension")) return { title: "Open Chrome profiles", run: (ui) => ui.openSettings("browser") };
+  if (n.startsWith("discord")) return { title: "Open Discord settings", run: (ui) => ui.openSettings("discord") };
+  if (n.startsWith("gpu")) return { title: "Show jobs", run: (ui) => ui.setOutputTab("jobs") };
+  if (n === "vyro" || n.startsWith("whop")) return { title: "Show Clipper's browser to log in", run: () => void openProfile("main") };
+  if (n.startsWith("claude")) return { title: "Open the Agents page", run: (_ui, go) => go("/agents") };
+  if (n.startsWith("disk")) return { title: "Open storage settings", run: (ui) => ui.openSettings("storage") };
+  return null;
+}
+
 function Health({ items }: { items: Schemas["HealthItem"][] }) {
+  const navigate = useNavigate();
   return (
     <section aria-label="Health" className="min-w-[220px] flex-[1_1_220px]">
       <SectionTitle>Health</SectionTitle>
       <ul className="m-0 flex list-none flex-col overflow-hidden rounded-[var(--radius)] border border-line bg-panel p-0">
-        {items.map((h) => (
-          <li key={h.name} className="flex h-7 items-center gap-2 border-b border-line-soft px-2.5 last:border-b-0" title={h.fix || undefined}>
-            <Dot tone={HEALTH_TONE[h.status] ?? "muted"} />
-            <span className="flex-1 truncate-1">{h.name}</span>
-            <span className="truncate-1 text-muted">{h.detail}</span>
-          </li>
-        ))}
+        {items.map((h) => {
+          const fix = healthFix(h.name);
+          const body = (
+            <>
+              <Dot tone={HEALTH_TONE[h.status] ?? "muted"} />
+              <span className="flex-1 truncate-1 text-left">{h.name}</span>
+              <span className="truncate-1 text-muted">{h.detail}</span>
+            </>
+          );
+          return (
+            <li key={h.name} className="border-b border-line-soft last:border-b-0" title={[h.fix, fix?.title].filter(Boolean).join(" · ") || undefined}>
+              {fix ? (
+                <button
+                  type="button"
+                  onClick={() => fix.run(useUi.getState(), (to) => void navigate({ to }))}
+                  className="flex h-7 w-full items-center gap-2 px-2.5 hover:bg-panel-2"
+                >
+                  {body}
+                </button>
+              ) : (
+                <div className="flex h-7 items-center gap-2 px-2.5">{body}</div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
@@ -189,6 +221,10 @@ export function OverviewScreen() {
   const take = useTakeCampaign();
   const skip = useSkipCampaign();
   const resume = useResumeAccount();
+  const retryJob = useRetryJob();
+  // also rendered by /settings (the dialog opens over Overview), so don't insist on this route's search
+  const search = useSearch({ strict: false }) as { item?: string };
+  const openItem = search.item ?? null;
 
   const onAction = (a: Schemas["NeedsYouAction"]) => {
     const args = a.args ?? {};
@@ -213,6 +249,12 @@ export function OverviewScreen() {
         break;
       case "open_campaign":
         void navigate({ to: "/campaigns", search: { open: Number(args["campaign_id"]) } });
+        break;
+      case "open_session":
+        void navigate({ to: "/agents", search: { session: Number(args["session_id"]) } });
+        break;
+      case "retry_job":
+        retryJob.mutate(Number(args["job_id"]));
         break;
       default:
         break;
@@ -245,6 +287,8 @@ export function OverviewScreen() {
           <NeedsYouList
             items={ov?.needs_you ?? []}
             onAction={onAction}
+            openKey={openItem}
+            onOpenKeyChange={(key) => void navigate({ to: "/", search: { item: key ?? undefined }, replace: true })}
             empty={`You're all caught up.${nextScout ? ` Next scout run in ${nextScout}.` : ""}`}
           />
         </section>

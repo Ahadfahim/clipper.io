@@ -25,7 +25,7 @@ const screens: Shot[] = [
   { name: "review", path: "/review/1", ready: "Decisions sync with Discord" },
   { name: "edit", path: "/edit/3", ready: "Your notes" },
   { name: "publishing", path: "/publishing", ready: "Drag a scheduled post" },
-  { name: "publishing-accounts", path: "/publishing?tab=accounts", ready: "Open Chrome window" },
+  { name: "publishing-accounts", path: "/publishing?tab=accounts", ready: "@clipsdaily" },
   { name: "earnings", path: "/earnings", ready: "Earnings per day" },
   { name: "settings", path: "/settings?section=markets", ready: "Socials and accounts" },
   { name: "settings-agents", path: "/settings?section=agents", ready: "Effort and turn limits" },

@@ -564,10 +564,60 @@
     "title": "AgentEventOut",
     "type": "object"
    },
+   "AgentMessage": {
+    "properties": {
+     "text": {
+      "title": "Text",
+      "type": "string"
+     },
+     "ts": {
+      "format": "date-time",
+      "title": "Ts",
+      "type": "string"
+     }
+    },
+    "required": [
+     "ts",
+     "text"
+    ],
+    "title": "AgentMessage",
+    "type": "object"
+   },
+   "AgentSaid": {
+    "properties": {
+     "messages": {
+      "items": {
+       "$ref": "#/components/schemas/AgentMessage"
+      },
+      "title": "Messages",
+      "type": "array"
+     },
+     "role": {
+      "title": "Role",
+      "type": "string"
+     },
+     "session_id": {
+      "title": "Session Id",
+      "type": "integer"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     }
+    },
+    "required": [
+     "session_id",
+     "role",
+     "status",
+     "messages"
+    ],
+    "title": "AgentSaid",
+    "type": "object"
+   },
    "AnswerIn": {
     "properties": {
      "answer": {
-      "maxLength": 500,
+      "maxLength": 2000,
       "minLength": 1,
       "title": "Answer",
       "type": "string"
@@ -576,6 +626,11 @@
       "default": "you",
       "title": "By",
       "type": "string"
+     },
+     "custom": {
+      "default": false,
+      "title": "Custom",
+      "type": "boolean"
      },
      "via": {
       "default": "dashboard",
@@ -1927,6 +1982,24 @@
     "title": "DiscordRefOut",
     "type": "object"
    },
+   "DismissIn": {
+    "properties": {
+     "note": {
+      "anyOf": [
+       {
+        "maxLength": 300,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Note"
+     }
+    },
+    "title": "DismissIn",
+    "type": "object"
+   },
    "EarningsOut": {
     "properties": {
      "by_account": {
@@ -2240,6 +2313,92 @@
     "title": "EventOut",
     "type": "object"
    },
+   "EvidenceOut": {
+    "properties": {
+     "error": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Error"
+     },
+     "raw_tail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Raw Tail"
+     },
+     "screenshot_url": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Screenshot Url"
+     }
+    },
+    "required": [
+     "error",
+     "raw_tail",
+     "screenshot_url"
+    ],
+    "title": "EvidenceOut",
+    "type": "object"
+   },
+   "FactRow": {
+    "properties": {
+     "at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "At"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "link": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/Link"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "value": {
+      "title": "Value",
+      "type": "string"
+     }
+    },
+    "required": [
+     "label",
+     "value",
+     "at",
+     "link"
+    ],
+    "title": "FactRow",
+    "type": "object"
+   },
    "HTTPValidationError": {
     "properties": {
      "detail": {
@@ -2523,6 +2682,51 @@
      "note"
     ],
     "title": "LessonPatch",
+    "type": "object"
+   },
+   "Link": {
+    "description": "A web address with the host shown beside it (the page that sent it is untrusted).",
+    "properties": {
+     "host": {
+      "title": "Host",
+      "type": "string"
+     },
+     "kind": {
+      "enum": [
+       "marketplace",
+       "source",
+       "post",
+       "platform",
+       "doc"
+      ],
+      "title": "Kind",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "open_in": {
+      "enum": [
+       "clipper",
+       "default"
+      ],
+      "title": "Open In",
+      "type": "string"
+     },
+     "url": {
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "label",
+     "url",
+     "kind",
+     "host",
+     "open_in"
+    ],
+    "title": "Link",
     "type": "object"
    },
    "ManualCampaignIn": {
@@ -2896,6 +3100,87 @@
     "title": "NeedsYouAction",
     "type": "object"
    },
+   "NeedsYouDetail": {
+    "properties": {
+     "agent": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/AgentSaid"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "body": {
+      "title": "Body",
+      "type": "string"
+     },
+     "evidence": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/EvidenceOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
+     "facts": {
+      "items": {
+       "$ref": "#/components/schemas/FactRow"
+      },
+      "title": "Facts",
+      "type": "array"
+     },
+     "item": {
+      "$ref": "#/components/schemas/NeedsYouItem"
+     },
+     "reply_to": {
+      "enum": [
+       "question",
+       "campaign",
+       "director"
+      ],
+      "title": "Reply To",
+      "type": "string"
+     },
+     "snooze_options": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Snooze Options",
+      "type": "array"
+     },
+     "thumbs": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Thumbs",
+      "type": "array"
+     },
+     "timeline": {
+      "items": {
+       "$ref": "#/components/schemas/TimelineEntry"
+      },
+      "title": "Timeline",
+      "type": "array"
+     }
+    },
+    "required": [
+     "item",
+     "body",
+     "facts",
+     "agent",
+     "evidence",
+     "thumbs",
+     "timeline",
+     "reply_to",
+     "snooze_options"
+    ],
+    "title": "NeedsYouDetail",
+    "type": "object"
+   },
    "NeedsYouItem": {
     "properties": {
      "actions": {
@@ -2905,8 +3190,45 @@
       "title": "Actions",
       "type": "array"
      },
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "campaign_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Title"
+     },
+     "count": {
+      "default": 1,
+      "title": "Count",
+      "type": "integer"
+     },
      "detail": {
       "title": "Detail",
+      "type": "string"
+     },
+     "dismissable": {
+      "default": false,
+      "title": "Dismissable",
+      "type": "boolean"
+     },
+     "key": {
+      "default": "",
+      "title": "Key",
       "type": "string"
      },
      "kind": {
@@ -2915,10 +3237,49 @@
        "question",
        "review",
        "campaign",
+       "alert",
        "failure"
       ],
       "title": "Kind",
       "type": "string"
+     },
+     "links": {
+      "items": {
+       "$ref": "#/components/schemas/Link"
+      },
+      "title": "Links",
+      "type": "array"
+     },
+     "options": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Options",
+      "type": "array"
+     },
+     "since": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Since"
+     },
+     "timeout_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Timeout At"
      },
      "title": {
       "title": "Title",
@@ -2934,7 +3295,16 @@
      "urgency",
      "title",
      "detail",
-     "actions"
+     "actions",
+     "key",
+     "campaign_id",
+     "campaign_title",
+     "since",
+     "timeout_at",
+     "options",
+     "count",
+     "dismissable",
+     "links"
     ],
     "title": "NeedsYouItem",
     "type": "object"
@@ -4000,6 +4370,60 @@
     "title": "ReplayOut",
     "type": "object"
    },
+   "ReplyIn": {
+    "properties": {
+     "text": {
+      "maxLength": 2000,
+      "minLength": 1,
+      "title": "Text",
+      "type": "string"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "text"
+    ],
+    "title": "ReplyIn",
+    "type": "object"
+   },
+   "ReplyOut": {
+    "properties": {
+     "id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Id"
+     },
+     "routed_to": {
+      "enum": [
+       "question",
+       "campaign",
+       "director"
+      ],
+      "title": "Routed To",
+      "type": "string"
+     }
+    },
+    "required": [
+     "routed_to",
+     "id"
+    ],
+    "title": "ReplyOut",
+    "type": "object"
+   },
    "RescheduleIn": {
     "properties": {
      "scheduled_at": {
@@ -4508,6 +4932,21 @@
      "model"
     ],
     "title": "SlotOut",
+    "type": "object"
+   },
+   "SnoozeIn": {
+    "properties": {
+     "minutes": {
+      "maximum": 10080.0,
+      "minimum": 1.0,
+      "title": "Minutes",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "minutes"
+    ],
+    "title": "SnoozeIn",
     "type": "object"
    },
    "SocialSwitch": {
@@ -7356,6 +7795,274 @@
      }
     },
     "summary": "Job Retry",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/needs-you": {
+   "get": {
+    "description": "Everything waiting on you, most urgent first (what Overview shows).",
+    "operationId": "needs_you_list_api_needs_you_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/NeedsYouItem"
+         },
+         "title": "Response Needs You List Api Needs You Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Needs You List",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/needs-you/{slug}": {
+   "get": {
+    "description": "The full story of one item: all the text, the facts, what the agent said, the evidence.",
+    "operationId": "needs_you_detail_api_needs_you__slug__get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "slug",
+      "required": true,
+      "schema": {
+       "title": "Slug",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/NeedsYouDetail"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Needs You Detail",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/needs-you/{slug}/dismiss": {
+   "post": {
+    "operationId": "needs_you_dismiss_api_needs_you__slug__dismiss_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "slug",
+      "required": true,
+      "schema": {
+       "title": "Slug",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/DismissIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Needs You Dismiss",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/needs-you/{slug}/reopen": {
+   "post": {
+    "operationId": "needs_you_reopen_api_needs_you__slug__reopen_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "slug",
+      "required": true,
+      "schema": {
+       "title": "Slug",
+       "type": "string"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Needs You Reopen",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/needs-you/{slug}/reply": {
+   "post": {
+    "description": "Your own words for an item. A question takes them as its answer; anything else goes to the\ncampaign's agent as a note, or to the Director when no campaign is involved.",
+    "operationId": "needs_you_reply_api_needs_you__slug__reply_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "slug",
+      "required": true,
+      "schema": {
+       "title": "Slug",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ReplyIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ReplyOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Needs You Reply",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/needs-you/{slug}/snooze": {
+   "post": {
+    "operationId": "needs_you_snooze_api_needs_you__slug__snooze_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "slug",
+      "required": true,
+      "schema": {
+       "title": "Slug",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/SnoozeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Needs You Snooze",
     "tags": [
      "system"
     ]

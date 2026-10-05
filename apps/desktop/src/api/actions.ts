@@ -1,6 +1,7 @@
 // Mutations. Every change goes through the core API (same services and guards the agents use).
 import { useMutation, useQueryClient, type QueryClient } from "@tanstack/react-query";
-import { api, unwrap, type Schemas } from "./client";
+import { api, FIXTURE_MODE, unwrap, type Schemas } from "./client";
+import { slugOf } from "@/lib/needsYou";
 import { qk, useAction } from "./queries";
 
 type Via = "dashboard";
@@ -74,7 +75,7 @@ export function useSwitch() {
 export function useAnswer() {
   return useAction({
     run: (v: { questionId: number; answer: string }) =>
-      unwrap(api.POST("/api/questions/{question_id}/answer", { params: { path: { question_id: v.questionId } }, body: { answer: v.answer, by: reviewer, via } })),
+      unwrap(api.POST("/api/questions/{question_id}/answer", { params: { path: { question_id: v.questionId } }, body: { answer: v.answer, by: reviewer, via, custom: false } })),
     optimistic: (v, qc) =>
       qc.setQueryData<Schemas["OverviewOut"]>(qk.overview, (o) =>
         o
@@ -458,5 +459,45 @@ export function useUpdateYtdlp() {
   return useMutation({
     mutationFn: () => unwrap(api.POST("/api/ytdlp/update")),
     onSettled: () => void qc.invalidateQueries({ queryKey: qk.doctor }),
+  });
+}
+
+/* ---------------------------------------------------------------- Needs you */
+
+const withoutItem = (key: string) => (qc: ReturnType<typeof useQueryClient>) =>
+  qc.setQueryData<Schemas["OverviewOut"]>(qk.overview, (o) => (o ? { ...o, needs_you: o.needs_you.filter((n) => n.key !== key) } : o));
+
+/** Your own words for an item: a question's answer, a note for the campaign's agent, or a message to the Director. */
+export function useReply() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { key: string; text: string }) =>
+      unwrap(api.POST("/api/needs-you/{slug}/reply", { params: { path: { slug: slugOf(v.key) } }, body: { text: v.text, via } })),
+    onSuccess: (res, v) => {
+      if (res.routed_to === "question") withoutItem(v.key)(qc); // answered: it is no longer waiting
+    },
+    onSettled: () => {
+      if (FIXTURE_MODE) return;
+      for (const key of [qk.overview, qk.questions, qk.status, qk.notes, qk.needsYouAll]) void qc.invalidateQueries({ queryKey: key });
+    },
+  });
+}
+
+/** Hide an item for a while. It comes back by itself. */
+export function useSnooze() {
+  return useAction({
+    run: (v: { key: string; minutes: number }) =>
+      unwrap(api.POST("/api/needs-you/{slug}/snooze", { params: { path: { slug: slugOf(v.key) } }, body: { minutes: v.minutes } })),
+    optimistic: (v, qc) => withoutItem(v.key)(qc),
+    invalidate: () => [qk.overview, qk.status, qk.needsYouAll],
+  });
+}
+
+/** Clear an alert or a failure you have dealt with. */
+export function useDismiss() {
+  return useAction({
+    run: (key: string) => unwrap(api.POST("/api/needs-you/{slug}/dismiss", { params: { path: { slug: slugOf(key) } }, body: {} })),
+    optimistic: (key, qc) => withoutItem(key)(qc),
+    invalidate: () => [qk.overview, qk.status, qk.needsYouAll],
   });
 }

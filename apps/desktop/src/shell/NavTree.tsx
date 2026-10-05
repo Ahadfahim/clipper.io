@@ -67,7 +67,7 @@ export function NavTree() {
 
   const sessions = (board?.slots ?? []).filter((s) => s.role && s.session_id);
   const nodes: Node[] = [
-    { key: "overview", label: "Overview", to: "/" },
+    { key: "overview", label: "Overview", to: "/", count: status?.needs_you || "", warn: Boolean(status?.needs_you) },
     {
       key: "agents",
       label: "Agents",

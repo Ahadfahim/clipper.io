@@ -82,7 +82,10 @@ export function describeEvent(ev: Pick<Schemas["EventOut"], "type" | "payload">)
     case "question.asked":
       return d("question", str(p["text"]), "agent");
     case "question.answered":
-      return d("question", `Answered: ${str(p["answer"])}`, "accent");
+      if (p["via"] === "campaign_closed") return d("question", `Closed: ${str(p["answer"])}`, "muted");
+      return d("question", `${p["custom"] ? "Answered in your own words" : "Answered"}: ${str(p["answer"])}`, "accent");
+    case "attention.changed":
+      return d("needs you", `${str(p["key"]).replace(/:/g, " ")} ${p["state"] === "open" ? "brought back" : str(p["state"])}`, "muted");
     case "toggles.changed":
       return d("switches", `${MARKET_LABEL[str(p["name"])] ?? PLATFORM_LABEL[str(p["name"])] ?? str(p["name"])} turned ${p["enabled"] ? "on" : "off"} (${str(p["via"])})`, "accent");
     case "control.changed":

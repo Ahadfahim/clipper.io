@@ -1,0 +1,70 @@
+{
+ "agent": null,
+ "body": "5 of 12 clips are waiting for a decision.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "Campaign",
+   "link": null,
+   "value": "MrBeast #42 clipping"
+  },
+  {
+   "at": null,
+   "label": "Batch",
+   "link": null,
+   "value": "1"
+  },
+  {
+   "at": null,
+   "label": "Decided",
+   "link": null,
+   "value": "5 approved \u00b7 2 rejected \u00b7 5 pending"
+  },
+  {
+   "at": "2026-10-02T23:00:00Z",
+   "label": "Times out",
+   "link": null,
+   "value": ""
+  }
+ ],
+ "item": {
+  "actions": [
+   {
+    "action": "review",
+    "args": {
+     "batch_id": 1
+    },
+    "label": "Review"
+   }
+  ],
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "count": 1,
+  "detail": "Batch 1",
+  "dismissable": false,
+  "key": "review:1",
+  "kind": "review",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:10:00Z",
+  "timeout_at": "2026-10-02T23:00:00Z",
+  "title": "5 of 12 clips to review: MrBeast #42 clipping",
+  "urgency": 3
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [
+  "/api/files/clip/1/thumb",
+  "/api/files/clip/2/thumb",
+  "/api/files/clip/3/thumb",
+  "/api/files/clip/4/thumb",
+  "/api/files/clip/5/thumb",
+  "/api/files/clip/6/thumb"
+ ],
+ "timeline": []
+}

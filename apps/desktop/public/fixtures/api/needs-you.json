@@ -1,0 +1,243 @@
+[
+ {
+  "actions": [
+   {
+    "action": "open_profile",
+    "args": {
+     "profile": "main"
+    },
+    "label": "Open window"
+   },
+   {
+    "action": "resume_account",
+    "args": {
+     "account_id": 1
+    },
+    "label": "Resume"
+   }
+  ],
+  "campaign_id": null,
+  "campaign_title": null,
+  "count": 1,
+  "detail": "verification needed",
+  "dismissable": false,
+  "key": "challenge:1",
+  "kind": "challenge",
+  "links": [],
+  "options": [],
+  "since": null,
+  "timeout_at": null,
+  "title": "TikTok @clipsdaily paused",
+  "urgency": 0
+ },
+ {
+  "actions": [
+   {
+    "action": "answer",
+    "args": {
+     "answer": "Yes",
+     "question_id": 1
+    },
+    "label": "Yes"
+   },
+   {
+    "action": "answer",
+    "args": {
+     "answer": "No",
+     "question_id": 1
+    },
+    "label": "No"
+   },
+   {
+    "action": "answer",
+    "args": {
+     "answer": "Skip campaign",
+     "question_id": 1
+    },
+    "label": "Skip campaign"
+   }
+  ],
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "count": 1,
+  "detail": "Asked by the campaign agent",
+  "dismissable": false,
+  "key": "question:1",
+  "kind": "question",
+  "links": [],
+  "options": [
+   "Yes",
+   "No",
+   "Skip campaign"
+  ],
+  "since": "2026-10-02T17:26:00Z",
+  "timeout_at": null,
+  "title": "Rules unclear: can we use the trailer footage?",
+  "urgency": 1
+ },
+ {
+  "actions": [
+   {
+    "action": "review",
+    "args": {
+     "batch_id": 1
+    },
+    "label": "Review"
+   }
+  ],
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "count": 1,
+  "detail": "Batch 1",
+  "dismissable": false,
+  "key": "review:1",
+  "kind": "review",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:10:00Z",
+  "timeout_at": "2026-10-02T23:00:00Z",
+  "title": "5 of 12 clips to review: MrBeast #42 clipping",
+  "urgency": 3
+ },
+ {
+  "actions": [
+   {
+    "action": "open_campaign",
+    "args": {
+     "campaign_id": 8
+    },
+    "label": "Open"
+   }
+  ],
+  "campaign_id": 8,
+  "campaign_title": "Gadget review shorts",
+  "count": 1,
+  "detail": "Whop",
+  "dismissable": false,
+  "key": "campaign:8",
+  "kind": "campaign",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T10:00:00Z",
+  "timeout_at": null,
+  "title": "Gadget review shorts: Paid join ($29): needs you.",
+  "urgency": 4
+ },
+ {
+  "actions": [
+   {
+    "action": "take",
+    "args": {
+     "campaign_id": 4
+    },
+    "label": "Take"
+   },
+   {
+    "action": "skip",
+    "args": {
+     "campaign_id": 4
+    },
+    "label": "Skip"
+   }
+  ],
+  "campaign_id": 4,
+  "campaign_title": "Hormozi gym launch",
+  "count": 1,
+  "detail": "Vyro",
+  "dismissable": false,
+  "key": "campaign:4",
+  "kind": "campaign",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:00:00Z",
+  "timeout_at": null,
+  "title": "New campaign: Hormozi gym launch, score 74, $3.2 CPM",
+  "urgency": 4
+ },
+ {
+  "actions": [
+   {
+    "action": "take",
+    "args": {
+     "campaign_id": 3
+    },
+    "label": "Take"
+   },
+   {
+    "action": "skip",
+    "args": {
+     "campaign_id": 3
+    },
+    "label": "Skip"
+   }
+  ],
+  "campaign_id": 3,
+  "campaign_title": "Diary of a CEO clips",
+  "count": 1,
+  "detail": "Whop",
+  "dismissable": false,
+  "key": "campaign:3",
+  "kind": "campaign",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:20:00Z",
+  "timeout_at": null,
+  "title": "New campaign: Diary of a CEO clips, score 81, $1.8 CPM",
+  "urgency": 4
+ },
+ {
+  "actions": [
+   {
+    "action": "open_campaign",
+    "args": {
+     "campaign_id": 7
+    },
+    "label": "Open"
+   }
+  ],
+  "campaign_id": 7,
+  "campaign_title": "Kai Cenat stream highlights",
+  "count": 1,
+  "detail": "warning from campaign",
+  "dismissable": true,
+  "key": "alert:14",
+  "kind": "alert",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:48:00Z",
+  "timeout_at": null,
+  "title": "No connected account matches the niche of Kai Cenat livestream clips. Connect one or skip the campaign.",
+  "urgency": 5
+ },
+ {
+  "actions": [
+   {
+    "action": "retry_job",
+    "args": {
+     "job_id": 5
+    },
+    "label": "Retry"
+   },
+   {
+    "action": "open_campaign",
+    "args": {
+     "campaign_id": 7
+    },
+    "label": "Open"
+   }
+  ],
+  "campaign_id": 7,
+  "campaign_title": "Kai Cenat stream highlights",
+  "count": 1,
+  "detail": "The video isn't available",
+  "dismissable": true,
+  "key": "failure:job:5",
+  "kind": "failure",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:00:00Z",
+  "timeout_at": null,
+  "title": "Download failed",
+  "urgency": 6
+ }
+]

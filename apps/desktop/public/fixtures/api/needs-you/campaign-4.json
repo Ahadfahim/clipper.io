@@ -1,0 +1,82 @@
+{
+ "agent": null,
+ "body": "High CPM but only $2.1k left and a 3-day deadline.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "Marketplace",
+   "link": null,
+   "value": "Vyro"
+  },
+  {
+   "at": null,
+   "label": "Score",
+   "link": null,
+   "value": "74"
+  },
+  {
+   "at": null,
+   "label": "CPM",
+   "link": null,
+   "value": "$3.2"
+  },
+  {
+   "at": null,
+   "label": "Budget left",
+   "link": null,
+   "value": "$2,100"
+  },
+  {
+   "at": "2026-10-05T18:00:00Z",
+   "label": "Deadline",
+   "link": null,
+   "value": ""
+  },
+  {
+   "at": null,
+   "label": "Platforms",
+   "link": null,
+   "value": "tiktok, instagram"
+  }
+ ],
+ "item": {
+  "actions": [
+   {
+    "action": "take",
+    "args": {
+     "campaign_id": 4
+    },
+    "label": "Take"
+   },
+   {
+    "action": "skip",
+    "args": {
+     "campaign_id": 4
+    },
+    "label": "Skip"
+   }
+  ],
+  "campaign_id": 4,
+  "campaign_title": "Hormozi gym launch",
+  "count": 1,
+  "detail": "Vyro",
+  "dismissable": false,
+  "key": "campaign:4",
+  "kind": "campaign",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:00:00Z",
+  "timeout_at": null,
+  "title": "New campaign: Hormozi gym launch, score 74, $3.2 CPM",
+  "urgency": 4
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

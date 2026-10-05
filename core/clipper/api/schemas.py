@@ -248,12 +248,92 @@ class NeedsYouAction(M):
     args: dict[str, Any] = Field(default_factory=dict)
 
 
+class TimelineEntry(M):
+    ts: datetime
+    type: str
+    text: str
+
+
+class Link(M):
+    """A web address with the host shown beside it (the page that sent it is untrusted)."""
+
+    label: str
+    url: str
+    kind: Literal["marketplace", "source", "post", "platform", "doc"]
+    host: str
+    open_in: Literal["clipper", "default"]  # Clipper's logged-in Chrome, or your own browser
+
+
 class NeedsYouItem(M):
-    kind: Literal["challenge", "question", "review", "campaign", "failure"]
+    kind: Literal["challenge", "question", "review", "campaign", "alert", "failure"]
     urgency: int
     title: str
     detail: str
     actions: list[NeedsYouAction]
+    key: str = ""  # "<kind>:<id>", stable across reads; what the detail and reply routes take
+    campaign_id: int | None = None
+    campaign_title: str | None = None
+    since: datetime | None = None
+    timeout_at: datetime | None = None
+    options: list[str] = Field(default_factory=list[str])  # a question's answers, in full
+    count: int = 1  # how many times the same alert came in
+    dismissable: bool = False
+    links: list[Link] = Field(default_factory=list[Link])
+
+
+class FactRow(M):
+    label: str
+    value: str
+    at: datetime | None = None  # when set, the UI shows it as a time instead of `value`
+    link: Link | None = None
+
+
+class AgentMessage(M):
+    ts: datetime
+    text: str
+
+
+class AgentSaid(M):
+    session_id: int
+    role: str
+    status: str
+    messages: list[AgentMessage]  # the last few things the agent said, newest first
+
+
+class EvidenceOut(M):
+    error: str | None = None
+    raw_tail: str | None = None
+    screenshot_url: str | None = None
+
+
+class NeedsYouDetail(M):
+    item: NeedsYouItem
+    body: str  # the full text: the question, the alert, the error
+    facts: list[FactRow]
+    agent: AgentSaid | None = None
+    evidence: EvidenceOut | None = None
+    thumbs: list[str] = Field(default_factory=list[str])  # clip thumbnails (review batches)
+    timeline: list[TimelineEntry] = Field(default_factory=list[TimelineEntry])
+    reply_to: Literal["question", "campaign", "director"]
+    snooze_options: list[int] = Field(default_factory=list[int])  # minutes
+
+
+class SnoozeIn(BaseModel):
+    minutes: int = Field(ge=1, le=10080)
+
+
+class DismissIn(BaseModel):
+    note: str | None = Field(default=None, max_length=300)
+
+
+class ReplyIn(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    via: Literal["dashboard", "discord"] = "dashboard"
+
+
+class ReplyOut(M):
+    routed_to: Literal["question", "campaign", "director"]
+    id: int | None = None
 
 
 class Kpi(M):
@@ -454,12 +534,6 @@ class SourceOut(M):
 
 class AttachFileIn(BaseModel):
     path: str = Field(min_length=1, description="a video file on this PC")
-
-
-class TimelineEntry(M):
-    ts: datetime
-    type: str
-    text: str
 
 
 class MoneyOut(M):
@@ -786,9 +860,10 @@ class QuestionOut(M):
 
 
 class AnswerIn(BaseModel):
-    answer: str = Field(min_length=1, max_length=500)
+    answer: str = Field(min_length=1, max_length=2000)
     by: str = "you"
     via: Literal["dashboard", "discord"] = "dashboard"
+    custom: bool = False  # typed in your own words rather than picked from the options
 
 
 class LessonOut(M):

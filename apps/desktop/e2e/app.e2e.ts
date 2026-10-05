@@ -28,6 +28,28 @@ test("overview shows what needs you, campaigns, slots and health", async ({ page
   await expect(needs.getByText("Rules unclear")).toHaveCount(0);
 });
 
+test("needs you: open a question, see every option, answer in your own words", async ({ page }) => {
+  await open(page, "/");
+  const needs = page.getByRole("table", { name: "Needs you" });
+  await needs.getByRole("row", { name: /Rules unclear/ }).click();
+  const detail = needs.getByRole("region", { name: /Details: Rules unclear/ });
+  await expect(detail.getByText("Your answer")).toBeVisible();
+  await expect(detail.getByRole("button", { name: /Skip campaign/ })).toBeVisible();
+  await expect(detail.getByText(/the hook lands late/)).toBeVisible(); // what the agent said just before asking
+  const box = detail.getByPlaceholder("Answer in your own words");
+  await box.fill("Use the trailer, but only the first minute");
+  await detail.getByRole("button", { name: /Send answer/ }).click();
+  await expect(box).toHaveValue("");
+  // the link in the address bar opens an item directly, and a failure shows the full output
+  await page.goto("/?item=failure:job:5");
+  const failure = page.getByRole("region", { name: /Details: Download failed/ });
+  await expect(failure.getByText("The video isn't available").first()).toBeVisible();
+  await failure.getByText("Full output").click();
+  await expect(failure.getByText(/ERROR: \[youtube\] gone/)).toBeVisible();
+  await failure.getByRole("button", { name: "Dismiss" }).click();
+  await expect(page.getByRole("region", { name: /Details: Download failed/ })).toHaveCount(0);
+});
+
 test("tree navigation and keyboard page shortcuts", async ({ page }) => {
   await open(page, "/");
   await page.getByRole("tree").getByRole("link", { name: /^Library/ }).click();

@@ -35,6 +35,8 @@ GETS = [
     "/api/events?after=0",
     "/api/jobs",
     "/api/questions",
+    "/api/needs-you",
+    "/api/needs-you/question-1",
     "/api/notes",
     "/api/agents/board",
     "/api/agents/models",

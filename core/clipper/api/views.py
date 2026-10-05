@@ -260,94 +260,9 @@ def status(core: Core, fixture_mode: bool) -> S.StatusOut:
 
 
 def overview_needs_you(core: Core) -> list[S.NeedsYouItem]:
-    items: list[S.NeedsYouItem] = []
-    with core.db.read() as s:
-        for a in s.exec(select(Account).where(Account.status == "paused")).all():
-            items.append(
-                S.NeedsYouItem(
-                    kind="challenge",
-                    urgency=0,
-                    title=f"{PLATFORM_NAMES.get(a.platform, a.platform)} {a.handle} paused",
-                    detail=a.paused_reason or "challenge screen",
-                    actions=[
-                        S.NeedsYouAction(
-                            label="Open window", action="open_profile", args={"profile": a.chrome_profile}
-                        ),
-                        S.NeedsYouAction(label="Resume", action="resume_account", args={"account_id": a.id}),
-                    ],
-                )
-            )
-        for q in s.exec(select(Question).where(Question.status == "open").order_by(col(Question.id))).all():
-            items.append(
-                S.NeedsYouItem(
-                    kind="question",
-                    urgency=1,
-                    title=q.text,
-                    detail=f"Asked by the campaign agent{f' (campaign {q.campaign_id})' if q.campaign_id else ''}",
-                    actions=[
-                        S.NeedsYouAction(label=o, action="answer", args={"question_id": q.id, "answer": o})
-                        for o in q.options_json
-                    ],
-                )
-            )
-        for b in s.exec(
-            select(ReviewBatch).where(ReviewBatch.status != "shipped").order_by(col(ReviewBatch.timeout_at))
-        ).all():
-            camp = s.get(Campaign, b.campaign_id)
-            pending = s.exec(
-                select(func.count())
-                .select_from(Review)
-                .where(Review.batch_id == b.id, Review.decision == "pending")
-            ).one()
-            total = s.exec(select(func.count()).select_from(Review).where(Review.batch_id == b.id)).one()
-            items.append(
-                S.NeedsYouItem(
-                    kind="review",
-                    urgency=2,
-                    title=f"{pending} of {total} clips to review: {camp.title if camp else b.campaign_id}",
-                    detail=f"Batch {b.id}"
-                    + (f", times out {b.timeout_at.isoformat()}" if b.timeout_at else ""),
-                    actions=[S.NeedsYouAction(label="Review", action="review", args={"batch_id": b.id})],
-                )
-            )
-        for c in s.exec(
-            select(Campaign)
-            .where(col(Campaign.status).in_(["suggested", "needs_user"]))
-            .order_by(col(Campaign.score).desc())
-        ).all():
-            if c.status == "suggested" and (c.score or 0) < core.settings.scout.min_score_to_post_card:
-                continue
-            take = S.NeedsYouAction(label="Take", action="take", args={"campaign_id": c.id})
-            skip = S.NeedsYouAction(label="Skip", action="skip", args={"campaign_id": c.id})
-            title = (
-                f"New campaign: {c.title}, score {c.score:.0f}, ${c.cpm:g} CPM"
-                if c.status == "suggested"
-                else f"{c.title}: {c.score_reason or 'needs you'}"
-            )
-            items.append(
-                S.NeedsYouItem(
-                    kind="campaign",
-                    urgency=3,
-                    title=title,
-                    detail=c.marketplace.capitalize(),
-                    actions=[take, skip]
-                    if c.status == "suggested"
-                    else [S.NeedsYouAction(label="Open", action="open_campaign", args={"campaign_id": c.id})],
-                )
-            )
-        for j in s.exec(
-            select(Job).where(Job.status == "failed").order_by(col(Job.id).desc()).limit(3)
-        ).all():
-            items.append(
-                S.NeedsYouItem(
-                    kind="failure",
-                    urgency=4,
-                    title=f"{j.kind} failed",
-                    detail=(j.error or "")[:200],
-                    actions=[],
-                )
-            )
-    return sorted(items, key=lambda i: i.urgency)
+    from clipper.api import needs_you  # imports this module, so not at the top
+
+    return needs_you.build(core)
 
 
 def _stages(s: Session, c: Campaign) -> list[S.Stage]:
@@ -881,7 +796,7 @@ def campaign_detail(core: Core, campaign_id: int) -> S.CampaignDetail | None:
         posts = s.exec(select(Post).where(Post.campaign_id == campaign_id)).all()
         subs = s.exec(select(Submission).where(Submission.campaign_id == campaign_id)).all()
         metrics = _latest_metrics(s)
-    timeline = [S.TimelineEntry(ts=e.ts, type=e.type, text=_event_text(e)) for e in events]
+    timeline = [S.TimelineEntry(ts=e.ts, type=e.type, text=event_text(e)) for e in events]
     sub_counts: dict[str, int] = defaultdict(int)
     for x in subs:
         sub_counts[x.external_status] += 1
@@ -923,7 +838,7 @@ def campaign_detail(core: Core, campaign_id: int) -> S.CampaignDetail | None:
     )
 
 
-def _event_text(e: Event) -> str:
+def event_text(e: Event) -> str:
     p = e.payload
     texts = {
         "campaign.found": "Found by the Scout",

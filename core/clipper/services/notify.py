@@ -116,14 +116,14 @@ class NotifyService(Service):
         self._push("warning", f"Clipper asks: {text}")
         return qid
 
-    def answer(self, question_id: int, answer: str, *, by: str, via: str) -> None:
+    def answer(self, question_id: int, answer: str, *, by: str, via: str, custom: bool = False) -> None:
         def job(tx: WriteTx) -> None:
             q = tx.session.get(Question, question_id)
             if q is None:
                 raise ServiceError(f"question {question_id} not found")
             if q.status != QuestionStatus.OPEN:
                 raise ServiceError(f"question {question_id} is already {q.status}")
-            q.answer = answer[:500]
+            q.answer = answer[:2000]
             q.answered_by = by
             q.via = via
             q.status = QuestionStatus.ANSWERED
@@ -136,6 +136,7 @@ class NotifyService(Service):
                     campaign_id=q.campaign_id,
                     answer=q.answer,
                     via=via,
+                    custom=custom,
                 )
             )
 

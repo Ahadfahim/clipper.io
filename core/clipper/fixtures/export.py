@@ -97,6 +97,7 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
         "/api/events?after=0",
         "/api/jobs",
         "/api/questions",
+        "/api/needs-you",
         "/api/notes",
         "/api/agents/board",
         "/api/agents/models",
@@ -117,6 +118,10 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
         "/api/doctor",
     ]
     paths += [f"/api/campaigns/{cid}" for cid in ids["campaigns"].values()]
+    from clipper.api import needs_you
+    from clipper.services.attention import slug_of
+
+    paths += [f"/api/needs-you/{slug_of(i.key)}" for i in needs_you.build(core)]
     paths += [f"/api/clips/{cid}" for cid in ids["clips"]]
     paths += [f"/api/agents/sessions/{sid}" for sid in ids["sessions"].values()]
     paths += [f"/api/review/batches/{ids['batch']}", f"/api/edit/{ids['clips'][2]}"]

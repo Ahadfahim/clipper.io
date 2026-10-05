@@ -114,6 +114,7 @@ class Core:
     ) -> None:
         # Local imports keep the import graph one-directional (services import Core only for typing).
         from clipper.services.agenda import AgendaService
+        from clipper.services.attention import AttentionService
         from clipper.services.campaigns import CampaignService
         from clipper.services.insights import InsightsService
         from clipper.services.market import MarketplaceService
@@ -146,6 +147,7 @@ class Core:
         self.market = MarketplaceService(self)
         self.toggles = ToggleService(self)
         self.notify = NotifyService(self)
+        self.attention = AttentionService(self)
         self.memory = MemoryService(self)
         self.agenda = AgendaService(self)
         self.wakeups = WakeupService(self)

@@ -1,0 +1,68 @@
+{
+ "agent": null,
+ "body": "verification needed",
+ "evidence": {
+  "error": "verify it's you screen",
+  "raw_tail": null,
+  "screenshot_url": null
+ },
+ "facts": [
+  {
+   "at": null,
+   "label": "Account",
+   "link": null,
+   "value": "TikTok @clipsdaily"
+  },
+  {
+   "at": null,
+   "label": "Chrome profile",
+   "link": null,
+   "value": "main"
+  },
+  {
+   "at": null,
+   "label": "Paused",
+   "link": null,
+   "value": "unknown"
+  }
+ ],
+ "item": {
+  "actions": [
+   {
+    "action": "open_profile",
+    "args": {
+     "profile": "main"
+    },
+    "label": "Open window"
+   },
+   {
+    "action": "resume_account",
+    "args": {
+     "account_id": 1
+    },
+    "label": "Resume"
+   }
+  ],
+  "campaign_id": null,
+  "campaign_title": null,
+  "count": 1,
+  "detail": "verification needed",
+  "dismissable": false,
+  "key": "challenge:1",
+  "kind": "challenge",
+  "links": [],
+  "options": [],
+  "since": null,
+  "timeout_at": null,
+  "title": "TikTok @clipsdaily paused",
+  "urgency": 0
+ },
+ "reply_to": "director",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

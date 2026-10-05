@@ -49,7 +49,7 @@ export const useLive = create<LiveStore>()((set) => ({
 }));
 
 /** Query keys an event makes stale. Kept as data so it's testable (live.test.ts). */
-export function keysFor(ev: Pick<LiveEvent, "type" | "payload">): QueryKey[] {
+function baseKeys(ev: Pick<LiveEvent, "type" | "payload">): QueryKey[] {
   const p = ev.payload as Record<string, unknown>;
   const num = (k: string) => (typeof p[k] === "number" ? (p[k] as number) : undefined);
   const campaign = num("campaign_id");
@@ -75,8 +75,14 @@ export function keysFor(ev: Pick<LiveEvent, "type" | "payload">): QueryKey[] {
     return [qk.overview, qk.notes, ...(p["scope"] === "clip" && p["scope_id"] ? [qk.edit(Number(p["scope_id"]))] : [])];
   if (t === "usage.updated") return [qk.status, qk.board];
   if (t === "user.chat") return [qk.director];
-  if (t === "alert") return [qk.overview];
+  if (t === "alert" || t === "attention.changed") return [qk.overview, qk.status];
   return [];
+}
+
+export function keysFor(ev: Pick<LiveEvent, "type" | "payload">): QueryKey[] {
+  const keys = baseKeys(ev);
+  // an open Needs you item shows facts from the same tables as the list, so it goes stale with it
+  return keys.includes(qk.overview) ? [...keys, qk.needsYouAll] : keys;
 }
 
 function makeInvalidator(qc: QueryClient) {

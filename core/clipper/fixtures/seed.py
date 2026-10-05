@@ -984,9 +984,14 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
         tx.add(
             Job(
                 kind="download",
-                input_json={"url": "https://www.youtube.com/watch?v=gone"},
+                input_json={"source_id": 9, "url": "https://www.youtube.com/watch?v=gone"},
                 status="failed",
-                error="RuntimeError: yt-dlp failed: Video unavailable",
+                error="The video isn't available\n\nDownload it yourself and put the video in "
+                "C:/ClipperData/sources/campaign_3 (Clipper attaches it on its own), or use Attach file on the source.",
+                result_json={
+                    "raw_tail": "WARNING: Your yt-dlp version (2026.03.17) is older than 90 days!\n"
+                    "ERROR: [youtube] gone: Video unavailable"
+                },
                 campaign_id=kai.id,
                 created_at=now - timedelta(hours=1, minutes=2),
                 finished_at=now - timedelta(hours=1),
@@ -1267,6 +1272,18 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                     "text": "@clipsdaily (tiktok) paused: verification challenge during upload. Fix it in the Clipper Chrome window, then resume.",
                     "source": "publish",
                     "campaign_id": None,
+                },
+            ),
+            (
+                -12,
+                "alert",
+                "alert",
+                None,
+                {
+                    "level": "warning",
+                    "text": "No connected account matches the niche of Kai Cenat livestream clips. Connect one or skip the campaign.",
+                    "source": "campaign",
+                    "campaign_id": kai.id,
                 },
             ),
             (

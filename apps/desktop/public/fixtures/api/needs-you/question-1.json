@@ -1,0 +1,94 @@
+{
+ "agent": {
+  "messages": [
+   {
+    "text": "Batch 1 is in review. Meanwhile I'll polish clip 3: the hook lands late.",
+    "ts": "2026-10-02T17:49:50Z"
+   }
+  ],
+  "role": "campaign",
+  "session_id": 1,
+  "status": "running"
+ },
+ "body": "Rules unclear: can we use the trailer footage?",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "Campaign",
+   "link": null,
+   "value": "MrBeast #42 clipping"
+  },
+  {
+   "at": null,
+   "label": "Asked by",
+   "link": null,
+   "value": "campaign agent \u00b7 session 1"
+  },
+  {
+   "at": "2026-10-02T17:26:00Z",
+   "label": "Asked",
+   "link": null,
+   "value": ""
+  },
+  {
+   "at": null,
+   "label": "Times out",
+   "link": null,
+   "value": "no timeout"
+  }
+ ],
+ "item": {
+  "actions": [
+   {
+    "action": "answer",
+    "args": {
+     "answer": "Yes",
+     "question_id": 1
+    },
+    "label": "Yes"
+   },
+   {
+    "action": "answer",
+    "args": {
+     "answer": "No",
+     "question_id": 1
+    },
+    "label": "No"
+   },
+   {
+    "action": "answer",
+    "args": {
+     "answer": "Skip campaign",
+     "question_id": 1
+    },
+    "label": "Skip campaign"
+   }
+  ],
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "count": 1,
+  "detail": "Asked by the campaign agent",
+  "dismissable": false,
+  "key": "question:1",
+  "kind": "question",
+  "links": [],
+  "options": [
+   "Yes",
+   "No",
+   "Skip campaign"
+  ],
+  "since": "2026-10-02T17:26:00Z",
+  "timeout_at": null,
+  "title": "Rules unclear: can we use the trailer footage?",
+  "urgency": 1
+ },
+ "reply_to": "question",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

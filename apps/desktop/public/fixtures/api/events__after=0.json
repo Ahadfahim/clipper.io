@@ -201,9 +201,22 @@
   "type": "toggles.changed"
  },
  {
+  "entity": "alert",
+  "entity_id": null,
+  "id": 14,
+  "payload": {
+   "campaign_id": 7,
+   "level": "warning",
+   "source": "campaign",
+   "text": "No connected account matches the niche of Kai Cenat livestream clips. Connect one or skip the campaign."
+  },
+  "ts": "2026-10-02T17:48:00Z",
+  "type": "alert"
+ },
+ {
   "entity": "campaign",
   "entity_id": "3",
-  "id": 14,
+  "id": 15,
   "payload": {
    "campaign_id": 3,
    "marketplace": "whop",
@@ -215,7 +228,7 @@
  {
   "entity": "agent_session",
   "entity_id": "1",
-  "id": 15,
+  "id": 16,
   "payload": {
    "agent_event_id": 9,
    "kind": "blocked",
@@ -229,7 +242,7 @@
  {
   "entity": "clip",
   "entity_id": "3",
-  "id": 16,
+  "id": 17,
   "payload": {
    "actor": "session:1",
    "clip_id": 3,
@@ -246,7 +259,7 @@
  {
   "entity": "clip",
   "entity_id": "3",
-  "id": 17,
+  "id": 18,
   "payload": {
    "actor": "session:1",
    "clip_id": 3,

@@ -1,6 +1,7 @@
 // TanStack Query hooks for every screen. Keys are shared with the live event stream (live.ts),
 // which invalidates them when the server says something changed.
 import { useMutation, useQuery, useQueryClient, type QueryKey } from "@tanstack/react-query";
+import { slugOf } from "@/lib/needsYou";
 import { api, FIXTURE_MODE, fixtureManifest, unwrap, type Schemas } from "./client";
 
 export const qk = {
@@ -11,6 +12,8 @@ export const qk = {
   events: ["events"],
   jobs: ["jobs"],
   questions: ["questions"],
+  needsYouAll: ["needs-you"],
+  needsYou: (key: string) => ["needs-you", key],
   notes: ["notes"],
   board: ["board"],
   models: ["models"],
@@ -48,6 +51,15 @@ export const useSwitchPreview = (level: "marketplace" | "social" | "account", na
     queryKey: qk.switchPreview(level, name),
     queryFn: () => unwrap(api.GET("/api/switches/preview", { params: { query: { level, name } } })),
     enabled,
+  });
+/** The full story of one Needs you item (all the text, facts, what the agent said, the evidence). */
+export const useNeedsYouDetail = (key: string | null) =>
+  useQuery({
+    queryKey: qk.needsYou(key ?? ""),
+    queryFn: () => unwrap(api.GET("/api/needs-you/{slug}", { params: { path: { slug: slugOf(key ?? "") } } })),
+    enabled: key !== null,
+    retry: false, // a 404 means it isn't waiting on you any more
+    ...live,
   });
 export const useJobs = () => useQuery({ queryKey: qk.jobs, queryFn: () => unwrap(api.GET("/api/jobs")), ...live });
 export const useQuestions = () => useQuery({ queryKey: qk.questions, queryFn: () => unwrap(api.GET("/api/questions")), ...live });

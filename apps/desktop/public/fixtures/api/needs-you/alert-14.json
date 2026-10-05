@@ -1,0 +1,63 @@
+{
+ "agent": null,
+ "body": "No connected account matches the niche of Kai Cenat livestream clips. Connect one or skip the campaign.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "Level",
+   "link": null,
+   "value": "warning"
+  },
+  {
+   "at": null,
+   "label": "From",
+   "link": null,
+   "value": "campaign"
+  },
+  {
+   "at": null,
+   "label": "Campaign",
+   "link": null,
+   "value": "Kai Cenat stream highlights"
+  },
+  {
+   "at": "2026-10-02T17:48:00Z",
+   "label": "Seen",
+   "link": null,
+   "value": "once"
+  }
+ ],
+ "item": {
+  "actions": [
+   {
+    "action": "open_campaign",
+    "args": {
+     "campaign_id": 7
+    },
+    "label": "Open"
+   }
+  ],
+  "campaign_id": 7,
+  "campaign_title": "Kai Cenat stream highlights",
+  "count": 1,
+  "detail": "warning from campaign",
+  "dismissable": true,
+  "key": "alert:14",
+  "kind": "alert",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T17:48:00Z",
+  "timeout_at": null,
+  "title": "No connected account matches the niche of Kai Cenat livestream clips. Connect one or skip the campaign.",
+  "urgency": 5
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

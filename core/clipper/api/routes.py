@@ -35,6 +35,7 @@ from clipper.media.edl.ops import EditError
 from clipper.rules.spec import ClipSpec
 from clipper.secrets import SECRET_NAMES, get_secret, set_secret
 from clipper.services.account_login import login_step
+from clipper.services.attention import key_of
 from clipper.services.base import ServiceError
 from clipper.services.control import set_control
 from clipper.services.recipe_check import CLIP_NAME, run_check_upload
@@ -209,6 +210,67 @@ def source_attach_file(core: CoreDep, source_id: int, body: S.AttachFileIn) -> S
     return S.OkOut(id=res["job_id"], detail=f"attached {Path(res['path']).name}; analyzing")
 
 
+@system.get("/needs-you", response_model=list[S.NeedsYouItem])
+def needs_you_list(core: CoreDep) -> list[S.NeedsYouItem]:
+    """Everything waiting on you, most urgent first (what Overview shows)."""
+    return views.overview_needs_you(core)
+
+
+@system.get("/needs-you/{slug}", response_model=S.NeedsYouDetail)
+def needs_you_detail(core: CoreDep, slug: str) -> S.NeedsYouDetail:
+    """The full story of one item: all the text, the facts, what the agent said, the evidence."""
+    from clipper.api import needs_you
+
+    found = needs_you.detail(core, key_of(slug))
+    if found is None:
+        raise HTTPException(404, "that item isn't waiting on you any more")
+    return found
+
+
+@system.post("/needs-you/{slug}/snooze", response_model=S.OkOut)
+def needs_you_snooze(core: CoreDep, slug: str, body: S.SnoozeIn) -> S.OkOut:
+    try:
+        until = core.attention.snooze(key_of(slug), body.minutes)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(detail=f"hidden until {until.isoformat()}")
+
+
+@system.post("/needs-you/{slug}/dismiss", response_model=S.OkOut)
+def needs_you_dismiss(core: CoreDep, slug: str, body: S.DismissIn) -> S.OkOut:
+    try:
+        core.attention.dismiss(key_of(slug), note=body.note)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut()
+
+
+@system.post("/needs-you/{slug}/reopen", response_model=S.OkOut)
+def needs_you_reopen(core: CoreDep, slug: str) -> S.OkOut:
+    try:
+        core.attention.reopen(key_of(slug))
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut()
+
+
+@system.post("/needs-you/{slug}/reply", response_model=S.ReplyOut)
+def needs_you_reply(core: CoreDep, slug: str, body: S.ReplyIn) -> S.ReplyOut:
+    """Your own words for an item. A question takes them as its answer; anything else goes to the
+    campaign's agent as a note, or to the Director when no campaign is involved."""
+    from clipper.api import needs_you
+
+    key = key_of(slug)
+    item = needs_you.find(core, key)
+    if item is None:
+        raise HTTPException(404, "that item isn't waiting on you any more")
+    try:
+        res = core.attention.reply(key, body.text, about=item.title[:200], via=body.via)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.ReplyOut(routed_to=res["routed_to"], id=res["id"])
+
+
 @system.get("/questions", response_model=list[S.QuestionOut])
 def questions(core: CoreDep, status: str | None = "open") -> list[S.QuestionOut]:
     return views.questions(core, status)
@@ -217,7 +279,7 @@ def questions(core: CoreDep, status: str | None = "open") -> list[S.QuestionOut]
 @system.post("/questions/{question_id}/answer", response_model=S.OkOut)
 def answer(core: CoreDep, question_id: int, body: S.AnswerIn) -> S.OkOut:
     try:
-        core.notify.answer(question_id, body.answer, by=body.by, via=body.via)
+        core.notify.answer(question_id, body.answer, by=body.by, via=body.via, custom=body.custom)
     except ServiceError as exc:
         raise _fail(exc) from exc
     return S.OkOut(id=question_id)

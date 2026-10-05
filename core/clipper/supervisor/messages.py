@@ -45,6 +45,12 @@ def describe(ev: dict[str, Any]) -> str:
         case "note.added":
             return f"New note #{p['note_id']} from the user ({p['scope']} {p.get('scope_id') or ''}): {p['text']!r}. Act on it, then agenda.ack_note."
         case "question.answered":
+            if p.get("custom"):
+                return (
+                    f"Your question #{p['question_id']} was answered in the user's own words (via {p.get('via')}): "
+                    f"{p['answer']!r}. None of your options fit, so follow what they wrote; ask again only if it "
+                    "leaves something open."
+                )
             return f"Your question #{p['question_id']} was answered via {p.get('via')}: {p['answer']!r}."
         case "user.chat":
             return f"User ({p.get('via', 'dashboard')}): {p['text']}"

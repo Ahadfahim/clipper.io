@@ -1,0 +1,75 @@
+{
+ "agent": null,
+ "body": "Paid join ($29): needs you.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "Marketplace",
+   "link": null,
+   "value": "Whop"
+  },
+  {
+   "at": null,
+   "label": "Score",
+   "link": null,
+   "value": "72"
+  },
+  {
+   "at": null,
+   "label": "CPM",
+   "link": null,
+   "value": "$2.2"
+  },
+  {
+   "at": null,
+   "label": "Budget left",
+   "link": null,
+   "value": "$4,000"
+  },
+  {
+   "at": null,
+   "label": "Deadline",
+   "link": null,
+   "value": "no deadline"
+  },
+  {
+   "at": null,
+   "label": "Platforms",
+   "link": null,
+   "value": "youtube, tiktok"
+  }
+ ],
+ "item": {
+  "actions": [
+   {
+    "action": "open_campaign",
+    "args": {
+     "campaign_id": 8
+    },
+    "label": "Open"
+   }
+  ],
+  "campaign_id": 8,
+  "campaign_title": "Gadget review shorts",
+  "count": 1,
+  "detail": "Whop",
+  "dismissable": false,
+  "key": "campaign:8",
+  "kind": "campaign",
+  "links": [],
+  "options": [],
+  "since": "2026-10-02T10:00:00Z",
+  "timeout_at": null,
+  "title": "Gadget review shorts: Paid join ($29): needs you.",
+  "urgency": 4
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

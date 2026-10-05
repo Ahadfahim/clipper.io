@@ -848,6 +848,118 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/needs-you": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Needs You List
+         * @description Everything waiting on you, most urgent first (what Overview shows).
+         */
+        get: operations["needs_you_list_api_needs_you_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/needs-you/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Needs You Detail
+         * @description The full story of one item: all the text, the facts, what the agent said, the evidence.
+         */
+        get: operations["needs_you_detail_api_needs_you__slug__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/needs-you/{slug}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Needs You Dismiss */
+        post: operations["needs_you_dismiss_api_needs_you__slug__dismiss_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/needs-you/{slug}/reopen": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Needs You Reopen */
+        post: operations["needs_you_reopen_api_needs_you__slug__reopen_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/needs-you/{slug}/reply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Needs You Reply
+         * @description Your own words for an item. A question takes them as its answer; anything else goes to the
+         *     campaign's agent as a note, or to the Director when no campaign is involved.
+         */
+        post: operations["needs_you_reply_api_needs_you__slug__reply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/needs-you/{slug}/snooze": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Needs You Snooze */
+        post: operations["needs_you_snooze_api_needs_you__slug__snooze_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/notes": {
         parameters: {
             query?: never;
@@ -1702,6 +1814,27 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** AgentMessage */
+        AgentMessage: {
+            /** Text */
+            text: string;
+            /**
+             * Ts
+             * Format: date-time
+             */
+            ts: string;
+        };
+        /** AgentSaid */
+        AgentSaid: {
+            /** Messages */
+            messages: components["schemas"]["AgentMessage"][];
+            /** Role */
+            role: string;
+            /** Session Id */
+            session_id: number;
+            /** Status */
+            status: string;
+        };
         /** AnswerIn */
         AnswerIn: {
             /** Answer */
@@ -1711,6 +1844,11 @@ export interface components {
              * @default you
              */
             by: string;
+            /**
+             * Custom
+             * @default false
+             */
+            custom: boolean;
             /**
              * Via
              * @default dashboard
@@ -2172,6 +2310,11 @@ export interface components {
             /** Thread Id */
             thread_id: string | null;
         };
+        /** DismissIn */
+        DismissIn: {
+            /** Note */
+            note?: string | null;
+        };
         /** EarningsOut */
         EarningsOut: {
             /** By Account */
@@ -2277,6 +2420,25 @@ export interface components {
             /** Type */
             type: string;
         };
+        /** EvidenceOut */
+        EvidenceOut: {
+            /** Error */
+            error: string | null;
+            /** Raw Tail */
+            raw_tail: string | null;
+            /** Screenshot Url */
+            screenshot_url: string | null;
+        };
+        /** FactRow */
+        FactRow: {
+            /** At */
+            at: string | null;
+            /** Label */
+            label: string;
+            link: components["schemas"]["Link"] | null;
+            /** Value */
+            value: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2370,6 +2532,28 @@ export interface components {
         LessonPatch: {
             /** Note */
             note: string;
+        };
+        /**
+         * Link
+         * @description A web address with the host shown beside it (the page that sent it is untrusted).
+         */
+        Link: {
+            /** Host */
+            host: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "marketplace" | "source" | "post" | "platform" | "doc";
+            /** Label */
+            label: string;
+            /**
+             * Open In
+             * @enum {string}
+             */
+            open_in: "clipper" | "default";
+            /** Url */
+            url: string;
         };
         /** ManualCampaignIn */
         ManualCampaignIn: {
@@ -2500,17 +2684,65 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** NeedsYouDetail */
+        NeedsYouDetail: {
+            agent: components["schemas"]["AgentSaid"] | null;
+            /** Body */
+            body: string;
+            evidence: components["schemas"]["EvidenceOut"] | null;
+            /** Facts */
+            facts: components["schemas"]["FactRow"][];
+            item: components["schemas"]["NeedsYouItem"];
+            /**
+             * Reply To
+             * @enum {string}
+             */
+            reply_to: "question" | "campaign" | "director";
+            /** Snooze Options */
+            snooze_options: number[];
+            /** Thumbs */
+            thumbs: string[];
+            /** Timeline */
+            timeline: components["schemas"]["TimelineEntry"][];
+        };
         /** NeedsYouItem */
         NeedsYouItem: {
             /** Actions */
             actions: components["schemas"]["NeedsYouAction"][];
+            /** Campaign Id */
+            campaign_id: number | null;
+            /** Campaign Title */
+            campaign_title: string | null;
+            /**
+             * Count
+             * @default 1
+             */
+            count: number;
             /** Detail */
             detail: string;
+            /**
+             * Dismissable
+             * @default false
+             */
+            dismissable: boolean;
+            /**
+             * Key
+             * @default
+             */
+            key: string;
             /**
              * Kind
              * @enum {string}
              */
-            kind: "challenge" | "question" | "review" | "campaign" | "failure";
+            kind: "challenge" | "question" | "review" | "campaign" | "alert" | "failure";
+            /** Links */
+            links: components["schemas"]["Link"][];
+            /** Options */
+            options: string[];
+            /** Since */
+            since: string | null;
+            /** Timeout At */
+            timeout_at: string | null;
             /** Title */
             title: string;
             /** Urgency */
@@ -2877,6 +3109,27 @@ export interface components {
             /** Tool */
             tool: string;
         };
+        /** ReplyIn */
+        ReplyIn: {
+            /** Text */
+            text: string;
+            /**
+             * Via
+             * @default dashboard
+             * @enum {string}
+             */
+            via: "dashboard" | "discord";
+        };
+        /** ReplyOut */
+        ReplyOut: {
+            /** Id */
+            id: number | null;
+            /**
+             * Routed To
+             * @enum {string}
+             */
+            routed_to: "question" | "campaign" | "director";
+        };
         /** RescheduleIn */
         RescheduleIn: {
             /**
@@ -3034,6 +3287,11 @@ export interface components {
             slot: number;
             /** Started */
             started: string | null;
+        };
+        /** SnoozeIn */
+        SnoozeIn: {
+            /** Minutes */
+            minutes: number;
         };
         /** SocialSwitch */
         SocialSwitch: {
@@ -4753,6 +5011,193 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    needs_you_list_api_needs_you_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NeedsYouItem"][];
+                };
+            };
+        };
+    };
+    needs_you_detail_api_needs_you__slug__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NeedsYouDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    needs_you_dismiss_api_needs_you__slug__dismiss_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DismissIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    needs_you_reopen_api_needs_you__slug__reopen_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    needs_you_reply_api_needs_you__slug__reply_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReplyIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReplyOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    needs_you_snooze_api_needs_you__slug__snooze_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SnoozeIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

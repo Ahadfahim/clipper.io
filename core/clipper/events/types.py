@@ -332,6 +332,18 @@ class QuestionAnswered(EventPayload):
     campaign_id: int | None
     answer: str
     via: str
+    custom: bool = False  # typed in the user's own words rather than picked from the options
+
+
+class AttentionChanged(EventPayload):
+    """A Needs you item was snoozed, dismissed or brought back."""
+
+    TYPE = "attention.changed"
+    ENTITY = "attention"
+    ENTITY_FIELD = "key"
+    key: str
+    state: str  # snoozed | dismissed | open
+    by: str
 
 
 class AgentEventLogged(EventPayload):

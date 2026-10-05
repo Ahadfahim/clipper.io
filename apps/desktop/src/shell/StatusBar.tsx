@@ -52,6 +52,9 @@ export function StatusBar() {
     <footer className="flex h-6 shrink-0 items-stretch overflow-hidden border-t border-line bg-chrome text-[11px] text-muted [&>*]:shrink-0">
       <Seg tone={run.tone}>{run.text}</Seg>
       {c.dry_run && <Seg tone="warn">Dry run</Seg>}
+      <Seg tone={s.needs_you ? "warn" : "muted"} onClick={() => void navigate({ to: "/", search: {} })} title="Items waiting on you (Overview)">
+        Needs you {s.needs_you}
+      </Seg>
       <Seg tone="agent" onClick={() => void navigate({ to: "/agents" })} title="Agent slots">
         Agents {s.agents_running}/{s.agents_capacity || "∞"}
       </Seg>

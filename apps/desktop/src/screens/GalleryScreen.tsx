@@ -171,10 +171,18 @@ export function GalleryScreen() {
           </div>
         </Spec>
         {overview && (
-          <Spec name="NeedsYouItem" note="urgency order, actions inline" wide>
-            <NeedsYouList items={overview.needs_you.slice(0, 4)} onAction={() => undefined} empty="You're all caught up." />
+          <>
+          <Spec name="NeedsYouItem" note="urgency order; at most two buttons per row; click, Enter or → opens one" wide>
+            <NeedsYouList items={overview.needs_you} onAction={() => undefined} empty="You're all caught up." />
             <NeedsYouList items={[]} onAction={() => undefined} empty="You're all caught up. Next scout run in 6m." />
           </Spec>
+          <Spec name="NeedsYouItem, open" note="a question: every option, your own words, snooze" wide>
+            <NeedsYouList items={overview.needs_you.filter((i) => i.kind === "question")} openKey="question:1" onOpenKeyChange={() => undefined} onAction={() => undefined} empty="" />
+          </Spec>
+          <Spec name="NeedsYouItem, open (failure)" note="the cleaned error, the full output, retry, dismiss" wide>
+            <NeedsYouList items={overview.needs_you.filter((i) => i.kind === "failure")} openKey="failure:job:5" onOpenKeyChange={() => undefined} onAction={() => undefined} empty="" />
+          </Spec>
+          </>
         )}
         {questions[0] && (
           <Spec name="AskUserCard">
