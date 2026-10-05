@@ -14,6 +14,7 @@ export const qk = {
   questions: ["questions"],
   needsYouAll: ["needs-you"],
   needsYou: (key: string) => ["needs-you", key],
+  candidates: (sourceId: number) => ["candidates", sourceId],
   notes: ["notes"],
   board: ["board"],
   models: ["models"],
@@ -62,6 +63,16 @@ export const useNeedsYouDetail = (key: string | null) =>
     queryFn: () => unwrap(api.GET("/api/needs-you/{slug}", { params: { path: { slug: slugOf(key ?? "") } } })),
     enabled: key !== null,
     retry: false, // a 404 means it isn't waiting on you any more
+    ...live,
+  });
+/** Videos you downloaded recently (Downloads folder, the campaign's drop folder): likely footage for a source. */
+export const useSourceCandidates = (sourceId: number, enabled = true) =>
+  useQuery({
+    queryKey: qk.candidates(sourceId),
+    queryFn: () => unwrap(api.GET("/api/sources/{source_id}/candidates", { params: { path: { source_id: sourceId } } })),
+    enabled,
+    retry: false,
+    refetchInterval: FIXTURE_MODE ? false : 10_000, // a download that finishes while this is open shows up
     ...live,
   });
 export const useJobs = () => useQuery({ queryKey: qk.jobs, queryFn: () => unwrap(api.GET("/api/jobs")), ...live });

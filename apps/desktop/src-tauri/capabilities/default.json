@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window and pop-out Review/Edit windows. Everything else goes through our own commands (src/commands.rs).",
+  "description": "Main window and pop-out Review/Edit windows. The file picker (dialog:allow-open) is for choosing footage. Everything else goes through our own commands (src/commands.rs).",
   "windows": ["main", "review-*", "edit-*"],
-  "permissions": ["core:default", "core:event:default", "core:window:default", "notification:default", "window-state:default"]
+  "permissions": ["core:default", "core:event:default", "core:window:default", "notification:default", "window-state:default", "dialog:allow-open"]
 }

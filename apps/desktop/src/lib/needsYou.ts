@@ -33,6 +33,11 @@ export function inlineActions(item: NeedsItem): NeedsAction[] {
     return fitsInline(item.options) ? item.actions : [{ label: "Answer", action: "expand", args: {} }];
   }
   if (item.kind === "alert") return item.actions.slice(0, 1);
+  if (item.kind === "footage") {
+    // go and get the video, then hand it over: the retry and skip buttons wait in the open row
+    const link = item.links.find((l) => l.kind === "source");
+    return [...(link ? [{ label: "Open link", action: "open_link", args: {} }] : []), { label: "Add file", action: "expand", args: {} }];
+  }
   return item.actions.slice(0, 2);
 }
 

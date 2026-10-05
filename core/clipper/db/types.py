@@ -51,6 +51,8 @@ class SourceStatus(StrEnum):
     ANALYZING = "analyzing"
     ANALYZED = "analyzed"
     FAILED = "failed"
+    NEEDS_FOOTAGE = "needs_footage"  # Clipper can't download it (Frame.io, WeTransfer): you supply the file
+    SKIPPED = "skipped"
     DELETED = "deleted"
 
 

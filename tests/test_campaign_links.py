@@ -106,7 +106,7 @@ def test_every_campaign_in_every_read_model_has_a_link(core: Core, settings: Set
     assert rows and all(r.link is not None and r.link.url.startswith("https://") for r in rows)
     assert all(a.link is not None for a in views.overview(core).active_campaigns)
     items = [i for i in needs_you.build(core) if i.campaign_id is not None]
-    assert items and all(i.links and i.links[0].kind == "marketplace" for i in items)
+    assert items and all(any(link.kind == "marketplace" for link in i.links) for i in items)
     clip = views.clips(core)[0]
     detail = views.clip_detail(core, clip.id)
     assert detail is not None and detail.campaign_link is not None

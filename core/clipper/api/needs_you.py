@@ -28,13 +28,25 @@ from clipper.db.models import (
     RecipeRun,
     Review,
     ReviewBatch,
+    Source,
 )
+from clipper.db.types import SourceStatus
+from clipper.rules.urls import download_support, host_of
 from clipper.services.attention import DISMISSABLE
 
 if TYPE_CHECKING:
     from clipper.core import Core
 
-URGENCY = {"challenge": 0, "question": 1, "join": 2, "review": 3, "campaign": 4, "alert": 5, "failure": 6}
+URGENCY = {
+    "challenge": 0,
+    "question": 1,
+    "footage": 1,
+    "join": 2,
+    "review": 3,
+    "campaign": 4,
+    "alert": 5,
+    "failure": 6,
+}
 SOON = timedelta(hours=2)  # a review batch that times out within this jumps ahead of campaign picks
 ALERT_AGE = timedelta(days=3)
 FAILURE_AGE = timedelta(days=7)
@@ -43,6 +55,11 @@ MAX_ALERTS = 5
 MAX_FAILURES = 5
 SNOOZE_MINUTES = [60, 240, 1440]
 MARKET_NAMES = {"vyro": "Vyro", "whop": "Whop"}
+SUPPORT_TEXT = {
+    "yes": "Yes",
+    "try": "It might work, but this host often blocks downloaders",
+    "no": "No: these are share pages, not video files",
+}
 JOB_LABEL = {
     "download": "Download",
     "analyze": "Analysis",
@@ -197,11 +214,13 @@ def build(core: Core, *, include_hidden: bool = False) -> list[S.NeedsYouItem]:
                 )
             )
         items += _alerts(core, s, now, titles, [a.handle for a in paused], joining)
-        items += _failures(core, s, now, titles)
+        footage, covered = _footage(core, s, now, camps)
+        items += footage
+        items += _failures(core, s, now, titles, covered)
     for i in items:
         camp = camps.get(i.campaign_id)
         if camp is not None:
-            i.links = [link_out(core, camp)]
+            i.links = [*i.links, link_out(core, camp)]
     visible = [i for i in items if i.key not in hidden]
     return sorted(visible, key=lambda i: (i.urgency, i.since is None, i.since or now, i.key))
 
@@ -252,12 +271,88 @@ def _alerts(
     return sorted(out, key=lambda i: i.since or now, reverse=True)[:MAX_ALERTS]
 
 
+def source_link(src: Source) -> S.Link | None:
+    """The page a source points at, for you to open and download from. It came from a campaign page
+    (untrusted), so only a plain http(s) address is offered and the host is shown beside it."""
+    host = host_of(src.url)
+    if not host or not src.url.lower().startswith(("http://", "https://")):
+        return None
+    return S.Link(label=f"Open on {host}", url=src.url, kind="source", host=host, open_in="default")
+
+
+def _importing(s: Any) -> dict[int, Job]:
+    """Files being copied in right now: the open import jobs, by the source they are for."""
+    out: dict[int, Job] = {}
+    for j in s.exec(
+        select(Job).where(Job.kind == "import", col(Job.status).in_(["queued", "running"]))
+    ).all():
+        sid = j.input_json.get("source_id")
+        if isinstance(sid, int):
+            out[sid] = j
+    return out
+
+
+def _footage(
+    core: Core, s: Any, now: datetime, camps: dict[int | None, Campaign]
+) -> tuple[list[S.NeedsYouItem], set[int]]:
+    """Sources that are waiting for a video from you (the download failed, or can't be tried at all),
+    one item each. Returns the items and the source ids they stand for, so their failed jobs aren't
+    listed a second time."""
+    importing = _importing(s)
+    waiting = list(
+        s.exec(
+            select(Source).where(col(Source.status).in_([SourceStatus.FAILED, SourceStatus.NEEDS_FOOTAGE]))
+        ).all()
+    )
+    out: list[S.NeedsYouItem] = []
+    covered: set[int] = set()
+    for src in waiting:
+        camp = camps.get(src.campaign_id)
+        if src.id is None or camp is None or camp.status in ("ended", "skipped"):
+            continue
+        covered.add(src.id)
+        host = host_of(src.url) or "this source"
+        job = importing.get(src.id)
+        activity = (
+            S.JobActivity(job_id=job.id or 0, kind="import", label="Adding your file", progress=job.progress)
+            if job is not None
+            else None
+        )
+        link = source_link(src)
+        out.append(
+            S.NeedsYouItem(
+                kind="footage",
+                urgency=URGENCY["footage"],
+                key=f"footage:{src.id}",
+                title=f"Add the video from {host}",
+                detail=_first_paragraph(src.reason or "The download didn't work."),
+                campaign_id=camp.id,
+                campaign_title=camp.title,
+                since=src.waiting_since or src.created_at,
+                links=[link] if link else [],
+                activity=activity,
+                actions=[
+                    S.NeedsYouAction(label="Add file", action="add_file", args={"source_id": src.id}),
+                    S.NeedsYouAction(
+                        label="Retry download", action="retry_source", args={"source_id": src.id}
+                    ),
+                    S.NeedsYouAction(label="Skip source", action="skip_source", args={"source_id": src.id}),
+                ],
+            )
+        )
+    for src_id in importing:  # a file is being added: keep the item until it has landed
+        covered.add(src_id)
+    return out, covered
+
+
 def _identity(job: Job) -> tuple[str, Any]:
     inp = job.input_json
     return job.kind, inp.get("source_id") or inp.get("clip_id") or inp.get("url") or job.id
 
 
-def _failures(core: Core, s: Any, now: datetime, titles: dict[int | None, str]) -> list[S.NeedsYouItem]:
+def _failures(
+    core: Core, s: Any, now: datetime, titles: dict[int | None, str], covered: set[int]
+) -> list[S.NeedsYouItem]:
     """Failed jobs that nothing has fixed since: the newest failure per input, with no later success
     and no retry in flight, in the last seven days."""
     rows = list(s.exec(select(Job).order_by(col(Job.id).desc()).limit(300)).all())
@@ -271,6 +366,8 @@ def _failures(core: Core, s: Any, now: datetime, titles: dict[int | None, str]) 
             continue
         if j.status != "failed" or ident in settled or ident in seen:
             continue
+        if j.kind in ("download", "import") and j.input_json.get("source_id") in covered:
+            continue  # the source's own item says it, with a place to drop the file
         seen.add(ident)
         if now - _utc(j.finished_at or j.created_at) > FAILURE_AGE:
             continue
@@ -314,6 +411,7 @@ def detail(core: Core, key: str) -> S.NeedsYouDetail | None:
     agent: S.AgentSaid | None = None
     evidence: S.EvidenceOut | None = None
     thumbs: list[str] = []
+    footage: S.FootageOut | None = None
     reply_to: Literal["question", "campaign", "director"] = "campaign" if item.campaign_id else "director"
     with core.db.read() as s:
         if kind == "question":
@@ -467,6 +565,49 @@ def detail(core: Core, key: str) -> S.NeedsYouDetail | None:
                 evidence = S.EvidenceOut(
                     error=j.error, raw_tail=str(j.result_json.get("raw_tail") or "") or None
                 )
+        elif kind == "footage":
+            src = s.get(Source, ident)
+            if src is not None:
+                host = host_of(src.url)
+                support = download_support(src.url)
+                minimum = core.media.spec_minimum(src.campaign_id)
+                drop = str(core.media.drop_folder(src.campaign_id))
+                why = (src.reason or "The download didn't work").strip().rstrip(".")
+                body = (
+                    f"{why}. Download the video yourself, then drop the file here or choose it. Clipper "
+                    "copies it into the campaign's folder and the campaign's agent carries on."
+                )
+                facts = [
+                    S.FactRow(label="Campaign", value=item.campaign_title or "none"),
+                    S.FactRow(label="Source", value=src.url),
+                    S.FactRow(label="Can Clipper download it?", value=SUPPORT_TEXT[support]),
+                    S.FactRow(label="Waiting", value="", at=item.since)
+                    if item.since
+                    else S.FactRow(label="Waiting", value="unknown"),
+                ]
+                if minimum is not None:
+                    facts.append(S.FactRow(label="Clips need to be at least", value=f"{minimum:.0f} seconds"))
+                last = s.exec(
+                    select(Job)
+                    .where(col(Job.kind).in_(["download", "import"]), col(Job.status) == "failed")
+                    .order_by(col(Job.id).desc())
+                    .limit(30)
+                ).all()
+                bad = next((j for j in last if j.input_json.get("source_id") == ident), None)
+                if bad is not None:
+                    evidence = S.EvidenceOut(
+                        error=bad.error, raw_tail=str(bad.result_json.get("raw_tail") or "") or None
+                    )
+                footage = S.FootageOut(
+                    source_id=ident,
+                    url=src.url,
+                    host=host,
+                    support=support,
+                    status=src.status,
+                    reason=src.reason,
+                    drop_folder=drop,
+                    minimum_s=minimum,
+                )
         timeline: list[S.TimelineEntry] = []
         if item.campaign_id is not None:
             events = s.exec(
@@ -486,6 +627,7 @@ def detail(core: Core, key: str) -> S.NeedsYouDetail | None:
         timeline=timeline,
         reply_to=reply_to,
         snooze_options=SNOOZE_MINUTES,
+        footage=footage,
     )
 
 

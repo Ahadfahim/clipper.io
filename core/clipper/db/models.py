@@ -102,6 +102,8 @@ class Source(SQLModel, table=True):
     duration: float | None = None
     heatmap_json: list[Any] = _json_list()
     status: str = "listed"
+    waiting_since: datetime | None = _dt()  # since when it needs footage from you
+    reason: str | None = None  # why: "Frame.io links can't be downloaded", the downloader's error
     created_at: datetime = _now_dt()
 
 

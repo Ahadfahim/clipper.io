@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useState } from "react";
-import { useAddNote, useAnswer, useDeleteNote, useJoinedCampaign, useResumeAccount, useRetryJob, useTakeCampaign } from "@/api/actions";
+import { useAddNote, useAnswer, useDeleteNote, useJoinedCampaign, useResumeAccount, useRetryJob, useRetrySource, useSkipSource, useTakeCampaign } from "@/api/actions";
 import { useBoard, useOverview, useStatus } from "@/api/queries";
 import type { Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -227,6 +227,8 @@ export function OverviewScreen() {
   const joined = useJoinedCampaign();
   const resume = useResumeAccount();
   const retryJob = useRetryJob();
+  const retrySource = useRetrySource(null);
+  const skipSource = useSkipSource(null);
   // also rendered by /settings (the dialog opens over Overview), so don't insist on this route's search
   const search = useSearch({ strict: false }) as { item?: string };
   const openItem = search.item ?? null;
@@ -266,6 +268,12 @@ export function OverviewScreen() {
         break;
       case "retry_job":
         retryJob.mutate(Number(args["job_id"]));
+        break;
+      case "retry_source":
+        retrySource.mutate({ sourceId: Number(args["source_id"]), force: args["force"] === true });
+        break;
+      case "skip_source":
+        skipSource.mutate(Number(args["source_id"]));
         break;
       default:
         break;

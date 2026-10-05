@@ -60,8 +60,10 @@ def download(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
     try:
         res = core.adapters.downloader.download(str(data["url"]), dest)
     except Exception as exc:
-        _set_source(core, source_id, status=SourceStatus.FAILED)
         reason = exc.reason if isinstance(exc, DownloadError) else f"{type(exc).__name__}: {exc}"
+        _set_source(
+            core, source_id, status=SourceStatus.FAILED, reason=reason[:300], waiting_since=core.clock.now()
+        )
         raise JobFailed(
             f"{reason}\n\nDownload it yourself and put the video in {dest} (Clipper attaches it on its own), "
             "or use Attach file on the source.",
@@ -305,6 +307,7 @@ def render_final(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
 
 def register_handlers(queue: JobQueue) -> None:
     queue.register("download", download, "download")
+    queue.register("import", lambda ctx, data: ctx.core.media.run_import(ctx, data), "cpu")
     queue.register("analyze", analyze, "gpu")
     queue.register("render_preview", render_preview, "encode")
     queue.register("render_final", render_final, "encode")

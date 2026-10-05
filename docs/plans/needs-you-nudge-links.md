@@ -1,6 +1,6 @@
 # Plan: Needs you details, nudges, campaign links, and stuck-work fixes
 
-Status: planned 2026-10-04. M0, M1, M2 and M2b are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
+Status: planned 2026-10-04. M0, M1, M2, M2b and M3 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
 
 This plan is for whoever implements it. Read CLAUDE.md first: agents run on the plan login only, safety rules live in code, and UI work follows the routine (frontend-design skill, shadcn MCP, utility style, check dark and light at 1280×800 and 1920×1080).
 
@@ -663,6 +663,11 @@ Each milestone ends with `just lint`, `just test`, the e2e run and the screensho
 **M3. Footage and drag-and-drop (F)**
 - 6.1–6.5: `need_footage`, the expanded footage item, `filedrop.ts`, Browse (dialog plugin), candidates, the import job, host classes, 7.7 and 7.22.
 - Done when dropping the real Frame.io file onto campaign 1's item imports it with progress, analysis runs and the agent resumes. Check it in `just dev-app` at 100% and 125% scaling.
+- As built (differences from the design above):
+  - The campaign agent's tool list was already at the 25-tool limit, so `state.get_clip` moved to its subagents (editor, qa-checker and copywriter already have it) to make room for `media.need_footage`.
+  - `need_footage` is checked in the tool, not the guard: the guard only knows `campaign_id`, `clip_id` and `post_id`, so the tool refuses a source of another campaign.
+  - The item shows the source link (default browser), "Copy link", the drop box, "Choose file…", the paste field, recent downloads, the move/copy checkbox, the drop folder with "Open folder", and Retry/Skip. A file that looks wrong (under 60 s, or under the spec's minimum, or without audio) is shown back before it is used.
+  - Not done: "Open in Clipper browser" for source links (`/api/browser/open` only opens sites Clipper works with), the Google Doc link list, dimming every zone while you drag, the confirm for a drop outside any zone, the aspect-ratio warning, and turning a refused drop-folder file into a footage item (it is still one alert, mentioned once; the same file shows under Recent downloads). Recipe failure screenshots (7.7) move to M6.
 
 **M4. Stalls and nudges (B1–B3, B5)**
 - The detector, the nudge API and events, job progress/heartbeat/cancel, the UI on every surface, 7.6, 7.9, 7.10 and 7.14.

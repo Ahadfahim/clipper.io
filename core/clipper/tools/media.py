@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from clipper.services.base import ServiceError
 from clipper.tools.base import ToolContext, ToolOutput, tool
 
 
@@ -41,6 +42,32 @@ class SourceArg(_A):
 )
 async def analyze(ctx: ToolContext, a: SourceArg) -> dict[str, Any]:
     return {"source_id": a.source_id, "job_id": ctx.core.media.request_analyze(a.source_id)}
+
+
+class NeedFootageArgs(_A):
+    source_id: int
+    reason: str = Field(
+        min_length=3,
+        max_length=300,
+        description="why it can't be downloaded, in plain words (shown to the user)",
+    )
+
+
+@tool(
+    "media",
+    "need_footage",
+    "A source can't be downloaded (a share page, a login wall): ask the user for the video file. It "
+    "appears in Needs you with a place to drop the file; you are resumed when it has been analyzed. "
+    "Use this instead of ask_user, then end your turn.",
+    NeedFootageArgs,
+)
+async def need_footage(ctx: ToolContext, a: NeedFootageArgs) -> dict[str, Any]:
+    src = ctx.core.media.source(a.source_id)
+    if ctx.campaign_id is not None and src.campaign_id != ctx.campaign_id:
+        raise ServiceError(
+            f"this session owns campaign {ctx.campaign_id}; source {a.source_id} belongs to another campaign"
+        )
+    return ctx.core.media.need_footage(a.source_id, a.reason, by=ctx.actor)
 
 
 class TranscriptArgs(_A):

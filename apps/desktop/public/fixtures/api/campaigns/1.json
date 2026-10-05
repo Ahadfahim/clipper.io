@@ -119,11 +119,16 @@
     0.166,
     0.188
    ],
+   "host": "youtube.com",
    "id": 1,
+   "importing": false,
    "path": "D:/Clipper.io/tests/fixtures/media/talk_16x9.mp4",
+   "reason": null,
    "status": "analyzed",
+   "support": "yes",
    "title": "I Gave Away $1,000,000",
-   "url": "https://www.youtube.com/watch?v=beast42xxxx"
+   "url": "https://www.youtube.com/watch?v=beast42xxxx",
+   "waiting_since": null
   },
   {
    "drop_folder": "D:/Clipper.io/data/sources/campaign_1",
@@ -220,11 +225,31 @@
     0.17,
     0.181
    ],
+   "host": "youtube.com",
    "id": 2,
+   "importing": false,
    "path": null,
+   "reason": null,
    "status": "downloading",
+   "support": "yes",
    "title": "Last To Leave Wins",
-   "url": "https://www.youtube.com/watch?v=beast42yyyy"
+   "url": "https://www.youtube.com/watch?v=beast42yyyy",
+   "waiting_since": null
+  },
+  {
+   "drop_folder": "D:/Clipper.io/data/sources/campaign_1",
+   "duration": null,
+   "heatmap": [],
+   "host": "next.frame.io",
+   "id": 5,
+   "importing": false,
+   "path": null,
+   "reason": "Clipper can't download next.frame.io links: they are share pages, not video files",
+   "status": "needs_footage",
+   "support": "no",
+   "title": "Raw episode (Frame.io)",
+   "url": "https://next.frame.io/share/9d3a07f5-9dbf-4acd-8028-86879ad0028b/view/3ea7e8a1",
+   "waiting_since": "2026-10-02T17:10:00Z"
   }
  ],
  "spec": {

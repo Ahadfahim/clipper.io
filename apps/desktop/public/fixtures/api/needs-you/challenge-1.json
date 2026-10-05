@@ -26,6 +26,7 @@
    "value": "unknown"
   }
  ],
+ "footage": null,
  "item": {
   "actions": [
    {
@@ -43,6 +44,7 @@
     "label": "Resume"
    }
   ],
+  "activity": null,
   "campaign_id": null,
   "campaign_title": null,
   "count": 1,

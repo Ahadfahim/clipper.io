@@ -430,21 +430,35 @@ export function useRetryJob() {
   });
 }
 
-/** Try a source's download again. */
-export function useRetrySource(campaignId: number) {
+/** Try a source's download again. A link the downloader can't fetch is only tried with `force`. */
+export function useRetrySource(campaignId: number | null) {
   return useAction({
-    run: (sourceId: number) => unwrap(api.POST("/api/sources/{source_id}/retry", { params: { path: { source_id: sourceId } } })),
-    invalidate: () => [qk.campaign(campaignId), qk.jobs, qk.status],
+    run: (v: { sourceId: number; force?: boolean }) =>
+      unwrap(api.POST("/api/sources/{source_id}/retry", { params: { path: { source_id: v.sourceId }, query: { force: v.force ?? false } } })),
+    invalidate: () => [...(campaignId !== null ? [qk.campaign(campaignId)] : []), qk.jobs, qk.status, qk.overview, qk.needsYouAll],
   });
 }
 
-/** Use a video you downloaded yourself as a source's footage. */
-export function useAttachFile(campaignId: number) {
+/** Don't use a source (the campaign's agent is told to use the others). */
+export function useSkipSource(campaignId: number | null) {
   return useAction({
-    run: (v: { sourceId: number; path: string }) =>
-      unwrap(api.POST("/api/sources/{source_id}/file", { params: { path: { source_id: v.sourceId } }, body: { path: v.path } })),
-    invalidate: () => [qk.campaign(campaignId), qk.jobs, qk.status, qk.overview, qk.questions],
+    run: (sourceId: number) => unwrap(api.POST("/api/sources/{source_id}/skip", { params: { path: { source_id: sourceId } } })),
+    invalidate: () => [...(campaignId !== null ? [qk.campaign(campaignId)] : []), qk.status, qk.overview, qk.needsYouAll],
   });
+}
+
+/** Use a video you downloaded yourself as a source's footage: it is copied (or moved) in as a job with progress. */
+export function useAttachFile(campaignId: number | null) {
+  return useAction({
+    run: (v: { sourceId: number; path: string; move?: boolean }) =>
+      unwrap(api.POST("/api/sources/{source_id}/file", { params: { path: { source_id: v.sourceId } }, body: { path: v.path, move: v.move ?? false } })),
+    invalidate: () => [...(campaignId !== null ? [qk.campaign(campaignId)] : []), qk.jobs, qk.status, qk.overview, qk.questions, qk.needsYouAll],
+  });
+}
+
+/** What a file is and whether it looks like the footage this campaign needs (so you can confirm before using it). */
+export async function inspectFile(sourceId: number, path: string): Promise<Schemas["InspectOut"]> {
+  return unwrap(api.POST("/api/sources/{source_id}/inspect", { params: { path: { source_id: sourceId } }, body: { path } }));
 }
 
 /** Set which model each agent runs on (applies to the next agent session). */

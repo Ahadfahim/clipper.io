@@ -190,24 +190,53 @@ def job_retry(core: CoreDep, job_id: int) -> S.OkOut:
 
 
 @system.post("/sources/{source_id}/retry", response_model=S.OkOut)
-def source_retry(core: CoreDep, source_id: int) -> S.OkOut:
-    """Try a source's download again."""
+def source_retry(core: CoreDep, source_id: int, force: bool = False) -> S.OkOut:
+    """Try a source's download again. A link the downloader can't fetch is only tried with ``force``."""
     try:
         src = core.media.source(source_id)
-        res = core.media.request_download(src.campaign_id, src.url)
+        res = core.media.request_download(src.campaign_id, src.url, force=force)
     except ServiceError as exc:
         raise _fail(exc) from exc
     return S.OkOut(id=res.get("job_id"), detail=str(res.get("note") or "download queued"))
 
 
-@system.post("/sources/{source_id}/file", response_model=S.OkOut)
-def source_attach_file(core: CoreDep, source_id: int, body: S.AttachFileIn) -> S.OkOut:
-    """Use a video you downloaded yourself as this source's footage, then analyze it."""
+@system.post("/sources/{source_id}/skip", response_model=S.OkOut)
+def source_skip(core: CoreDep, source_id: int) -> S.OkOut:
+    """Don't use this source (the campaign's agent is told to use the others)."""
     try:
-        res = core.media.attach_file(source_id, body.path)
+        core.media.skip_source(source_id)
     except ServiceError as exc:
         raise _fail(exc) from exc
-    return S.OkOut(id=res["job_id"], detail=f"attached {Path(res['path']).name}; analyzing")
+    return S.OkOut(id=source_id, detail="source skipped")
+
+
+@system.get("/sources/{source_id}/candidates", response_model=list[S.CandidateOut])
+def source_candidates(core: CoreDep, source_id: int) -> list[S.CandidateOut]:
+    """Videos you downloaded recently (Downloads folder, the campaign's drop folder): likely footage."""
+    try:
+        return [S.CandidateOut(**c) for c in core.media.candidates(source_id)]
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+
+
+@system.post("/sources/{source_id}/inspect", response_model=S.InspectOut)
+def source_inspect(core: CoreDep, source_id: int, body: S.InspectIn) -> S.InspectOut:
+    """What a file is, and whether it looks like the footage this campaign needs (so you can confirm)."""
+    try:
+        return S.InspectOut(**core.media.inspect_file(source_id, body.path))
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+
+
+@system.post("/sources/{source_id}/file", response_model=S.OkOut)
+def source_attach_file(core: CoreDep, source_id: int, body: S.AttachFileIn) -> S.OkOut:
+    """Use a video you downloaded yourself as this source's footage: copied (or moved) in as a job with
+    progress, then analyzed."""
+    try:
+        job_id = core.media.import_file(source_id, body.path, move=body.move)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(id=job_id, detail=f"adding {Path(body.path).name}")
 
 
 @system.get("/needs-you", response_model=list[S.NeedsYouItem])

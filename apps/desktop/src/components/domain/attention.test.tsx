@@ -122,3 +122,42 @@ describe("NeedsYouList", () => {
     expect(screen.getByText("You're all caught up.")).toBeInTheDocument();
   });
 });
+
+describe("a footage item", () => {
+  const share = items.find((i) => i.key === "footage:5")!;
+  const drive = items.find((i) => i.key === "footage:6")!;
+
+  it("gives a row that gets you to the video and to the place to put it", () => {
+    withProviders(<NeedsYouList items={[share]} onAction={() => undefined} empty="Nothing" />);
+    const row = screen.getByRole("row", { name: /Add the video from next.frame.io/ });
+    expect(within(row).getAllByRole("button").map((b) => b.textContent)).toEqual(["MrBeast #42 clipping", "Open link", "Add file"]);
+    expect(inlineActions(share).map((a) => a.action)).toEqual(["open_link", "expand"]);
+  });
+
+  it("opens with the link, a way to copy it, the drop box and what to do if you can't", async () => {
+    const onAction = vi.fn();
+    withProviders(<NeedsYouList items={[share]} onAction={onAction} empty="Nothing" openKey={share.key} onOpenKeyChange={() => undefined} />);
+    const region = await screen.findByRole("region", { name: /Details: Add the video from next.frame.io/ });
+    expect(await within(region).findByText("Add the video")).toBeInTheDocument();
+    expect(within(region).getByRole("button", { name: "Open on next.frame.io" })).toBeInTheDocument();
+    expect(within(region).getByRole("button", { name: "Open on Vyro" })).toBeInTheDocument();
+    expect(within(region).getByRole("button", { name: /Copy link/ })).toBeInTheDocument();
+    expect(within(region).getByRole("group", { name: "Drop the video file here" })).toBeInTheDocument();
+    expect(within(region).getByText("15 seconds")).toBeInTheDocument();
+    // a share page can't be downloaded, so the retry says it will try anyway
+    fireEvent.click(within(region).getByRole("button", { name: "Try the download anyway" }));
+    expect(onAction).toHaveBeenCalledWith(expect.objectContaining({ action: "retry_source", args: { source_id: 5, force: true } }), share);
+    fireEvent.click(within(region).getByRole("button", { name: "Skip source" }));
+    expect(onAction).toHaveBeenLastCalledWith(expect.objectContaining({ action: "skip_source", args: { source_id: 5 } }), share);
+  });
+
+  it("shows how far the copy is, in the row and in the open item", async () => {
+    withProviders(<NeedsYouList items={[drive]} onAction={() => undefined} empty="Nothing" openKey={drive.key} onOpenKeyChange={() => undefined} />);
+    const row = screen.getByRole("row", { name: /Add the video from drive.google.com/ });
+    expect(within(row).getByText("Adding your file: 40%")).toBeInTheDocument();
+    const region = await screen.findByRole("region");
+    expect(await within(region).findByRole("progressbar", { name: "Adding the file" })).toHaveAttribute("aria-valuenow", "40");
+    expect(within(region).queryByRole("button", { name: /Retry download|Try the download anyway/ })).toBeNull();
+    expect(within(region).getByRole("button", { name: "Skip source" })).toBeDisabled();
+  });
+});

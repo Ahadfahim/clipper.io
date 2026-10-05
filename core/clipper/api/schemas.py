@@ -264,8 +264,17 @@ class Link(M):
     open_in: Literal["clipper", "default"]  # Clipper's logged-in Chrome, or your own browser
 
 
+class JobActivity(M):
+    """Something Clipper is doing for an item right now (a file being copied in)."""
+
+    job_id: int
+    kind: str
+    label: str
+    progress: float  # 0..1
+
+
 class NeedsYouItem(M):
-    kind: Literal["challenge", "question", "join", "review", "campaign", "alert", "failure"]
+    kind: Literal["challenge", "question", "footage", "join", "review", "campaign", "alert", "failure"]
     urgency: int
     title: str
     detail: str
@@ -279,6 +288,7 @@ class NeedsYouItem(M):
     count: int = 1  # how many times the same alert came in
     dismissable: bool = False
     links: list[Link] = Field(default_factory=list[Link])
+    activity: JobActivity | None = None
 
 
 class FactRow(M):
@@ -306,6 +316,19 @@ class EvidenceOut(M):
     screenshot_url: str | None = None
 
 
+class FootageOut(M):
+    """What a "needs footage" item needs: where the video comes from and where it can be put."""
+
+    source_id: int
+    url: str
+    host: str
+    support: Literal["yes", "try", "no"]  # can the downloader fetch this host?
+    status: str
+    reason: str | None = None
+    drop_folder: str
+    minimum_s: float | None = None  # the shortest clip the campaign's spec allows
+
+
 class NeedsYouDetail(M):
     item: NeedsYouItem
     body: str  # the full text: the question, the alert, the error
@@ -316,6 +339,7 @@ class NeedsYouDetail(M):
     timeline: list[TimelineEntry] = Field(default_factory=list[TimelineEntry])
     reply_to: Literal["question", "campaign", "director"]
     snooze_options: list[int] = Field(default_factory=list[int])  # minutes
+    footage: FootageOut | None = None
 
 
 class SnoozeIn(BaseModel):
@@ -533,6 +557,11 @@ class SourceOut(M):
     heatmap: list[float]
     path: str | None = None
     drop_folder: str | None = None  # put footage you downloaded yourself here; Clipper attaches it
+    reason: str | None = None  # why it needs footage from you
+    waiting_since: datetime | None = None
+    host: str = ""
+    support: Literal["yes", "try", "no"] = "yes"
+    importing: bool = False  # a file is being copied in right now
 
 
 class ScrapCheckOut(M):
@@ -622,6 +651,36 @@ class OpenUrlIn(BaseModel):
 
 class AttachFileIn(BaseModel):
     path: str = Field(min_length=1, description="a video file on this PC")
+    move: bool = Field(default=False, description="move the file into Clipper's folder instead of copying it")
+
+
+class InspectIn(BaseModel):
+    path: str = Field(min_length=1)
+
+
+class FootageWarning(M):
+    code: Literal["short", "no_audio"]
+    text: str
+
+
+class InspectOut(M):
+    name: str
+    path: str
+    size: int
+    duration: float
+    width: int
+    height: int
+    has_audio: bool
+    warnings: list[FootageWarning]
+
+
+class CandidateOut(M):
+    name: str
+    path: str
+    size: int
+    modified: datetime
+    duration: float | None = None
+    in_drop_folder: bool = False
 
 
 class MoneyOut(M):

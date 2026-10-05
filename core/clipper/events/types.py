@@ -149,6 +149,26 @@ class JobDone(EventPayload):
 # ---------------------------------------------------------------- clips, review
 
 
+class SourceNeedsFootage(EventPayload):
+    """A source can't be downloaded by Clipper: it needs the video file from you."""
+
+    TYPE = "source.needs_footage"
+    ENTITY = "source"
+    ENTITY_FIELD = "source_id"
+    source_id: int
+    campaign_id: int | None = None
+    reason: str = ""
+
+
+class SourceSkipped(EventPayload):
+    TYPE = "source.skipped"
+    ENTITY = "source"
+    ENTITY_FIELD = "source_id"
+    source_id: int
+    campaign_id: int | None = None
+    by: str = "user"
+
+
 class ClipScrapped(EventPayload):
     TYPE = "clip.scrapped"
     ENTITY = "campaign"

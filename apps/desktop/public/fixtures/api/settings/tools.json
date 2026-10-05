@@ -46,13 +46,13 @@
    "mcp__state__update_campaign",
    "mcp__state__save_spec",
    "mcp__state__save_moments",
-   "mcp__state__get_clip",
    "mcp__state__log_note",
    "mcp__marketplace__get_campaign_page",
    "mcp__marketplace__join_campaign",
    "mcp__marketplace__submit_post_url",
    "mcp__media__download",
    "mcp__media__render",
+   "mcp__media__need_footage",
    "mcp__review__post_batch",
    "mcp__review__get_decisions",
    "mcp__publish__list_accounts",
@@ -202,7 +202,7 @@
    "errors_7d": 0,
    "read_only": 7,
    "server": "media",
-   "tools": 10
+   "tools": 11
   },
   {
    "blocked_7d": 0,

@@ -1,0 +1,114 @@
+{
+ "agent": null,
+ "body": "The host refused the download (403). Download the video yourself, then drop the file here or choose it. Clipper copies it into the campaign's folder and the campaign's agent carries on.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "Campaign",
+   "link": null,
+   "value": "Ali Abdaal podcast cuts"
+  },
+  {
+   "at": null,
+   "label": "Source",
+   "link": null,
+   "value": "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view"
+  },
+  {
+   "at": null,
+   "label": "Can Clipper download it?",
+   "link": null,
+   "value": "It might work, but this host often blocks downloaders"
+  },
+  {
+   "at": "2026-10-02T15:50:00Z",
+   "label": "Waiting",
+   "link": null,
+   "value": ""
+  },
+  {
+   "at": null,
+   "label": "Clips need to be at least",
+   "link": null,
+   "value": "20 seconds"
+  }
+ ],
+ "footage": {
+  "drop_folder": "D:/Clipper.io/data/sources/campaign_2",
+  "host": "drive.google.com",
+  "minimum_s": 20.0,
+  "reason": "The host refused the download (403)",
+  "source_id": 6,
+  "status": "failed",
+  "support": "try",
+  "url": "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view"
+ },
+ "item": {
+  "actions": [
+   {
+    "action": "add_file",
+    "args": {
+     "source_id": 6
+    },
+    "label": "Add file"
+   },
+   {
+    "action": "retry_source",
+    "args": {
+     "source_id": 6
+    },
+    "label": "Retry download"
+   },
+   {
+    "action": "skip_source",
+    "args": {
+     "source_id": 6
+    },
+    "label": "Skip source"
+   }
+  ],
+  "activity": {
+   "job_id": 3,
+   "kind": "import",
+   "label": "Adding your file",
+   "progress": 0.4
+  },
+  "campaign_id": 2,
+  "campaign_title": "Ali Abdaal podcast cuts",
+  "count": 1,
+  "detail": "The host refused the download (403)",
+  "dismissable": false,
+  "key": "footage:6",
+  "kind": "footage",
+  "links": [
+   {
+    "host": "drive.google.com",
+    "kind": "source",
+    "label": "Open on drive.google.com",
+    "open_in": "default",
+    "url": "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view"
+   },
+   {
+    "host": "whop.com",
+    "kind": "marketplace",
+    "label": "Open Whop's campaigns",
+    "open_in": "clipper",
+    "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x"
+   }
+  ],
+  "options": [],
+  "since": "2026-10-02T15:50:00Z",
+  "timeout_at": null,
+  "title": "Add the video from drive.google.com",
+  "urgency": 1
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

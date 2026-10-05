@@ -37,9 +37,9 @@
  "fixture_mode": true,
  "gpu_util": null,
  "jobs_queued": 1,
- "jobs_running": 2,
+ "jobs_running": 3,
  "library_count": 12,
- "needs_you": 8,
+ "needs_you": 10,
  "review_pending": 5,
  "usage": {
   "max_slots": 4,

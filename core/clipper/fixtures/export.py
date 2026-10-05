@@ -7,12 +7,13 @@ so screens can be developed and screenshotted without Python. Media is copied ne
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import tempfile
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, cast
 from urllib.parse import quote
@@ -126,6 +127,24 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
 
     paths += [f"/api/needs-you/{slug_of(i.key)}" for i in needs_you.build(core)]
     paths += [f"/api/clips/{cid}" for cid in ids["clips"]]
+    # videos in a pretend Downloads folder: what the footage item offers as "recent downloads"
+    downloads = tmp / "Downloads"
+    downloads.mkdir(exist_ok=True)
+    for name, hours in (("episode-212.mp4", 2), ("Raw episode final.mov", 26)):
+        f = downloads / name
+        f.write_bytes(bytes(2048))
+        stamp = (FIXED_NOW - timedelta(hours=hours)).timestamp()
+        os.utime(f, (stamp, stamp))
+    from sqlmodel import col, select
+
+    from clipper.db.models import Source
+
+    with core.db.read() as s:
+        waiting = [
+            x.id
+            for x in s.exec(select(Source).where(col(Source.status).in_(["failed", "needs_footage"]))).all()
+        ]
+    paths += [f"/api/sources/{sid}/candidates" for sid in waiting]
     paths += [f"/api/agents/sessions/{sid}" for sid in ids["sessions"].values()]
     paths += [f"/api/review/batches/{ids['batch']}", f"/api/edit/{ids['clips'][2]}"]
     paths += [
@@ -141,7 +160,11 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
     ]
     from clipper.settings import REPO_ROOT
 
-    replacements = [(str(tmp), "D:/Clipper.io/data"), (str(REPO_ROOT), "D:/Clipper.io")]
+    replacements = [
+        (str(downloads), "C:/Users/you/Downloads"),
+        (str(tmp), "D:/Clipper.io/data"),
+        (str(REPO_ROOT), "D:/Clipper.io"),
+    ]
     if out_dir.exists():
         shutil.rmtree(out_dir)
     (out_dir / "files").mkdir(parents=True)

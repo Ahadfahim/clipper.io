@@ -41,13 +41,31 @@ test("needs you: open a question, see every option, answer in your own words", a
   await detail.getByRole("button", { name: /Send answer/ }).click();
   await expect(box).toHaveValue("");
   // the link in the address bar opens an item directly, and a failure shows the full output
-  await page.goto("/?item=failure:job:5");
+  await page.goto("/?item=failure:job:6");
   const failure = page.getByRole("region", { name: /Details: Download failed/ });
   await expect(failure.getByText("The video isn't available").first()).toBeVisible();
   await failure.getByText("Full output").click();
   await expect(failure.getByText(/ERROR: \[youtube\] gone/)).toBeVisible();
   await failure.getByRole("button", { name: "Dismiss" }).click();
   await expect(page.getByRole("region", { name: /Details: Download failed/ })).toHaveCount(0);
+});
+
+test("needs you: a source that can't be downloaded has its link, and takes a dropped video file", async ({ page }) => {
+  await page.goto("/?item=footage:5");
+  const detail = page.getByRole("region", { name: /Details: Add the video from next.frame.io/ });
+  await expect(detail.getByRole("button", { name: "Open on next.frame.io" })).toBeVisible();
+  await expect(detail.getByRole("button", { name: "Try the download anyway" })).toBeVisible();
+  await expect(detail.getByText("Recent downloads")).toBeVisible();
+  // a file that isn't a video is turned away with the reason
+  await page.evaluate(() => window.__clipperTestDrop?.(["C:/Users/you/Downloads/notes.txt"]));
+  await expect(detail.getByText(/notes.txt isn't a video/)).toBeVisible();
+  // a video is checked, then added: the box turns into its progress
+  await page.evaluate(() => window.__clipperTestDrop?.(["C:/Users/you/Downloads/episode-212.mp4"]));
+  await expect(detail.getByText("Adding episode-212.mp4")).toBeVisible();
+  await expect(detail.getByRole("group", { name: "Drop the video file here" })).toHaveCount(0);
+  // the other item is already copying a file: its row says how far
+  await page.goto("/?item=footage:6");
+  await expect(page.getByRole("row", { name: /Add the video from drive.google.com/ }).getByText("Adding your file: 40%")).toBeVisible();
 });
 
 test("library: select cards like Explorer, scrap them with Delete, undo, and find them in Scrapped", async ({ page }) => {

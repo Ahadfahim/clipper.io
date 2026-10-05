@@ -49,7 +49,7 @@ export function StatusPill({ status, className }: { status: string; className?: 
   const tone: StatusTone =
     s === "running" || s === "active" || s === "live" || s === "approved" || s === "ok" || s === "done" || s === "connected" || s === "posted" || s === "simulated"
       ? "ok"
-      : s.includes("dry") || s === "paused" || s === "waiting" || s === "pending" || s === "in_review" || s === "needs_user" || s === "suggested" || s === "scheduled" || s === "queued" || s === "warn"
+      : s.includes("dry") || s === "paused" || s === "waiting" || s === "pending" || s === "in_review" || s === "needs_user" || s === "needs_footage" || s === "suggested" || s === "scheduled" || s === "queued" || s === "warn"
         ? "warn"
         : s === "blocked" || s === "failed" || s === "rejected" || s === "error" || s === "fail" || s.includes("challenge")
           ? "bad"

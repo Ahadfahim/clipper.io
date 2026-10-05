@@ -38,6 +38,7 @@
    "value": "no timeout"
   }
  ],
+ "footage": null,
  "item": {
   "actions": [
    {
@@ -65,6 +66,7 @@
     "label": "Skip campaign"
    }
   ],
+  "activity": null,
   "campaign_id": 1,
   "campaign_title": "MrBeast #42 clipping",
   "count": 1,

@@ -3,6 +3,7 @@ And retrying a failed download or job."""
 
 from __future__ import annotations
 
+import asyncio
 import shutil
 from pathlib import Path
 
@@ -90,7 +91,7 @@ def test_a_file_dropped_in_the_campaign_folder_is_attached_once_it_stops_growing
 
 def test_retry_a_failed_download_and_a_failed_job(core: Core) -> None:
     cid, sid = _failed_source(core)
-    res = core.media.request_download(cid, "https://f.io/rnWUqe5F")
+    res = core.media.request_download(cid, "https://f.io/rnWUqe5F", force=True)  # Try download anyway
     assert res["source_id"] == sid and res["job_id"] is not None
     with core.db.read() as s:
         src = s.get(Source, sid)
@@ -219,3 +220,134 @@ def test_attach_with_check_raises_suspicious_footage(core: Core, video: Path) ->
     assert err.value.minimum == 45.0 and 7 < err.value.duration < 12
     assert core.media.source(sid).status == SourceStatus.FAILED
     assert core.media.attach_file(sid, video)["source_id"] == sid  # the user confirmed
+
+
+# ---------------------------------------------------------------- footage that needs you
+
+
+def test_a_share_page_is_not_downloaded_it_asks_for_the_file(core: Core) -> None:
+    camp = make_campaign(core.db)
+    assert camp.id is not None
+    seen: list[object] = []
+    core.bus.add_listener(lambda e: seen.append(e.payload), types=["source.needs_footage"])
+    res = core.media.request_download(camp.id, "https://f.io/rnWUqe5F")
+    assert res["job_id"] is None and res["status"] == "needs_footage"
+    assert _jobs(core, "download") == []
+    src = core.media.source(res["source_id"])
+    assert (
+        src.status == SourceStatus.NEEDS_FOOTAGE
+        and "f.io links" in (src.reason or "")
+        and src.waiting_since is not None
+    )
+    assert len(seen) == 1
+    # a normal link is queued as before, and "Try download anyway" queues the blocked one
+    ok = core.media.request_download(camp.id, "https://www.youtube.com/watch?v=abc123")
+    assert ok["job_id"] is not None
+    forced = core.media.request_download(camp.id, "https://f.io/rnWUqe5F", force=True)
+    assert forced["job_id"] is not None and core.media.source(res["source_id"]).status == SourceStatus.QUEUED
+
+
+def test_the_agent_can_say_a_source_needs_footage(core: Core) -> None:
+    cid, sid = _failed_source(core)
+    out = core.media.need_footage(sid, "The only source is a Frame.io share link")
+    assert out["status"] == "needs_footage" and "end your turn" in out["next"]
+    src = core.media.source(sid)
+    assert (
+        src.status == SourceStatus.NEEDS_FOOTAGE and src.reason == "The only source is a Frame.io share link"
+    )
+    done = make_source(core.db, cid, url="https://x.example/a", status=SourceStatus.ANALYZED)
+    with pytest.raises(ServiceError, match="already has its video"):
+        core.media.need_footage(done.id or 0, "nope")
+    with pytest.raises(ServiceError, match="not found"):
+        core.media.need_footage(999, "x")
+
+
+def test_the_drop_folder_also_serves_a_source_that_needs_footage(
+    core: Core, video: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("clipper.services.media.DROP_SCAN_EVERY_S", 0.0)
+    camp = make_campaign(core.db)
+    res = core.media.request_download(camp.id or 0, "https://we.tl/t-abc")
+    _drop(core, camp.id or 0, video)
+    assert core.media.scan_drop_folders() == []
+    assert [a["source_id"] for a in core.media.scan_drop_folders()] == [res["source_id"]]
+
+
+def test_a_skipped_source_leaves_the_agent_a_note(core: Core) -> None:
+    _cid, sid = _failed_source(core)
+    notes: list[object] = []
+    core.bus.add_listener(lambda e: notes.append(e.payload), types=["note.added"])
+    core.media.skip_source(sid)
+    assert core.media.source(sid).status == SourceStatus.SKIPPED
+    assert notes and "skipped source" in str(notes[0])
+
+
+def test_inspecting_a_file_warns_when_it_looks_wrong(core: Core, video: Path) -> None:
+    from clipper.rules.spec import ClipSpec
+
+    cid, sid = _failed_source(core)
+    info = core.media.inspect_file(sid, video)
+    assert info["name"] == video.name and 7 < info["duration"] < 12 and info["has_audio"]
+    assert [w["code"] for w in info["warnings"]] == ["short"]  # about 8 s: far from a source video
+    core.campaigns.save_spec(cid, ClipSpec(duration_min_s=45.0))
+    assert "at least 0:45" in core.media.inspect_file(sid, video)["warnings"][0]["text"]
+    note = video.with_suffix(".txt")
+    note.write_text("x")
+    with pytest.raises(ServiceError, match="isn't a video"):
+        core.media.inspect_file(sid, note)
+
+
+def test_recent_downloads_are_offered_newest_first_and_only_videos(
+    core: Core, video: Path, tmp_path: Path
+) -> None:
+    import os
+    import time
+
+    downloads = tmp_path / "Recent"
+    downloads.mkdir()
+    object.__setattr__(core.settings.media, "downloads_dirs", [downloads])
+    _cid, sid = _failed_source(core)
+    now = time.time()
+    for name, age_h in (("new.mp4", 1), ("older.mp4", 5), ("ancient.mp4", 80)):
+        f = downloads / name
+        shutil.copy(video, f)
+        stamp = now - age_h * 3600
+        os.utime(f, (stamp, stamp))
+    (downloads / "notes.txt").write_text("x")
+    names = [c["name"] for c in core.media.candidates(sid)]
+    assert names == ["new.mp4", "older.mp4"]  # 80 h old is too old; a text file is never listed
+    first = core.media.candidates(sid)[0]
+    assert first["size"] > 0 and 7 < first["duration"] < 12 and not first["in_drop_folder"]
+    core.media.attach_file(sid, downloads / "new.mp4")  # used now: no longer offered
+    assert [c["name"] for c in core.media.candidates(sid)] == ["older.mp4"]
+
+
+async def test_importing_a_file_is_a_job_with_progress_and_ends_attached(core: Core, video: Path) -> None:
+    cid, sid = _failed_source(core)
+    job_id = core.media.import_file(sid, video)
+    with pytest.raises(ServiceError, match="already being added"):
+        core.media.import_file(sid, video)
+    progress: list[float] = []
+    core.bus.add_listener(
+        lambda e: e.payload["kind"] == "import" and progress.append(float(e.payload["progress"])),
+        types=["job.progress"],
+    )
+    await core.jobs.drain(timeout=60)
+    with core.db.read() as s:
+        job = s.get(Job, job_id)
+    assert job is not None and job.status == JobStatus.DONE, job.error if job else None
+    src = core.media.source(sid)
+    assert src.status in (SourceStatus.DOWNLOADED, SourceStatus.ANALYZING, SourceStatus.ANALYZED)
+    copied = Path(src.path or "")
+    assert copied.parent == core.media.drop_folder(cid)
+    assert await asyncio.to_thread(video.exists)  # copied: the original stays
+    assert progress and progress[-1] >= 0.9
+    assert len(_jobs(core, "analyze")) == 1
+
+
+async def test_importing_can_move_the_file_instead(core: Core, video: Path) -> None:
+    _cid, sid = _failed_source(core)
+    core.media.import_file(sid, video, move=True)
+    await core.jobs.drain(timeout=60)
+    moved = Path(core.media.source(sid).path or "")
+    assert await asyncio.to_thread(lambda: not video.exists() and moved.is_file())

@@ -192,8 +192,18 @@ CASES: list[Case] = [
     Case("unknown tool denied", call("mcp__shell__run", {"cmd": "rm -rf /"}), False, "access"),
     # ---------------------------------------------------------------- campaign scope
     Case("other campaign by id", call(fq("state", "get_campaign"), {"campaign_id": 2}), False, "campaign_scope"),
-    Case("other campaign via clip", call(fq("state", "get_clip"), {"clip_id": 20}), False, "campaign_scope"),
-    Case("own campaign via clip", call(fq("state", "get_clip"), {"clip_id": 10}), True),
+    # the campaign's subagents read clips for it, and are bound to the same campaign
+    Case(
+        "other campaign via clip",
+        call(fq("state", "get_clip"), {"clip_id": 20}, role="editor", campaign_id=1),
+        False,
+        "campaign_scope",
+    ),
+    Case(
+        "own campaign via clip",
+        call(fq("state", "get_clip"), {"clip_id": 10}, role="editor", campaign_id=1),
+        True,
+    ),
     # ---------------------------------------------------------------- marketplace switch
     Case(
         "disabled marketplace listing",
@@ -509,6 +519,7 @@ async def test_sdk_hook_denies_with_reason_and_maps_subagents() -> None:
             "hook_event_name": "PreToolUse",
             "tool_name": fq("state", "get_clip"),
             "tool_input": {"clip_id": 10},
+            "agent_type": "editor",
         },
         "t3",
         {"signal": None},

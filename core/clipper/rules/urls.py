@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from typing import Literal
 from urllib.parse import parse_qsl, urlencode, urlsplit
 
 _YT_HOSTS = {"youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be", "youtube-nocookie.com"}
@@ -78,3 +79,22 @@ def source_whitelisted(url: str, whitelist: list[str]) -> bool:
         return False
     key = canonical_source(url)
     return any(canonical_source(entry) == key for entry in whitelist if entry.strip())
+
+
+# Hosts where a share link is a page, not a video file: yt-dlp can't fetch from them.
+_NO_DOWNLOAD = ("frame.io", "f.io", "wetransfer.com", "we.tl", "docs.google.com")
+# Hosts that sometimes work (public files), so they are tried and fall back to asking you.
+_MAYBE_DOWNLOAD = ("drive.google.com", "dropbox.com")
+
+
+def download_support(url: str) -> Literal["yes", "try", "no"]:
+    """Can the downloader fetch this link? ``no`` (a share page: Frame.io, WeTransfer, a Google Doc), ``try``
+    (Drive, Dropbox: sometimes), ``yes`` (everything else)."""
+    host = host_of(url)
+
+    def on(domains: tuple[str, ...]) -> bool:
+        return any(host == d or host.endswith(f".{d}") for d in domains)
+
+    if on(_NO_DOWNLOAD):
+        return "no"
+    return "try" if on(_MAYBE_DOWNLOAD) else "yes"

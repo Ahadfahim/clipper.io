@@ -1,4 +1,4 @@
-import { ChevronDown16Regular, ChevronRight16Regular, LinkSquare16Regular } from "@fluentui/react-icons";
+import { ChevronDown16Regular, ChevronRight16Regular, Copy16Regular, LinkSquare16Regular } from "@fluentui/react-icons";
 import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useDismiss, useReply, useSnooze } from "@/api/actions";
 import { useManifest, useNeedsYouDetail } from "@/api/queries";
@@ -12,10 +12,12 @@ import { clock, relative } from "@/lib/format";
 import { age, inlineActions, snoozeLabel, type NeedsAction, type NeedsItem } from "@/lib/needsYou";
 import { nowMs } from "@/lib/now";
 import { openMarketplace } from "@/lib/tauri";
+import { FootageDrop } from "./footage";
 
 const KIND: Record<NeedsItem["kind"], { label: string; tone: StatusTone }> = {
   challenge: { label: "Blocked", tone: "bad" },
   question: { label: "Question", tone: "agent" },
+  footage: { label: "Footage", tone: "warn" },
   join: { label: "Join", tone: "accent" },
   review: { label: "Review", tone: "warn" },
   campaign: { label: "Campaign", tone: "accent" },
@@ -145,7 +147,7 @@ export function NeedsYouList({
                   {n.title}
                 </span>
                 <span className="truncate-1 text-muted" title={n.detail}>
-                  {n.detail}
+                  {n.activity ? `${n.activity.label}: ${Math.round(n.activity.progress * 100)}%` : n.detail}
                   {timeout !== null && <span className={cn(soon && "text-warn")}>{`${n.detail ? " · " : ""}times out ${relative(n.timeout_at)}`}</span>}
                 </span>
               </span>
@@ -228,7 +230,32 @@ export function NeedsYouPanel({ item, onAction, onClose }: { item: NeedsItem; on
     reply.mutate({ key: item.key, text: t }, { onSuccess: () => setText("") });
   };
   const isQuestion = item.kind === "question";
+  const isFootage = item.kind === "footage" && d.footage != null;
+  const shownLinks = item.kind === "footage" ? item.links : item.links.slice(0, 1);
+  const retry = item.actions.find((a) => a.action === "retry_source");
+  const skip = item.actions.find((a) => a.action === "skip_source");
   const rest = item.actions.filter((a) => a.action !== "open_campaign" || item.kind === "alert" || item.kind === "failure");
+
+  const linksBlock =
+    shownLinks.length > 0 ? (
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        {shownLinks.map((l) => (
+          <span key={l.url} className="inline-flex min-w-0 items-center gap-1.5">
+            <Button size="sm" variant={isFootage && l.kind === "source" ? "primary" : "default"} icon={<LinkSquare16Regular />} onClick={() => void openMarketplace(l)}>
+              {l.label}
+            </Button>
+            <span className="num truncate-1 text-[11px] text-muted" title={l.url}>
+              {l.host}
+            </span>
+            {l.kind === "source" && (
+              <Button size="sm" variant="ghost" icon={<Copy16Regular />} onClick={() => void navigator.clipboard?.writeText(l.url)}>
+                Copy link
+              </Button>
+            )}
+          </span>
+        ))}
+      </div>
+    ) : null;
 
   return (
     <div className="@container px-4 py-3">
@@ -236,6 +263,7 @@ export function NeedsYouPanel({ item, onAction, onClose }: { item: NeedsItem; on
         <section aria-label="What happened" className="min-w-0">
           <Caption>What happened</Caption>
           <p className="selectable m-0 mb-2.5 break-words whitespace-pre-wrap">{d.body}</p>
+          {isFootage && linksBlock}
           {d.facts.length > 0 && (
             <PropertyGrid
               labelWidth={96}
@@ -252,16 +280,7 @@ export function NeedsYouPanel({ item, onAction, onClose }: { item: NeedsItem; on
               ])}
             />
           )}
-          {item.links.length > 0 && (
-            <div className="mb-2.5 flex items-center gap-2">
-              <Button size="sm" icon={<LinkSquare16Regular />} onClick={() => void openMarketplace(item.links[0]!)}>
-                {item.links[0]!.label}
-              </Button>
-              <span className="num truncate-1 text-[11px] text-muted" title={item.links[0]!.url}>
-                {item.links[0]!.host}
-              </span>
-            </div>
-          )}
+          {!isFootage && linksBlock}
           {d.agent && d.agent.messages.length > 0 && (
             <div className="mb-2.5">
               <Caption>
@@ -308,8 +327,24 @@ export function NeedsYouPanel({ item, onAction, onClose }: { item: NeedsItem; on
         </section>
 
         <section aria-label="What to do" className="min-w-0">
-          <Caption>{isQuestion ? "Your answer" : "What to do"}</Caption>
-          {isQuestion ? (
+          <Caption>{isQuestion ? "Your answer" : isFootage ? "Add the video" : "What to do"}</Caption>
+          {isFootage && d.footage ? (
+            <div className="mb-3 flex flex-col gap-2.5">
+              <FootageDrop sourceId={d.footage.source_id} campaignId={item.campaign_id ?? null} dropFolder={d.footage.drop_folder} activity={item.activity} />
+              <div className="flex flex-wrap gap-1.5 border-t border-line-soft pt-2.5">
+                {retry && !item.activity && (
+                  <Button onClick={() => onAction({ ...retry, args: { ...retry.args, force: d.footage?.support === "no" } }, item)}>
+                    {d.footage.support === "no" ? "Try the download anyway" : "Retry download"}
+                  </Button>
+                )}
+                {skip && (
+                  <Button disabled={Boolean(item.activity)} onClick={() => onAction(skip, item)}>
+                    Skip source
+                  </Button>
+                )}
+              </div>
+            </div>
+          ) : isQuestion ? (
             <ol className="m-0 mb-3 flex list-none flex-col gap-1 p-0">
               {item.options.map((o, i) => (
                 <li key={o}>

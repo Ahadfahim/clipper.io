@@ -52,11 +52,16 @@
    "drop_folder": "D:/Clipper.io/data/sources/campaign_3",
    "duration": null,
    "heatmap": [],
+   "host": "youtube.com",
    "id": 4,
+   "importing": false,
    "path": null,
+   "reason": null,
    "status": "listed",
+   "support": "yes",
    "title": "The Habit Expert",
-   "url": "https://www.youtube.com/watch?v=doac0000001"
+   "url": "https://www.youtube.com/watch?v=doac0000001",
+   "waiting_since": null
   }
  ],
  "spec": null,

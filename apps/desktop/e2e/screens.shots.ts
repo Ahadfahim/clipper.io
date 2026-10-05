@@ -17,9 +17,16 @@ const themes = ["dark", "light"] as const;
 type Shot = { name: string; path: string; ready: string; then?: (page: Page) => Promise<void>; size?: { name: string; width: number; height: number } };
 const screens: Shot[] = [
   { name: "overview", path: "/", ready: "Needs you" },
+  { name: "needs-you-footage", path: "/?item=footage:5", ready: "Drop the video file here" },
+  { name: "needs-you-footage-copying", path: "/?item=footage:6", ready: "Adding your file" },
   { name: "agents", path: "/agents?session=1", ready: "Live transcript" },
   { name: "campaigns", path: "/campaigns", ready: "Paste campaign URL" },
   { name: "campaign-detail", path: "/campaigns?open=1", ready: "Why this score" },
+  { name: "campaign-sources", path: "/campaigns?open=1", ready: "Why this score", then: async (p) => {
+      await p.getByRole("tab", { name: /^Sources/ }).click();
+      await p.getByRole("button", { name: "Add file…" }).click();
+      await p.getByRole("group", { name: "Drop the video file here" }).waitFor();
+    } },
   { name: "library", path: "/library", ready: "12 of 12 clips" },
   { name: "library-scrapped", path: "/library?status=scrapped", ready: "Deleted in 5 days" },
   { name: "library-scrap", path: "/library", ready: "12 of 12 clips", then: async (p) => {

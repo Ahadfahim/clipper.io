@@ -84,6 +84,10 @@ export function describeEvent(ev: Pick<Schemas["EventOut"], "type" | "payload">)
     case "question.answered":
       if (p["via"] === "campaign_closed") return d("question", `Closed: ${str(p["answer"])}`, "muted");
       return d("question", `${p["custom"] ? "Answered in your own words" : "Answered"}: ${str(p["answer"])}`, "accent");
+    case "source.needs_footage":
+      return d("sources", `Source ${str(p["source_id"])} needs a video from you: ${str(p["reason"])}`, "warn");
+    case "source.skipped":
+      return d("sources", `Skipped source ${str(p["source_id"])}`, "muted");
     case "clip.scrapped":
       return d("library", `Scrapped ${(p["clip_ids"] as unknown[] | undefined)?.length ?? 0} clip${(p["clip_ids"] as unknown[] | undefined)?.length === 1 ? "" : "s"}${p["reason"] ? ` (${str(p["reason"])})` : ""}`, "muted");
     case "clip.restored":

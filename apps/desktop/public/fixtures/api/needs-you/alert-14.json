@@ -28,6 +28,7 @@
    "value": "once"
   }
  ],
+ "footage": null,
  "item": {
   "actions": [
    {
@@ -38,6 +39,7 @@
     "label": "Open"
    }
   ],
+  "activity": null,
   "campaign_id": 7,
   "campaign_title": "Kai Cenat stream highlights",
   "count": 1,

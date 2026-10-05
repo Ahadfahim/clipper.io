@@ -140,6 +140,7 @@
   "media": {
    "default_caption_style": "bold-pop",
    "discord_preview_mb": 9.5,
+   "downloads_dirs": [],
    "encoder": "nvenc",
    "final_bitrate": "14M",
    "final_height": 1920,

@@ -242,6 +242,8 @@ class MediaSettings(_Model):
     default_caption_style: str = "bold-pop"
     silence_threshold_db: float = -35.0
     ytdlp_max_age_days: int = 60  # the doctor warns when yt-dlp is older than this
+    # where recently downloaded videos are looked for when a source needs footage (empty = your Downloads folder)
+    downloads_dirs: list[Path] = Field(default_factory=list[Path])
 
 
 class DiscordChannels(_Model):
@@ -354,7 +356,8 @@ class Settings(_Model):
         paths = self.paths.model_copy(
             update={"data_dir": data_dir, "chrome_profiles_dir": data_dir / "chrome", **reset}
         )
-        return self.model_copy(update={"paths": paths})
+        media = self.media.model_copy(update={"downloads_dirs": [data_dir / "Downloads"]})
+        return self.model_copy(update={"paths": paths, "media": media})
 
 
 def load_settings(path: Path | None = None, overrides: dict[str, Any] | None = None) -> Settings:

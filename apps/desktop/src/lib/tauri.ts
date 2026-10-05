@@ -59,6 +59,14 @@ export async function openMarketplace(link: { url: string; open_in: "clipper" | 
   await openUrl(link.url);
 }
 
+/** The system "open file" dialog, limited to these extensions. Undefined when you cancel, and outside the desktop app. */
+export async function pickFile(name: string, extensions: readonly string[]): Promise<string | undefined> {
+  if (!IN_TAURI) return undefined;
+  const { open } = await import("@tauri-apps/plugin-dialog");
+  const picked = await open({ multiple: false, directory: false, filters: [{ name, extensions: [...extensions] }] });
+  return typeof picked === "string" ? picked : undefined;
+}
+
 export async function openPath(path: string): Promise<void> {
   await call("open_path", { path });
 }

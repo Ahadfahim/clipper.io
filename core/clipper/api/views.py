@@ -46,6 +46,7 @@ from clipper.db.models import (
 )
 from clipper.rules.caps import local_day_bounds
 from clipper.rules.spec import ClipSpec
+from clipper.rules.urls import download_support, host_of
 from clipper.services.control import configured_slots, kv_get, read_control
 from clipper.services.media import load_words
 from clipper.services.usage import POOL_CEILING, UNLIMITED
@@ -807,6 +808,12 @@ def campaign_detail(core: Core, campaign_id: int) -> S.CampaignDetail | None:
         c = s.get(Campaign, campaign_id)
         assert c is not None
         sources = s.exec(select(Source).where(Source.campaign_id == campaign_id)).all()
+        importing = {
+            j.input_json.get("source_id")
+            for j in s.exec(
+                select(Job).where(Job.kind == "import", col(Job.status).in_(["queued", "running"]))
+            ).all()
+        }
         events = s.exec(
             select(Event)
             .where(Event.entity == "campaign", Event.entity_id == str(campaign_id))
@@ -844,6 +851,11 @@ def campaign_detail(core: Core, campaign_id: int) -> S.CampaignDetail | None:
                 heatmap=[float(h.get("value", 0)) for h in x.heatmap_json],
                 path=x.path,
                 drop_folder=str(core.media.drop_folder(x.campaign_id)),
+                reason=x.reason,
+                waiting_since=x.waiting_since,
+                host=host_of(x.url),
+                support=download_support(x.url),
+                importing=x.id in importing,
             )
             for x in sources
         ],

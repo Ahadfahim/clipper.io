@@ -1684,6 +1684,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/sources/{source_id}/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Source Candidates
+         * @description Videos you downloaded recently (Downloads folder, the campaign's drop folder): likely footage.
+         */
+        get: operations["source_candidates_api_sources__source_id__candidates_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/sources/{source_id}/file": {
         parameters: {
             query?: never;
@@ -1695,9 +1715,30 @@ export interface paths {
         put?: never;
         /**
          * Source Attach File
-         * @description Use a video you downloaded yourself as this source's footage, then analyze it.
+         * @description Use a video you downloaded yourself as this source's footage: copied (or moved) in as a job with
+         *     progress, then analyzed.
          */
         post: operations["source_attach_file_api_sources__source_id__file_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sources/{source_id}/inspect": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Source Inspect
+         * @description What a file is, and whether it looks like the footage this campaign needs (so you can confirm).
+         */
+        post: operations["source_inspect_api_sources__source_id__inspect_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1715,9 +1756,29 @@ export interface paths {
         put?: never;
         /**
          * Source Retry
-         * @description Try a source's download again.
+         * @description Try a source's download again. A link the downloader can't fetch is only tried with ``force``.
          */
         post: operations["source_retry_api_sources__source_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/sources/{source_id}/skip": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Source Skip
+         * @description Don't use this source (the campaign's agent is told to use the others).
+         */
+        post: operations["source_skip_api_sources__source_id__skip_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2043,6 +2104,12 @@ export interface components {
         /** AttachFileIn */
         AttachFileIn: {
             /**
+             * Move
+             * @description move the file into Clipper's folder instead of copying it
+             * @default false
+             */
+            move: boolean;
+            /**
              * Path
              * @description a video file on this PC
              */
@@ -2240,6 +2307,27 @@ export interface components {
             status: string;
             /** Title */
             title: string;
+        };
+        /** CandidateOut */
+        CandidateOut: {
+            /** Duration */
+            duration: number | null;
+            /**
+             * In Drop Folder
+             * @default false
+             */
+            in_drop_folder: boolean;
+            /**
+             * Modified
+             * Format: date-time
+             */
+            modified: string;
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /** Size */
+            size: number;
         };
         /** CaptionIn */
         CaptionIn: {
@@ -2664,6 +2752,41 @@ export interface components {
             /** Value */
             value: string;
         };
+        /**
+         * FootageOut
+         * @description What a "needs footage" item needs: where the video comes from and where it can be put.
+         */
+        FootageOut: {
+            /** Drop Folder */
+            drop_folder: string;
+            /** Host */
+            host: string;
+            /** Minimum S */
+            minimum_s: number | null;
+            /** Reason */
+            reason: string | null;
+            /** Source Id */
+            source_id: number;
+            /** Status */
+            status: string;
+            /**
+             * Support
+             * @enum {string}
+             */
+            support: "yes" | "try" | "no";
+            /** Url */
+            url: string;
+        };
+        /** FootageWarning */
+        FootageWarning: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "short" | "no_audio";
+            /** Text */
+            text: string;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -2695,6 +2818,44 @@ export interface components {
              * @default true
              */
             hidden: boolean;
+        };
+        /** InspectIn */
+        InspectIn: {
+            /** Path */
+            path: string;
+        };
+        /** InspectOut */
+        InspectOut: {
+            /** Duration */
+            duration: number;
+            /** Has Audio */
+            has_audio: boolean;
+            /** Height */
+            height: number;
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /** Size */
+            size: number;
+            /** Warnings */
+            warnings: components["schemas"]["FootageWarning"][];
+            /** Width */
+            width: number;
+        };
+        /**
+         * JobActivity
+         * @description Something Clipper is doing for an item right now (a file being copied in).
+         */
+        JobActivity: {
+            /** Job Id */
+            job_id: number;
+            /** Kind */
+            kind: string;
+            /** Label */
+            label: string;
+            /** Progress */
+            progress: number;
         };
         /** JobOut */
         JobOut: {
@@ -2927,6 +3088,7 @@ export interface components {
             evidence: components["schemas"]["EvidenceOut"] | null;
             /** Facts */
             facts: components["schemas"]["FactRow"][];
+            footage: components["schemas"]["FootageOut"] | null;
             item: components["schemas"]["NeedsYouItem"];
             /**
              * Reply To
@@ -2944,6 +3106,7 @@ export interface components {
         NeedsYouItem: {
             /** Actions */
             actions: components["schemas"]["NeedsYouAction"][];
+            activity: components["schemas"]["JobActivity"] | null;
             /** Campaign Id */
             campaign_id: number | null;
             /** Campaign Title */
@@ -2969,7 +3132,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "challenge" | "question" | "join" | "review" | "campaign" | "alert" | "failure";
+            kind: "challenge" | "question" | "footage" | "join" | "review" | "campaign" | "alert" | "failure";
             /** Links */
             links: components["schemas"]["Link"][];
             /** Options */
@@ -3681,16 +3844,36 @@ export interface components {
             duration: number | null;
             /** Heatmap */
             heatmap: number[];
+            /**
+             * Host
+             * @default
+             */
+            host: string;
             /** Id */
             id: number;
+            /**
+             * Importing
+             * @default false
+             */
+            importing: boolean;
             /** Path */
             path: string | null;
+            /** Reason */
+            reason: string | null;
             /** Status */
             status: string;
+            /**
+             * Support
+             * @default yes
+             * @enum {string}
+             */
+            support: "yes" | "try" | "no";
             /** Title */
             title: string | null;
             /** Url */
             url: string;
+            /** Waiting Since */
+            waiting_since: string | null;
         };
         /** Stage */
         Stage: {
@@ -6952,6 +7135,37 @@ export interface operations {
             };
         };
     };
+    source_candidates_api_sources__source_id__candidates_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CandidateOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     source_attach_file_api_sources__source_id__file_post: {
         parameters: {
             query?: never;
@@ -6987,7 +7201,75 @@ export interface operations {
             };
         };
     };
+    source_inspect_api_sources__source_id__inspect_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                source_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InspectIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InspectOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     source_retry_api_sources__source_id__retry_post: {
+        parameters: {
+            query?: {
+                force?: boolean;
+            };
+            header?: never;
+            path: {
+                source_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    source_skip_api_sources__source_id__skip_post: {
         parameters: {
             query?: never;
             header?: never;

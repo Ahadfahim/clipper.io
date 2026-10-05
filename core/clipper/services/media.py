@@ -7,7 +7,7 @@ import json
 import re
 import shutil
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -17,13 +17,13 @@ from clipper.clock import ensure_utc
 from clipper.db.engine import WriteTx
 from clipper.db.models import Analysis, Campaign, Clip, Job, Moment, Question, Source
 from clipper.db.types import ClipStatus, QuestionStatus, SourceStatus
-from clipper.events.types import ClipUpdated
+from clipper.events.types import ClipUpdated, SourceNeedsFootage, SourceSkipped
 from clipper.media.download import file_hash
 from clipper.media.edl.schema import Box, CaptionWord, SourceInfo, new_edl
 from clipper.media.ffmpeg import probe, run_ffmpeg
 from clipper.media.reframe import auto_camera_keys
 from clipper.rules.spec import ClipSpec
-from clipper.rules.urls import canonical_source, host_of
+from clipper.rules.urls import canonical_source, download_support, host_of
 from clipper.services.base import Service, ServiceError
 from clipper.services.control import kv_get, kv_set_tx
 
@@ -33,7 +33,7 @@ VIDEO_EXTS = {".mp4", ".mov", ".mkv", ".webm", ".m4v", ".avi"}
 # Only a source whose download was tried and failed takes a file from the drop folder. A source that
 # is merely named by the marketplace page (listed) or still downloading must never grab a file that
 # happens to be lying there.
-WAITING = (SourceStatus.FAILED,)
+WAITING = (SourceStatus.FAILED, SourceStatus.NEEDS_FOOTAGE)
 DROP_SCAN_EVERY_S = 10.0
 DROP_REFUSED_KEY = "media.drop_refused"
 _FOOTAGE_QUESTION = re.compile(r"download|footage|source|episode|video|frame\.io|wetransfer|drive", re.I)
@@ -53,6 +53,34 @@ def _mmss(seconds: float) -> str:
     return f"{int(seconds) // 60}:{int(seconds) % 60:02d}"
 
 
+def _size_of(path: Path) -> int | None:
+    try:
+        return path.stat().st_size
+    except OSError:
+        return None
+
+
+SHORT_FOOTAGE_S = 60.0  # a source video shorter than this is probably a preview, not the footage
+COPY_CHUNK = 8 * 1024 * 1024
+
+
+def _copy_with_progress(src: Path, dest: Path, ctx: Any) -> str:
+    """Copy a file in 8 MB steps, hashing it as it goes (one pass), reporting progress and bytes."""
+    import hashlib
+
+    total = max(src.stat().st_size, 1)
+    done = 0
+    h = hashlib.sha256()
+    with src.open("rb") as r, dest.open("wb") as w:
+        while block := r.read(COPY_CHUNK):
+            w.write(block)
+            h.update(block)
+            done += len(block)
+            ctx.progress(0.9 * done / total)
+    shutil.copystat(src, dest, follow_symlinks=True)
+    return h.hexdigest()
+
+
 def load_words(path: str | None) -> list[dict[str, Any]]:
     if not path or not Path(path).exists():
         return []
@@ -70,8 +98,13 @@ def load_faces(path: str | None) -> list[tuple[float, Box]]:
 class MediaService(Service):
     # ------------------------------------------------------------ sources
 
-    def request_download(self, campaign_id: int, url: str, *, analyze: bool = True) -> dict[str, Any]:
+    def request_download(
+        self, campaign_id: int, url: str, *, analyze: bool = True, force: bool = False
+    ) -> dict[str, Any]:
+        """Queue a download. A link the downloader can't fetch (a Frame.io or WeTransfer share page, a Google
+        Doc) isn't tried: the source needs the video from you, and says so at once. ``force`` tries anyway."""
         key = canonical_source(url)
+        blocked = not force and download_support(url) == "no"
 
         def job(tx: WriteTx) -> tuple[int, str]:
             if tx.session.get(Campaign, campaign_id) is None:
@@ -86,7 +119,30 @@ class MediaService(Service):
                 if existing
                 else Source(campaign_id=campaign_id, url=url, status=SourceStatus.QUEUED)
             )
-            if src.status in (SourceStatus.LISTED, SourceStatus.FAILED, SourceStatus.DELETED):
+            if blocked and src.status in (
+                SourceStatus.LISTED,
+                SourceStatus.QUEUED,
+                SourceStatus.FAILED,
+                SourceStatus.NEEDS_FOOTAGE,
+                SourceStatus.DELETED,
+            ):
+                src.status = SourceStatus.NEEDS_FOOTAGE
+                src.reason = (
+                    f"Clipper can't download {host_of(url)} links: they are share pages, not video files"
+                )
+                src.waiting_since = src.waiting_since or self.now()
+                tx.add(src)
+                tx.flush()
+                assert src.id is not None
+                tx.publish(SourceNeedsFootage(source_id=src.id, campaign_id=campaign_id, reason=src.reason))
+                return src.id, src.status
+            if src.status in (
+                SourceStatus.LISTED,
+                SourceStatus.FAILED,
+                SourceStatus.DELETED,
+                SourceStatus.NEEDS_FOOTAGE,
+                SourceStatus.SKIPPED,
+            ):
                 src.status = SourceStatus.QUEUED
             tx.add(src)
             tx.flush()
@@ -94,6 +150,13 @@ class MediaService(Service):
             return src.id, src.status
 
         source_id, status = self.db.write(job)
+        if status == SourceStatus.NEEDS_FOOTAGE:
+            return {
+                "source_id": source_id,
+                "job_id": None,
+                "status": status,
+                "note": "Clipper can't download this link; the user was asked for the video file",
+            }
         if status in (
             SourceStatus.DOWNLOADED,
             SourceStatus.ANALYZING,
@@ -124,15 +187,11 @@ class MediaService(Service):
         """Where to put footage you downloaded yourself: Clipper attaches it on its own."""
         return self.core.dir("sources") / f"campaign_{campaign_id}"
 
-    def attach_file(
-        self, source_id: int, path: str | Path, *, by: str = "user", check: bool = False
-    ) -> dict[str, Any]:
-        """Use a video file you supplied as a source's footage (when the site can't be downloaded
-        from: Frame.io, WeTransfer, Drive). A file outside the campaign's folder is copied in. Then the
-        analysis is queued, which resumes the campaign's agent when it finishes.
-
-        With ``check`` a file shorter than the campaign spec's minimum clip length is refused with
-        ``SuspiciousFootage`` (the caller asks the user, or leaves the file alone)."""
+    def _probe_footage(
+        self, source_id: int, path: str | Path, *, check: bool = False
+    ) -> tuple[Source, Path, Any]:
+        """The checks every way of supplying footage shares: the file exists, is a video, reads, and (with
+        ``check``) isn't shorter than the campaign's spec allows."""
         src = self.source(source_id)
         if src.status in (SourceStatus.DOWNLOADING, SourceStatus.ANALYZING):
             raise ServiceError(f"source {source_id} is {src.status} right now")
@@ -148,7 +207,7 @@ class MediaService(Service):
         if not info.duration or info.duration < 1:
             raise ServiceError(f"{file.name} has no playable video")
         if check:
-            minimum = self._spec_minimum(src.campaign_id)
+            minimum = self.spec_minimum(src.campaign_id)
             if minimum is not None and info.duration < minimum:
                 raise SuspiciousFootage(
                     f"{file.name} is only {_mmss(info.duration)} long, and the campaign needs clips of at "
@@ -156,6 +215,18 @@ class MediaService(Service):
                     duration=info.duration,
                     minimum=minimum,
                 )
+        return src, file, info
+
+    def attach_file(
+        self, source_id: int, path: str | Path, *, by: str = "user", check: bool = False
+    ) -> dict[str, Any]:
+        """Use a video file you supplied as a source's footage (when the site can't be downloaded
+        from: Frame.io, WeTransfer, Drive). A file outside the campaign's folder is copied in. Then the
+        analysis is queued, which resumes the campaign's agent when it finishes.
+
+        With ``check`` a file shorter than the campaign spec's minimum clip length is refused with
+        ``SuspiciousFootage`` (the caller asks the user, or leaves the file alone)."""
+        src, file, info = self._probe_footage(source_id, path, check=check)
         folder = self.drop_folder(src.campaign_id)
         folder.mkdir(parents=True, exist_ok=True)
         if file.resolve().parent != folder.resolve():
@@ -164,14 +235,20 @@ class MediaService(Service):
                 target = folder / f"{file.stem}_{source_id}{file.suffix}"
             shutil.copy2(file, target)
             file = target
-        digest = file_hash(file)
+        return self._finish_attach(src, file, info.duration, file_hash(file), by)
+
+    def _finish_attach(
+        self, src: Source, file: Path, duration: float, digest: str, by: str
+    ) -> dict[str, Any]:
+        source_id = src.id or 0
 
         def job(tx: WriteTx) -> list[int]:
             row = tx.session.get(Source, source_id)
             assert row is not None
-            row.path, row.hash, row.duration = str(file), digest, info.duration
+            row.path, row.hash, row.duration = str(file), digest, duration
             row.title = row.title or file.stem
             row.status = SourceStatus.DOWNLOADED
+            row.reason = None
             tx.add(row)
             # the agent asked you for this footage: that question is answered now
             asked = tx.session.exec(
@@ -197,9 +274,177 @@ class MediaService(Service):
             source="media",
             campaign_id=src.campaign_id,
         )
-        return {"source_id": source_id, "path": str(file), "duration": info.duration, "job_id": job_id}
+        return {"source_id": source_id, "path": str(file), "duration": duration, "job_id": job_id}
 
-    def _spec_minimum(self, campaign_id: int) -> float | None:
+    # ------------------------------------------------------------ footage that needs you
+
+    def need_footage(self, source_id: int, reason: str, *, by: str = "agent") -> dict[str, Any]:
+        """A source can't be downloaded: it needs the video file from you. Shows up in Needs you."""
+        why = reason.strip()[:300] or "the download didn't work"
+
+        def job(tx: WriteTx) -> int:
+            row = tx.session.get(Source, source_id)
+            if row is None:
+                raise ServiceError(f"source {source_id} not found")
+            if row.status in (SourceStatus.DOWNLOADED, SourceStatus.ANALYZING, SourceStatus.ANALYZED):
+                raise ServiceError(f"source {source_id} already has its video ({row.status})")
+            row.status = SourceStatus.NEEDS_FOOTAGE
+            row.reason = why
+            row.waiting_since = row.waiting_since or self.now()
+            tx.add(row)
+            tx.publish(SourceNeedsFootage(source_id=source_id, campaign_id=row.campaign_id, reason=why))
+            return row.campaign_id
+
+        campaign_id = self.db.write(job)
+        return {
+            "source_id": source_id,
+            "campaign_id": campaign_id,
+            "status": SourceStatus.NEEDS_FOOTAGE,
+            "next": "end your turn; you are resumed when the user's file has been analyzed",
+        }
+
+    def skip_source(self, source_id: int, *, by: str = "user") -> None:
+        """Don't use this source (it can't be downloaded and you won't supply it)."""
+        src = self.source(source_id)
+
+        def job(tx: WriteTx) -> None:
+            row = tx.session.get(Source, source_id)
+            assert row is not None
+            row.status = SourceStatus.SKIPPED
+            tx.add(row)
+            tx.publish(SourceSkipped(source_id=source_id, campaign_id=row.campaign_id, by=by))
+
+        self.db.write(job)
+        self.core.agenda.add_note(
+            "campaign",
+            str(src.campaign_id),
+            f"I skipped source {source_id} ({host_of(src.url)}): it can't be downloaded and I won't supply it. "
+            "Use the other sources, or tell me what you need.",
+            author=by,
+            campaign_id=src.campaign_id,
+        )
+
+    def inspect_file(self, source_id: int, path: str | Path) -> dict[str, Any]:
+        """What a file you picked is, and whether it looks like the right footage (so you can confirm)."""
+        src, file, info = self._probe_footage(source_id, path)
+        minimum = self.spec_minimum(src.campaign_id)
+        warnings: list[dict[str, str]] = []
+        if minimum is not None and info.duration < minimum:
+            warnings.append(
+                {
+                    "code": "short",
+                    "text": f"This file is only {_mmss(info.duration)} long, and the campaign needs clips of at least {_mmss(minimum)}.",
+                }
+            )
+        elif info.duration < SHORT_FOOTAGE_S:
+            warnings.append(
+                {
+                    "code": "short",
+                    "text": f"This file is only {_mmss(info.duration)} long. Source footage is usually longer than a minute: it may be a preview.",
+                }
+            )
+        if not info.has_audio:
+            warnings.append(
+                {"code": "no_audio", "text": "This file has no audio, so there is nothing to transcribe."}
+            )
+        return {
+            "name": file.name,
+            "path": str(file),
+            "size": file.stat().st_size,
+            "duration": info.duration,
+            "width": info.width,
+            "height": info.height,
+            "has_audio": bool(info.has_audio),
+            "warnings": warnings,
+        }
+
+    def candidates(self, source_id: int, *, limit: int = 5, max_age_h: float = 48.0) -> list[dict[str, Any]]:
+        """Videos you downloaded recently (your Downloads folder, the campaign's drop folder): the likely
+        footage for a source that needs it. Newest first. Only video files are looked at."""
+        src = self.source(source_id)
+        folders = [Path(d) for d in self.settings.media.downloads_dirs] or [Path.home() / "Downloads"]
+        folders.append(self.drop_folder(src.campaign_id))
+        with self.db.read() as s:
+            used = [Path(x.path) for x in s.exec(select(Source)).all() if x.path]
+        known = {str(u.resolve()).lower() for u in used}
+        # attaching copies the file in, so the original in Downloads is spotted by its name and size
+        copies = {(u.name.lower(), size) for u in used if (size := _size_of(u)) is not None}
+        cutoff = (self.now() - timedelta(hours=max_age_h)).timestamp()
+        found: list[tuple[float, Path]] = []
+        for folder in folders:
+            if not folder.is_dir():
+                continue
+            try:
+                entries = list(folder.iterdir())
+            except OSError:
+                continue
+            for f in entries:
+                try:
+                    if (
+                        f.suffix.lower() in VIDEO_EXTS
+                        and f.is_file()
+                        and f.stat().st_mtime >= cutoff
+                        and str(f.resolve()).lower() not in known
+                        and (f.name.lower(), f.stat().st_size) not in copies
+                    ):
+                        found.append((f.stat().st_mtime, f))
+                except OSError:
+                    continue
+        out: list[dict[str, Any]] = []
+        for mtime, f in sorted(found, key=lambda x: -x[0])[:limit]:
+            try:
+                length: float | None = probe(f, self.settings).duration
+            except Exception:
+                length = None
+            out.append(
+                {
+                    "name": f.name,
+                    "path": str(f),
+                    "size": f.stat().st_size,
+                    "modified": datetime.fromtimestamp(mtime, UTC),
+                    "duration": length,
+                    "in_drop_folder": f.resolve().parent == self.drop_folder(src.campaign_id).resolve(),
+                }
+            )
+        return out
+
+    def import_file(self, source_id: int, path: str | Path, *, move: bool = False) -> int:
+        """Bring a video you picked into the campaign's folder as a job (a big file takes a while), with
+        progress. The checks happen now, so a bad file is refused at once. Returns the job id."""
+        _src, file, _info = self._probe_footage(source_id, path)
+        with self.db.read() as s:
+            busy = s.exec(
+                select(Job).where(col(Job.status).in_(["queued", "running"]), Job.kind == "import")
+            ).all()
+        if any(j.input_json.get("source_id") == source_id for j in busy):
+            raise ServiceError(f"a file is already being added to source {source_id}")
+        campaign_id = self.source(source_id).campaign_id
+        return self.core.jobs.enqueue(
+            "import", {"source_id": source_id, "path": str(file), "move": move}, campaign_id=campaign_id
+        )
+
+    def run_import(self, ctx: Any, data: dict[str, Any]) -> dict[str, Any]:
+        """The ``import`` job: copy (or move) the file in 8 MB steps, hash it on the way, then attach it."""
+        source_id = int(data["source_id"])
+        src, file, info = self._probe_footage(source_id, data["path"])
+        folder = self.drop_folder(src.campaign_id)
+        folder.mkdir(parents=True, exist_ok=True)
+        if file.resolve().parent != folder.resolve():
+            target = folder / file.name
+            if target.exists():
+                target = folder / f"{file.stem}_{source_id}{file.suffix}"
+            digest = _copy_with_progress(file, target, ctx)
+            if data.get("move"):
+                with contextlib.suppress(OSError):
+                    file.unlink()
+            file = target
+        else:
+            ctx.progress(0.5)
+            digest = file_hash(file)
+        ctx.progress(0.95)
+        return self._finish_attach(src, file, info.duration, digest, "user")
+
+    def spec_minimum(self, campaign_id: int) -> float | None:
         """The shortest clip the campaign's saved spec allows (None until a spec is saved)."""
         with self.db.read() as s:
             camp = s.get(Campaign, campaign_id)

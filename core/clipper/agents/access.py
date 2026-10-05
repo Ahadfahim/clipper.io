@@ -39,6 +39,7 @@ CATALOG: Final[dict[str, dict[str, bool]]] = {
     "media": {
         "download": False,
         "analyze": False,
+        "need_footage": False,
         "get_transcript": True,
         "get_signals": True,
         "get_comments": True,
@@ -168,9 +169,11 @@ ACCESS: Final[dict[str, list[str]]] = {
         *_t("trends", "niche_trends", "hashtags", "saturation", "best_post_times"),
     ],
     "campaign": [
-        *_t("state", "get_campaign", "update_campaign", "save_spec", "save_moments", "get_clip", "log_note"),
+        *_t(
+            "state", "get_campaign", "update_campaign", "save_spec", "save_moments", "log_note"
+        ),  # clips are read by its subagents
         *_t("marketplace", "get_campaign_page", "join_campaign", "submit_post_url"),  # its campaign only
-        *_t("media", "download", "render"),
+        *_t("media", "download", "render", "need_footage"),
         *_t("review", "post_batch", "get_decisions"),
         *_t("publish", "list_accounts", "schedule_post"),  # approved clips only (hook)
         *_t("edit", "render_final"),  # approved clips only (hook)

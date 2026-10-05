@@ -1,0 +1,109 @@
+{
+ "agent": null,
+ "body": "Clipper can't download next.frame.io links: they are share pages, not video files. Download the video yourself, then drop the file here or choose it. Clipper copies it into the campaign's folder and the campaign's agent carries on.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "Campaign",
+   "link": null,
+   "value": "MrBeast #42 clipping"
+  },
+  {
+   "at": null,
+   "label": "Source",
+   "link": null,
+   "value": "https://next.frame.io/share/9d3a07f5-9dbf-4acd-8028-86879ad0028b/view/3ea7e8a1"
+  },
+  {
+   "at": null,
+   "label": "Can Clipper download it?",
+   "link": null,
+   "value": "No: these are share pages, not video files"
+  },
+  {
+   "at": "2026-10-02T17:10:00Z",
+   "label": "Waiting",
+   "link": null,
+   "value": ""
+  },
+  {
+   "at": null,
+   "label": "Clips need to be at least",
+   "link": null,
+   "value": "15 seconds"
+  }
+ ],
+ "footage": {
+  "drop_folder": "D:/Clipper.io/data/sources/campaign_1",
+  "host": "next.frame.io",
+  "minimum_s": 15.0,
+  "reason": "Clipper can't download next.frame.io links: they are share pages, not video files",
+  "source_id": 5,
+  "status": "needs_footage",
+  "support": "no",
+  "url": "https://next.frame.io/share/9d3a07f5-9dbf-4acd-8028-86879ad0028b/view/3ea7e8a1"
+ },
+ "item": {
+  "actions": [
+   {
+    "action": "add_file",
+    "args": {
+     "source_id": 5
+    },
+    "label": "Add file"
+   },
+   {
+    "action": "retry_source",
+    "args": {
+     "source_id": 5
+    },
+    "label": "Retry download"
+   },
+   {
+    "action": "skip_source",
+    "args": {
+     "source_id": 5
+    },
+    "label": "Skip source"
+   }
+  ],
+  "activity": null,
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "count": 1,
+  "detail": "Clipper can't download next.frame.io links: they are share pages, not video files",
+  "dismissable": false,
+  "key": "footage:5",
+  "kind": "footage",
+  "links": [
+   {
+    "host": "next.frame.io",
+    "kind": "source",
+    "label": "Open on next.frame.io",
+    "open_in": "default",
+    "url": "https://next.frame.io/share/9d3a07f5-9dbf-4acd-8028-86879ad0028b/view/3ea7e8a1"
+   },
+   {
+    "host": "app.vyro.com",
+    "kind": "marketplace",
+    "label": "Open on Vyro",
+    "open_in": "clipper",
+    "url": "https://app.vyro.com/campaigns?c=vyro-4242"
+   }
+  ],
+  "options": [],
+  "since": "2026-10-02T17:10:00Z",
+  "timeout_at": null,
+  "title": "Add the video from next.frame.io",
+  "urgency": 1
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

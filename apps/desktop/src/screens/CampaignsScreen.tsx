@@ -1,7 +1,7 @@
 import { Dismiss16Regular, LinkSquare16Regular } from "@fluentui/react-icons";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useAttachFile, useJoinedCampaign, useManualCampaign, usePauseCampaign, useRetrySource, useSaveSpec, useTakeCampaign } from "@/api/actions";
+import { useJoinedCampaign, useManualCampaign, usePauseCampaign, useRetrySource, useSaveSpec, useSkipSource, useTakeCampaign } from "@/api/actions";
 import { useCampaign, useCampaigns, useClips, useManifest, useSwitches } from "@/api/queries";
 import { fileUrl, type Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -14,12 +14,13 @@ import { TabPanel, Tabs } from "@/components/ui/tabs";
 import { MarketBadge, PlatformTag, Score } from "@/components/domain/badges";
 import { BudgetBurnBar, RunsOut } from "@/components/domain/meters";
 import { ClipCard } from "@/components/domain/clip";
+import { FootageDrop } from "@/components/domain/footage";
 import { CampaignLinkButton, useSkipFlow } from "@/components/domain/links";
 import { UntrustedBanner } from "@/components/domain/switches";
 import { cn } from "@/lib/cn";
 import { clock, compact, cpm, day, duration, money } from "@/lib/format";
 import { MARKET_LABEL, PLATFORM_LABEL, PLATFORM_ORDER } from "@/lib/platforms";
-import { openMarketplace, openPath } from "@/lib/tauri";
+import { openMarketplace, openUrl } from "@/lib/tauri";
 import { useUi } from "@/state/ui";
 
 const NONE: never[] = [];
@@ -328,13 +329,16 @@ function PasteDialog({ open, onClose }: { open: boolean; onClose: () => void }) 
   );
 }
 
-const NEEDS_FOOTAGE = new Set(["failed", "listed", "queued"]);
+const NEEDS_FOOTAGE = new Set(["failed", "needs_footage", "listed", "queued"]);
 
 /** One source: download state, and for footage that couldn't be downloaded (Frame.io, WeTransfer,
- * Drive) a retry and a way to hand Clipper the file yourself. */
+ * Drive) the link, a retry, skipping it, and the same drop zone the Needs you item has. */
 function SourceRow({ campaignId, source: s }: { campaignId: number; source: Schemas["SourceOut"] }) {
   const retry = useRetrySource(campaignId);
-  const [attaching, setAttaching] = useState(false);
+  const skip = useSkipSource(campaignId);
+  const [adding, setAdding] = useState(false);
+  const waiting = NEEDS_FOOTAGE.has(s.status);
+  const blocked = s.status === "needs_footage" || s.support === "no";
   return (
     <div className="flex flex-col gap-1 border-b border-line-soft px-3 py-2">
       <span className="flex items-center gap-2">
@@ -346,81 +350,32 @@ function SourceRow({ campaignId, source: s }: { campaignId: number; source: Sche
         <Heat values={s.heatmap} />
         <span className="truncate-1 num text-[11px]">{s.path ?? s.url}</span>
       </span>
-      {NEEDS_FOOTAGE.has(s.status) && (
-        <span className="flex items-center gap-2 pt-1">
-          <Button size="sm" disabled={retry.isPending} onClick={() => retry.mutate(s.id)}>
-            {s.status === "failed" ? "Retry download" : "Download"}
+      {waiting && s.reason && <span className="text-muted">{s.reason}</span>}
+      {waiting && (
+        <span className="flex flex-wrap items-center gap-2 pt-1">
+          <Button size="sm" variant={blocked ? "primary" : "default"} aria-expanded={adding || s.importing} onClick={() => setAdding((a) => !a)}>
+            {adding ? "Hide file options" : "Add file…"}
           </Button>
-          <Button size="sm" onClick={() => setAttaching(true)}>
-            Attach file…
+          {/^https?:\/\//.test(s.url) && (
+            <Button size="sm" icon={<LinkSquare16Regular />} title={s.url} onClick={() => void openUrl(s.url)}>
+              Open link
+            </Button>
+          )}
+          <Button size="sm" disabled={retry.isPending} onClick={() => retry.mutate({ sourceId: s.id, force: s.support === "no" })}>
+            {s.status === "failed" ? "Retry download" : blocked ? "Try download anyway" : "Download"}
+          </Button>
+          <Button size="sm" disabled={skip.isPending} onClick={() => skip.mutate(s.id)}>
+            Skip source
           </Button>
           {retry.error && <span className="truncate-1 text-[11px] text-bad">{retry.error.message}</span>}
         </span>
       )}
-      <AttachDialog open={attaching} onClose={() => setAttaching(false)} campaignId={campaignId} source={s} />
+      {waiting && (adding || s.importing) && (
+        <div className="pt-1.5">
+          <FootageDrop sourceId={s.id} campaignId={campaignId} dropFolder={s.drop_folder} importing={s.importing} />
+        </div>
+      )}
     </div>
-  );
-}
-
-function AttachDialog({ open, onClose, campaignId, source }: { open: boolean; onClose: () => void; campaignId: number; source: Schemas["SourceOut"] }) {
-  const attach = useAttachFile(campaignId);
-  const [path, setPath] = useState("");
-  const clean = path.trim().replace(/^"(.*)"$/, "$1"); // Explorer's "Copy as path" adds quotes
-  const folder = source.drop_folder;
-  return (
-    <Dialog
-      open={open}
-      onOpenChange={(o) => !o && onClose()}
-      title="Attach footage"
-      description="For sources Clipper can't download itself. The file is checked, then analyzed, and the campaign's agent carries on."
-      width={540}
-      footer={
-        <>
-          <Button
-            variant="primary"
-            disabled={!clean || attach.isPending}
-            onClick={() =>
-              attach.mutate(
-                { sourceId: source.id, path: clean },
-                {
-                  onSuccess: () => {
-                    setPath("");
-                    onClose();
-                  },
-                },
-              )
-            }
-          >
-            Attach
-          </Button>
-          <Button onClick={onClose}>Cancel</Button>
-        </>
-      }
-    >
-      <div className="flex flex-col gap-3">
-        <PropertyGrid
-          rows={[
-            ["Source", <span className="truncate-1 num text-[11px]">{source.url}</span>],
-            [
-              "Drop folder",
-              <span className="flex items-center gap-2">
-                <span className="truncate-1 num flex-1 text-[11px]">{folder}</span>
-                {folder && (
-                  <Button size="sm" onClick={() => void openPath(folder)}>
-                    Open folder
-                  </Button>
-                )}
-              </span>,
-            ],
-          ]}
-        />
-        <p className="text-muted">Put the video in the drop folder and Clipper attaches it on its own once the copy finishes. Or paste the file's path here (in Explorer, right-click the file and choose Copy as path).</p>
-        <Field label="Video file">
-          {(fid) => <TextField id={fid} autoFocus value={path} onChange={(e) => setPath(e.target.value)} placeholder="C:\Users\you\Downloads\episode.mp4" />}
-        </Field>
-        {attach.error && <p className="text-bad">{attach.error.message}</p>}
-      </div>
-    </Dialog>
   );
 }
 

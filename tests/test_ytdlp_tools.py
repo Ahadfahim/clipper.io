@@ -129,7 +129,7 @@ def test_a_failed_download_job_stores_the_reason_and_the_full_output(
         raise DownloadError(reason, tail)
 
     monkeypatch.setattr(core.adapters.downloader, "download", boom)
-    res = core.media.request_download(camp.id, "https://f.io/rnWUqe5F")
+    res = core.media.request_download(camp.id, "https://f.io/rnWUqe5F", force=True)
     asyncio.run(core.jobs.drain(timeout=30))
     with core.db.read() as s:
         job = s.get(Job, res["job_id"])

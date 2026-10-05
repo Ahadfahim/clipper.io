@@ -175,11 +175,31 @@
     0.215,
     0.151
    ],
+   "host": "youtube.com",
    "id": 3,
+   "importing": false,
    "path": null,
+   "reason": null,
    "status": "analyzing",
+   "support": "yes",
    "title": "How I Manage My Time",
-   "url": "https://www.youtube.com/watch?v=aliabdaal01"
+   "url": "https://www.youtube.com/watch?v=aliabdaal01",
+   "waiting_since": null
+  },
+  {
+   "drop_folder": "D:/Clipper.io/data/sources/campaign_2",
+   "duration": null,
+   "heatmap": [],
+   "host": "drive.google.com",
+   "id": 6,
+   "importing": true,
+   "path": null,
+   "reason": "The host refused the download (403)",
+   "status": "failed",
+   "support": "try",
+   "title": "Podcast episode 212 (Drive)",
+   "url": "https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view",
+   "waiting_since": "2026-10-02T15:50:00Z"
   }
  ],
  "spec": {

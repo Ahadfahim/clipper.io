@@ -430,7 +430,25 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
             title="The Habit Expert",
             status="listed",
         )
-        for src in (src1, src2, src3, src4):
+        # two sources that wait for a video from you: a share page nothing can download, and a Drive
+        # link that was refused (a file is already being copied in for this one)
+        src5 = Source(
+            campaign_id=beast.id or 0,
+            url="https://next.frame.io/share/9d3a07f5-9dbf-4acd-8028-86879ad0028b/view/3ea7e8a1",
+            title="Raw episode (Frame.io)",
+            status="needs_footage",
+            reason="Clipper can't download next.frame.io links: they are share pages, not video files",
+            waiting_since=now - timedelta(minutes=50),
+        )
+        src6 = Source(
+            campaign_id=ali.id or 0,
+            url="https://drive.google.com/file/d/1AbCdEfGhIjKlMnOpQrStUvWxYz/view",
+            title="Podcast episode 212 (Drive)",
+            status="failed",
+            reason="The host refused the download (403)",
+            waiting_since=now - timedelta(hours=2, minutes=10),
+        )
+        for src in (src1, src2, src3, src4, src5, src6):
             tx.add(src)
         tx.flush()
         assert src1.id is not None
@@ -971,6 +989,21 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 campaign_id=ali.id,
                 created_at=now - timedelta(minutes=7),
                 started_at=now - timedelta(minutes=6),
+            )
+        )
+        tx.add(
+            Job(
+                kind="import",
+                input_json={
+                    "source_id": src6.id,
+                    "path": "C:/Users/you/Downloads/episode-212.mp4",
+                    "move": False,
+                },
+                status="running",
+                progress=0.4,
+                campaign_id=ali.id,
+                created_at=now - timedelta(seconds=40),
+                started_at=now - timedelta(seconds=38),
             )
         )
         tx.add(

@@ -661,6 +661,12 @@
    },
    "AttachFileIn": {
     "properties": {
+     "move": {
+      "default": false,
+      "description": "move the file into Clipper's folder instead of copying it",
+      "title": "Move",
+      "type": "boolean"
+     },
      "path": {
       "description": "a video file on this PC",
       "minLength": 1,
@@ -1312,6 +1318,53 @@
      "link_status"
     ],
     "title": "CampaignRow",
+    "type": "object"
+   },
+   "CandidateOut": {
+    "properties": {
+     "duration": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Duration"
+     },
+     "in_drop_folder": {
+      "default": false,
+      "title": "In Drop Folder",
+      "type": "boolean"
+     },
+     "modified": {
+      "format": "date-time",
+      "title": "Modified",
+      "type": "string"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "path": {
+      "title": "Path",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "name",
+     "path",
+     "size",
+     "modified",
+     "duration",
+     "in_drop_folder"
+    ],
+    "title": "CandidateOut",
     "type": "object"
    },
    "CaptionIn": {
@@ -2540,6 +2593,96 @@
     "title": "FactRow",
     "type": "object"
    },
+   "FootageOut": {
+    "description": "What a \"needs footage\" item needs: where the video comes from and where it can be put.",
+    "properties": {
+     "drop_folder": {
+      "title": "Drop Folder",
+      "type": "string"
+     },
+     "host": {
+      "title": "Host",
+      "type": "string"
+     },
+     "minimum_s": {
+      "anyOf": [
+       {
+        "type": "number"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Minimum S"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "source_id": {
+      "title": "Source Id",
+      "type": "integer"
+     },
+     "status": {
+      "title": "Status",
+      "type": "string"
+     },
+     "support": {
+      "enum": [
+       "yes",
+       "try",
+       "no"
+      ],
+      "title": "Support",
+      "type": "string"
+     },
+     "url": {
+      "title": "Url",
+      "type": "string"
+     }
+    },
+    "required": [
+     "source_id",
+     "url",
+     "host",
+     "support",
+     "status",
+     "reason",
+     "drop_folder",
+     "minimum_s"
+    ],
+    "title": "FootageOut",
+    "type": "object"
+   },
+   "FootageWarning": {
+    "properties": {
+     "code": {
+      "enum": [
+       "short",
+       "no_audio"
+      ],
+      "title": "Code",
+      "type": "string"
+     },
+     "text": {
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "code",
+     "text"
+    ],
+    "title": "FootageWarning",
+    "type": "object"
+   },
    "HTTPValidationError": {
     "properties": {
      "detail": {
@@ -2609,6 +2752,100 @@
      "clip_ids"
     ],
     "title": "HideIn",
+    "type": "object"
+   },
+   "InspectIn": {
+    "properties": {
+     "path": {
+      "minLength": 1,
+      "title": "Path",
+      "type": "string"
+     }
+    },
+    "required": [
+     "path"
+    ],
+    "title": "InspectIn",
+    "type": "object"
+   },
+   "InspectOut": {
+    "properties": {
+     "duration": {
+      "title": "Duration",
+      "type": "number"
+     },
+     "has_audio": {
+      "title": "Has Audio",
+      "type": "boolean"
+     },
+     "height": {
+      "title": "Height",
+      "type": "integer"
+     },
+     "name": {
+      "title": "Name",
+      "type": "string"
+     },
+     "path": {
+      "title": "Path",
+      "type": "string"
+     },
+     "size": {
+      "title": "Size",
+      "type": "integer"
+     },
+     "warnings": {
+      "items": {
+       "$ref": "#/components/schemas/FootageWarning"
+      },
+      "title": "Warnings",
+      "type": "array"
+     },
+     "width": {
+      "title": "Width",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "name",
+     "path",
+     "size",
+     "duration",
+     "width",
+     "height",
+     "has_audio",
+     "warnings"
+    ],
+    "title": "InspectOut",
+    "type": "object"
+   },
+   "JobActivity": {
+    "description": "Something Clipper is doing for an item right now (a file being copied in).",
+    "properties": {
+     "job_id": {
+      "title": "Job Id",
+      "type": "integer"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "progress": {
+      "title": "Progress",
+      "type": "number"
+     }
+    },
+    "required": [
+     "job_id",
+     "kind",
+     "label",
+     "progress"
+    ],
+    "title": "JobActivity",
     "type": "object"
    },
    "JobOut": {
@@ -3297,6 +3534,16 @@
       "title": "Facts",
       "type": "array"
      },
+     "footage": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/FootageOut"
+       },
+       {
+        "type": "null"
+       }
+      ]
+     },
      "item": {
       "$ref": "#/components/schemas/NeedsYouItem"
      },
@@ -3340,7 +3587,8 @@
      "thumbs",
      "timeline",
      "reply_to",
-     "snooze_options"
+     "snooze_options",
+     "footage"
     ],
     "title": "NeedsYouDetail",
     "type": "object"
@@ -3353,6 +3601,16 @@
       },
       "title": "Actions",
       "type": "array"
+     },
+     "activity": {
+      "anyOf": [
+       {
+        "$ref": "#/components/schemas/JobActivity"
+       },
+       {
+        "type": "null"
+       }
+      ]
      },
      "campaign_id": {
       "anyOf": [
@@ -3399,6 +3657,7 @@
       "enum": [
        "challenge",
        "question",
+       "footage",
        "join",
        "review",
        "campaign",
@@ -3469,7 +3728,8 @@
      "options",
      "count",
      "dismissable",
-     "links"
+     "links",
+     "activity"
     ],
     "title": "NeedsYouItem",
     "type": "object"
@@ -5528,9 +5788,19 @@
       "title": "Heatmap",
       "type": "array"
      },
+     "host": {
+      "default": "",
+      "title": "Host",
+      "type": "string"
+     },
      "id": {
       "title": "Id",
       "type": "integer"
+     },
+     "importing": {
+      "default": false,
+      "title": "Importing",
+      "type": "boolean"
      },
      "path": {
       "anyOf": [
@@ -5543,8 +5813,29 @@
       ],
       "title": "Path"
      },
+     "reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
      "status": {
       "title": "Status",
+      "type": "string"
+     },
+     "support": {
+      "default": "yes",
+      "enum": [
+       "yes",
+       "try",
+       "no"
+      ],
+      "title": "Support",
       "type": "string"
      },
      "title": {
@@ -5561,6 +5852,18 @@
      "url": {
       "title": "Url",
       "type": "string"
+     },
+     "waiting_since": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Waiting Since"
      }
     },
     "required": [
@@ -5571,7 +5874,12 @@
      "duration",
      "heatmap",
      "path",
-     "drop_folder"
+     "drop_folder",
+     "reason",
+     "waiting_since",
+     "host",
+     "support",
+     "importing"
     ],
     "title": "SourceOut",
     "type": "object"
@@ -10576,9 +10884,56 @@
     ]
    }
   },
+  "/api/sources/{source_id}/candidates": {
+   "get": {
+    "description": "Videos you downloaded recently (Downloads folder, the campaign's drop folder): likely footage.",
+    "operationId": "source_candidates_api_sources__source_id__candidates_get",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "source_id",
+      "required": true,
+      "schema": {
+       "title": "Source Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/CandidateOut"
+         },
+         "title": "Response Source Candidates Api Sources  Source Id  Candidates Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Source Candidates",
+    "tags": [
+     "system"
+    ]
+   }
+  },
   "/api/sources/{source_id}/file": {
    "post": {
-    "description": "Use a video you downloaded yourself as this source's footage, then analyze it.",
+    "description": "Use a video you downloaded yourself as this source's footage: copied (or moved) in as a job with\nprogress, then analyzed.",
     "operationId": "source_attach_file_api_sources__source_id__file_post",
     "parameters": [
      {
@@ -10629,10 +10984,116 @@
     ]
    }
   },
+  "/api/sources/{source_id}/inspect": {
+   "post": {
+    "description": "What a file is, and whether it looks like the footage this campaign needs (so you can confirm).",
+    "operationId": "source_inspect_api_sources__source_id__inspect_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "source_id",
+      "required": true,
+      "schema": {
+       "title": "Source Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/InspectIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/InspectOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Source Inspect",
+    "tags": [
+     "system"
+    ]
+   }
+  },
   "/api/sources/{source_id}/retry": {
    "post": {
-    "description": "Try a source's download again.",
+    "description": "Try a source's download again. A link the downloader can't fetch is only tried with ``force``.",
     "operationId": "source_retry_api_sources__source_id__retry_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "source_id",
+      "required": true,
+      "schema": {
+       "title": "Source Id",
+       "type": "integer"
+      }
+     },
+     {
+      "in": "query",
+      "name": "force",
+      "required": false,
+      "schema": {
+       "default": false,
+       "title": "Force",
+       "type": "boolean"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Source Retry",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/sources/{source_id}/skip": {
+   "post": {
+    "description": "Don't use this source (the campaign's agent is told to use the others).",
+    "operationId": "source_skip_api_sources__source_id__skip_post",
     "parameters": [
      {
       "in": "path",
@@ -10666,7 +11127,7 @@
       "description": "Validation Error"
      }
     },
-    "summary": "Source Retry",
+    "summary": "Source Skip",
     "tags": [
      "system"
     ]
