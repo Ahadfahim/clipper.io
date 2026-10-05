@@ -99,6 +99,7 @@ class ClipFacts:
     campaign_id: int | None
     locked_by: str | None = None
     score: float | None = None
+    status: str = ""
 
 
 @dataclass(frozen=True)
@@ -340,6 +341,8 @@ def rule_publish_approval(call: ToolCall, ctx: GuardContext) -> Verdict | None:
     clip = ctx.clip(clip_id)
     if clip is None:
         return deny("approval", f"clip {clip_id} does not exist")
+    if clip.status == "scrapped":
+        return deny("approval", f"clip {clip_id} was scrapped by the user and can't be published")
     review = ctx.review(clip_id)
     ok, why = human_approved(review, clip, ctx)
     if not ok:

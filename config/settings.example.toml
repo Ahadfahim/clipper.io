@@ -201,6 +201,7 @@ failure_screenshots_days = 30
 logs_days = 14
 backups_keep = 14
 nightly_backup_at = "03:30"
+scrapped_clip_days = 7        # a scrapped clip's files are deleted after this; 0 = at the next daily purge
 
 [notify]
 # ntfy_url = "https://ntfy.sh"

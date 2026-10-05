@@ -50,6 +50,42 @@ test("needs you: open a question, see every option, answer in your own words", a
   await expect(page.getByRole("region", { name: /Details: Download failed/ })).toHaveCount(0);
 });
 
+test("library: select cards like Explorer, scrap them with Delete, undo, and find them in Scrapped", async ({ page }) => {
+  await open(page, "/library?status=in_review"); // clips waiting for review: nothing posted, so all can be scrapped
+  const cards = page.getByRole("group", { name: "Clips" }).getByRole("button", { name: /^Clip \d+/ });
+  await expect(cards.first()).toBeVisible();
+  const before = await cards.count();
+  expect(before).toBeGreaterThan(3);
+  await cards.nth(0).click();
+  await cards.nth(2).click({ modifiers: ["Control"] });
+  await expect(page.getByText(/2 selected/)).toBeVisible();
+  await expect(cards.nth(0)).toHaveAttribute("aria-pressed", "true");
+  await expect(cards.nth(1)).toHaveAttribute("aria-pressed", "false");
+  await page.keyboard.press("Delete");
+  const dialog = page.getByRole("dialog", { name: "Scrap 2 clips?" });
+  await expect(dialog.getByText(/files are deleted after 7 days/)).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Scrap 2 clips" })).toBeEnabled();
+  await dialog.getByRole("button", { name: "Scrap 2 clips" }).click();
+  await expect(page.getByText("2 clips scrapped.")).toBeVisible();
+  await expect(cards).toHaveCount(before - 2);
+  await page.getByRole("button", { name: /^Undo/ }).click();
+  await expect(page.getByText("2 clips scrapped.")).toHaveCount(0);
+  // the Scrapped view lists clips thrown away earlier, greyed, with when their files go
+  await page.getByLabel("Status").selectOption("scrapped");
+  await expect(page.getByText("Deleted in 5 days")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Delete files now" })).toBeVisible();
+});
+
+test("library: a posted clip can't be scrapped, and the dialog says why", async ({ page }) => {
+  await open(page, "/library?status=posted");
+  const card = page.getByRole("group", { name: "Clips" }).getByRole("button", { name: /^Clip \d+/ }).first();
+  await card.click();
+  await page.keyboard.press("Delete");
+  const dialog = page.getByRole("dialog", { name: "Scrap this clip?" });
+  await expect(dialog.getByText(/Can't scrap a posted clip/)).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /^Scrap 0 clips/ })).toBeDisabled();
+});
+
 test("tree navigation and keyboard page shortcuts", async ({ page }) => {
   await open(page, "/");
   await page.getByRole("tree").getByRole("link", { name: /^Library/ }).click();

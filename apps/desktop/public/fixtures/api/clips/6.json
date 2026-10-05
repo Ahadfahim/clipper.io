@@ -7,12 +7,15 @@
   "url": "https://app.vyro.com/campaigns?c=vyro-4242"
  },
  "clip": {
+  "bytes": null,
   "campaign_id": 1,
   "campaign_title": "MrBeast #42 clipping",
   "caption_style": "clean",
   "decision": "approved",
   "duration": 33.0,
   "editing_live": false,
+  "files_purged": false,
+  "hidden": false,
   "hook": "Wait for the twist at the end",
   "id": 6,
   "layout": "split",
@@ -21,7 +24,10 @@
    "youtube"
   ],
   "preview_url": "/api/files/clip/6/preview",
+  "purge_at": null,
   "score": 77.0,
+  "scrap_reason": null,
+  "scrapped_at": null,
   "status": "approved",
   "thumb_url": "/api/files/clip/6/thumb",
   "variant_label": null,

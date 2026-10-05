@@ -33,6 +33,12 @@ class Applied:
     out_range: tuple[float, float] | None
 
 
+def _refuse_scrapped(tx: WriteTx, clip_id: int) -> None:
+    clip = tx.session.get(Clip, clip_id)
+    if clip is not None and clip.status == "scrapped":
+        raise EditError(f"clip {clip_id} was scrapped by the user")
+
+
 class LockedError(EditError):
     """The clip is locked by someone else (the user took over)."""
 
@@ -110,6 +116,7 @@ class EdlService:
             args = {**args, "silences": self.silences_for(clip_id)}
 
         def job(tx: WriteTx) -> Applied:
+            _refuse_scrapped(tx, clip_id)
             row = _load(tx, clip_id)
             if row.locked_by == "user" and actor != "user":
                 raise LockedError(f"the user took over clip {clip_id}")
@@ -147,6 +154,7 @@ class EdlService:
 
     def undo(self, clip_id: int, op_id: int, *, actor: str) -> tuple[Edl, list[str]]:
         def job(tx: WriteTx) -> tuple[Edl, list[str]]:
+            _refuse_scrapped(tx, clip_id)
             row = _load(tx, clip_id)
             if row.locked_by == "user" and actor != "user":
                 raise LockedError(f"the user took over clip {clip_id}")
@@ -220,6 +228,7 @@ class EdlService:
             src = tx.session.get(Clip, clip_id)
             if src is None:
                 raise EditError(f"clip {clip_id} not found")
+            _refuse_scrapped(tx, clip_id)
             clone = Clip(
                 moment_id=src.moment_id,
                 campaign_id=src.campaign_id,

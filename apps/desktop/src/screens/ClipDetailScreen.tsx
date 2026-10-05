@@ -1,6 +1,7 @@
 import { ArrowLeft16Regular, Edit16Regular, LinkSquare16Regular } from "@fluentui/react-icons";
 import { Link, useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { useRef, useState } from "react";
+import { useRestore } from "@/api/actions";
 import { useClip, useManifest } from "@/api/queries";
 import { fileUrl } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,9 @@ import { compact, dayTime, duration, money } from "@/lib/format";
 import { useHotkeys } from "@/lib/hotkeys";
 import { openUrl } from "@/lib/tauri";
 import { CampaignLinkButton } from "@/components/domain/links";
+import { ScrapDialog } from "@/components/domain/scrap";
+import { purgeLabel } from "@/lib/library";
+import { relative } from "@/lib/format";
 
 /** Clip detail: player with frame stepping; transcript, why this moment, versions, posts (UI.md §3.4). */
 export function ClipDetailScreen() {
@@ -24,11 +28,14 @@ export function ClipDetailScreen() {
   const manifest = useManifest().data;
   const player = useRef<PlayerHandle>(null);
   const [t, setT] = useState(0);
+  const [scrapOpen, setScrapOpen] = useState(false);
+  const restore = useRestore();
   useHotkeys({
     space: () => player.current?.toggle(),
     ",": () => player.current?.step(-1),
     ".": () => player.current?.step(1),
     e: () => void navigate({ to: "/edit/$clipId", params: { clipId } }),
+    delete: () => d && d.clip.status !== "scrapped" && setScrapOpen(true),
   });
   if (!d) return <Empty>Loading clip…</Empty>;
   const c = d.clip;
@@ -49,15 +56,38 @@ export function ClipDetailScreen() {
         <CampaignLinkButton link={d.campaign_link} />
         <StatusPill status={c.status} />
         <span className="flex-1" />
-        <Button icon={<Edit16Regular />} shortcut="E" onClick={() => void navigate({ to: "/edit/$clipId", params: { clipId } })}>
-          Edit
-        </Button>
+        {c.status === "scrapped" ? (
+          <Button variant="primary" disabled={c.files_purged || restore.isPending} onClick={() => restore.mutate([c.id])}>
+            Restore
+          </Button>
+        ) : (
+          <>
+            <Button icon={<Edit16Regular />} shortcut="E" onClick={() => void navigate({ to: "/edit/$clipId", params: { clipId } })}>
+              Edit
+            </Button>
+            <Button variant="danger" shortcut="Del" onClick={() => setScrapOpen(true)}>
+              Scrap clip
+            </Button>
+          </>
+        )}
         {sourceUrl && (
           <Button icon={<LinkSquare16Regular />} onClick={() => void openUrl(`${sourceUrl}&t=${Math.floor(d.source_range[0] ?? 0)}`)}>
             Open source at {duration(d.source_range[0])}
           </Button>
         )}
       </div>
+      {c.status === "scrapped" && (
+        <div role="status" className="flex items-center gap-3 border-b border-line bg-warn-soft px-3 py-1.5">
+          <span>
+            {`Scrapped ${c.scrapped_at ? relative(c.scrapped_at) : ""}${c.scrap_reason ? ` (${c.scrap_reason})` : ""}. ${c.files_purged ? "Its files are deleted." : `${purgeLabel(c.purge_at, false)}.`} It can't be edited or posted.`}
+          </span>
+          {!c.files_purged && (
+            <Button size="sm" onClick={() => restore.mutate([c.id])}>
+              Restore
+            </Button>
+          )}
+        </div>
+      )}
       <div className="flex min-h-0 flex-1 flex-wrap overflow-auto">
         <div className="flex flex-[1_1_320px] flex-col items-center gap-3 bg-bg p-4">
           <ClipPlayer ref={player} label={`Clip ${c.id} preview`} src={fileUrl(c.preview_url, manifest)} poster={fileUrl(c.thumb_url, manifest)} width={270} onTime={setT} autoPlay={false} />
@@ -159,6 +189,7 @@ export function ClipDetailScreen() {
           </Tabs>
         </div>
       </div>
+      <ScrapDialog clips={[c]} open={scrapOpen} onClose={() => setScrapOpen(false)} onScrapped={() => void navigate({ to: "/library" })} />
     </div>
   );
 }

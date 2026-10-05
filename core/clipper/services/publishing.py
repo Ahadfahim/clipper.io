@@ -83,6 +83,8 @@ class PublishingService(Service):
             clip = s.get(Clip, clip_id)
             if clip is None:
                 raise ServiceError(f"clip {clip_id} not found")
+            if clip.status == ClipStatus.SCRAPPED:
+                raise ServiceError(f"clip {clip_id} was scrapped by the user and can't be posted")
             review = s.get(Review, clip_id)
             account = s.get(Account, account_id)
             if account is None:
@@ -161,6 +163,9 @@ class PublishingService(Service):
                 clip = s.get(Clip, post.clip_id)
             if account is None or clip is None:
                 self._set_post(post_id, status=PostStatus.FAILED, error="account or clip missing")
+                continue
+            if clip.status == ClipStatus.SCRAPPED:  # scrapped after it was scheduled: never upload it
+                self._set_post(post_id, status=PostStatus.CANCELLED, error="the clip was scrapped")
                 continue
             if not account.enabled or account.status != AccountStatus.ACTIVE:
                 continue  # stays scheduled until the account is back (or the user cancels)

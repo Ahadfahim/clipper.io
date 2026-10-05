@@ -104,6 +104,7 @@ def clip_rows(core: Core, s: Session, clips: list[Clip]) -> list[S.ClipRow]:
     posts = s.exec(select(Post).where(col(Post.clip_id).in_(clip_ids))).all()
     metrics = _latest_metrics(s)
     live = _editing_live(s, core.clock.now())
+    days = core.settings.retention.scrapped_clip_days
     posted: dict[int, set[str]] = defaultdict(set)
     views: dict[int, int] = defaultdict(int)
     for p in posts:
@@ -136,6 +137,14 @@ def clip_rows(core: Core, s: Session, clips: list[Clip]) -> list[S.ClipRow]:
                 views=views[c.id],
                 decision=reviews[c.id].decision if c.id in reviews else None,
                 editing_live=c.id in live,
+                scrapped_at=c.scrapped_at,
+                scrap_reason=c.scrap_reason,
+                purge_at=(c.scrapped_at + timedelta(days=days)) if c.scrapped_at else None,
+                files_purged=c.files_purged_at is not None,
+                hidden=c.hidden,
+                bytes=core.library.clip_bytes(c.id)
+                if c.status == "scrapped" and c.files_purged_at is None
+                else None,
             )
         )
     return out
@@ -870,12 +879,17 @@ def event_text(e: Event) -> str:
 def clips(
     core: Core, *, campaign_id: int | None = None, status: str | None = None, min_score: float | None = None
 ) -> list[S.ClipRow]:
+    """The Library. Scrapped and hidden clips stay out of it unless you ask for them by status."""
     with core.db.read() as s:
         q = select(Clip).order_by(col(Clip.id).desc())
         if campaign_id is not None:
             q = q.where(Clip.campaign_id == campaign_id)
-        if status:
+        if status == "hidden":
+            q = q.where(col(Clip.hidden), Clip.status != "scrapped")
+        elif status:
             q = q.where(Clip.status == status)
+        if status != "scrapped" and status != "hidden":
+            q = q.where(Clip.status != "scrapped", col(Clip.hidden).is_(False))
         rows = clip_rows(core, s, list(s.exec(q.limit(500)).all()))
     if min_score is not None:
         rows = [r for r in rows if r.score >= min_score]

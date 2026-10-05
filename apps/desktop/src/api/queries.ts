@@ -23,6 +23,9 @@ export const qk = {
   campaigns: ["campaigns"],
   campaign: (id: number) => ["campaign", id],
   clips: ["clips"],
+  clipsScrapped: ["clips", "scrapped"],
+  clipsHidden: ["clips", "hidden"],
+  cleanup: ["cleanup"],
   clip: (id: number) => ["clip", id],
   batches: ["batches"],
   batch: (id: number) => ["batch", id],
@@ -86,6 +89,23 @@ export const useCampaign = (id: number | undefined) =>
     ...live,
   });
 export const useClips = () => useQuery({ queryKey: qk.clips, queryFn: () => unwrap(api.GET("/api/clips")), ...live });
+/** Clips you scrapped (restorable until their files are deleted) and clips you hid. */
+export const useScrappedClips = () =>
+  useQuery({ queryKey: qk.clipsScrapped, queryFn: () => unwrap(api.GET("/api/clips", { params: { query: { status: "scrapped" } } })), ...live });
+export const useHiddenClips = () =>
+  useQuery({ queryKey: qk.clipsHidden, queryFn: () => unwrap(api.GET("/api/clips", { params: { query: { status: "hidden" } } })), ...live });
+/** Things worth throwing away, grouped, each with the space it would free. */
+export const useCleanup = (enabled: boolean) =>
+  useQuery({ queryKey: qk.cleanup, queryFn: () => unwrap(api.GET("/api/clips/cleanup")), enabled, ...live });
+/** What scrapping these clips would do (which can't be, scheduled posts, variants, space). */
+export const useScrapPreview = (ids: number[], includeVariants: boolean, enabled: boolean) =>
+  useQuery({
+    queryKey: ["scrap-preview", ids, includeVariants],
+    queryFn: () => unwrap(api.POST("/api/clips/scrap/preview", { body: { clip_ids: ids, include_variants: includeVariants } })),
+    enabled: enabled && ids.length > 0,
+    retry: false,
+    gcTime: 0,
+  });
 export const useClip = (id: number | undefined) =>
   useQuery({
     queryKey: qk.clip(id ?? 0),

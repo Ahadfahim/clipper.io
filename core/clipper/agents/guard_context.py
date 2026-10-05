@@ -127,6 +127,7 @@ class DbGuardContext:
                 campaign_id=c.campaign_id,
                 locked_by=edl.locked_by if edl else None,
                 score=moment.final_score if moment else None,
+                status=c.status,
             )
 
     def review(self, clip_id: int) -> ReviewFacts | None:

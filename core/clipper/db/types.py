@@ -64,6 +64,7 @@ class ClipStatus(StrEnum):
     FINAL = "final"  # final render done
     POSTED = "posted"
     FAILED = "failed"
+    SCRAPPED = "scrapped"  # thrown away by the user (services/library.py)
 
 
 class Decision(StrEnum):

@@ -153,6 +153,7 @@ class Supervisor:
         self.core.wakeups.fire_due()
         self.watchdog()
         self.core.notify.expire()
+        self.core.library.purge_expired_daily()  # once per day: delete the files of clips scrapped long ago
         # footage you put in sources/campaign_<id>/ yourself; off the loop: probing and hashing a
         # multi-GB video takes seconds
         await asyncio.to_thread(self.core.media.scan_drop_folders)

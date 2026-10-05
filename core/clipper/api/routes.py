@@ -716,6 +716,76 @@ def clip_list(
     return views.clips(core, campaign_id=campaign_id, status=status, min_score=min_score)
 
 
+def _refused(items: list[dict[str, object]]) -> list[S.Refused]:
+    return [S.Refused(id=int(str(i["id"])), reason=str(i["reason"])) for i in items]
+
+
+@library.post("/scrap/preview", response_model=S.ScrapPreviewOut)
+def scrap_preview(core: CoreDep, body: S.ScrapPreviewIn) -> S.ScrapPreviewOut:
+    """What scrapping these clips would do, clip by clip: which can't be (and why), scheduled posts,
+    hook variants that come along, and the space their files take."""
+    try:
+        checks = core.library.check(body.clip_ids, include_variants=body.include_variants)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    rows = [S.ScrapCheckOut(**c.__dict__) for c in checks]
+    ok = [c for c in rows if c.can_scrap]
+    return S.ScrapPreviewOut(
+        clips=rows,
+        scrappable=len(ok),
+        bytes=sum(c.bytes for c in ok),
+        grace_days=core.settings.retention.scrapped_clip_days,
+    )
+
+
+@library.post("/scrap", response_model=S.ScrapOut)
+def scrap(core: CoreDep, body: S.ScrapIn) -> S.ScrapOut:
+    """Scrap clips: they leave the Library and can never be posted; files are deleted after a grace period."""
+    try:
+        res = core.library.scrap(
+            body.clip_ids,
+            reason=body.reason,
+            include_variants=body.include_variants,
+            cancel_posts=body.cancel_posts,
+            by="user",
+            via=body.via,
+        )
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.ScrapOut(scrapped=res["scrapped"], refused=_refused(res["refused"]), bytes=res["bytes"])
+
+
+@library.post("/restore", response_model=S.RestoreOut)
+def restore(core: CoreDep, body: S.RestoreIn) -> S.RestoreOut:
+    res = core.library.restore(body.clip_ids)
+    return S.RestoreOut(restored=res["restored"], refused=_refused(res["refused"]))
+
+
+@library.post("/purge", response_model=S.PurgeOut)
+def purge(core: CoreDep, body: S.PurgeIn) -> S.PurgeOut:
+    """Delete files now: of scrapped clips (all of them, or the ones given), or just the render files of
+    old versions of the clips given."""
+    if body.old_versions:
+        if not body.clip_ids:
+            raise HTTPException(400, "say which clips")
+        res = core.library.purge_old_versions(body.clip_ids)
+    else:
+        res = core.library.purge(body.clip_ids)
+    return S.PurgeOut(clips=res["clips"], bytes=res["bytes"])
+
+
+@library.post("/hide", response_model=list[int])
+def hide(core: CoreDep, body: S.HideIn) -> list[int]:
+    """Hide posted clips from the Library (or show them again). They can't be scrapped."""
+    return core.library.hide(body.clip_ids, body.hidden)
+
+
+@library.get("/cleanup", response_model=list[S.CleanupGroupOut])
+def cleanup(core: CoreDep) -> list[S.CleanupGroupOut]:
+    """Things worth throwing away, grouped, with the space each would free."""
+    return [S.CleanupGroupOut(**g.__dict__) for g in core.library.cleanup_groups()]
+
+
 @library.get("/{clip_id}", response_model=S.ClipDetail)
 def clip_get(core: CoreDep, clip_id: int) -> S.ClipDetail:
     detail = views.clip_detail(core, clip_id)

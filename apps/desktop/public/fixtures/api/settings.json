@@ -195,6 +195,7 @@
    "failure_screenshots_days": 30,
    "logs_days": 14,
    "nightly_backup_at": "03:30",
+   "scrapped_clip_days": 7,
    "sources_days_after_end": 14
   },
   "review": {

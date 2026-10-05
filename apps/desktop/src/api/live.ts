@@ -61,6 +61,7 @@ function baseKeys(ev: Pick<LiveEvent, "type" | "payload">): QueryKey[] {
   if (t === "agent.event" || t === "agent.session" || t === "agent.log")
     return [qk.board, qk.sessions, ...(session !== undefined ? [qk.session(session)] : []), ...(t === "agent.session" ? [qk.director] : [])];
   if (t.startsWith("job.")) return withC([qk.jobs, qk.status, ...(t === "job.done" ? [qk.clips, qk.overview] : [])]);
+  if (t === "clip.scrapped" || t === "clip.restored" || t === "clip.purged") return withC([qk.clips, qk.cleanup, qk.batches, qk.overview]);
   if (t === "clip.updated" || t === "review.preview_replaced")
     return withC([qk.clips, ...(clip !== undefined ? [qk.clip(clip), qk.edit(clip)] : []), qk.batches, ...(batch !== undefined ? [qk.batch(batch)] : [])]);
   if (t.startsWith("review.") || t === "caption.edited" || t === "recut.requested")

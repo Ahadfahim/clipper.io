@@ -288,6 +288,7 @@ class RetentionSettings(_Model):
     logs_days: int = 14
     backups_keep: int = 14
     nightly_backup_at: str = "03:30"
+    scrapped_clip_days: int = 7  # a scrapped clip's files are deleted after this (0 = at the next purge)
 
 
 class NotifySettings(_Model):

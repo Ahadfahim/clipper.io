@@ -523,6 +523,125 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/clips/cleanup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Cleanup
+         * @description Things worth throwing away, grouped, with the space each would free.
+         */
+        get: operations["cleanup_api_clips_cleanup_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clips/hide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Hide
+         * @description Hide posted clips from the Library (or show them again). They can't be scrapped.
+         */
+        post: operations["hide_api_clips_hide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clips/purge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Purge
+         * @description Delete files now: of scrapped clips (all of them, or the ones given), or just the render files of
+         *     old versions of the clips given.
+         */
+        post: operations["purge_api_clips_purge_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clips/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Restore */
+        post: operations["restore_api_clips_restore_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clips/scrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Scrap
+         * @description Scrap clips: they leave the Library and can never be posted; files are deleted after a grace period.
+         */
+        post: operations["scrap_api_clips_scrap_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/clips/scrap/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Scrap Preview
+         * @description What scrapping these clips would do, clip by clip: which can't be (and why), scheduled posts,
+         *     hook variants that come along, and the space their files take.
+         */
+        post: operations["scrap_preview_api_clips_scrap_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/clips/{clip_id}": {
         parameters: {
             query?: never;
@@ -2162,6 +2281,22 @@ export interface components {
              */
             confirm: true;
         };
+        /** CleanupGroupOut */
+        CleanupGroupOut: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "scrap" | "delete_files";
+            /** Bytes */
+            bytes: number;
+            /** Clip Ids */
+            clip_ids: number[];
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+        };
         /** ClipDetail */
         ClipDetail: {
             campaign_link: components["schemas"]["Link"] | null;
@@ -2201,6 +2336,8 @@ export interface components {
         };
         /** ClipRow */
         ClipRow: {
+            /** Bytes */
+            bytes: number | null;
             /** Campaign Id */
             campaign_id: number | null;
             /** Campaign Title */
@@ -2213,6 +2350,16 @@ export interface components {
             duration: number | null;
             /** Editing Live */
             editing_live: boolean;
+            /**
+             * Files Purged
+             * @default false
+             */
+            files_purged: boolean;
+            /**
+             * Hidden
+             * @default false
+             */
+            hidden: boolean;
             /** Hook */
             hook: string;
             /** Id */
@@ -2225,8 +2372,14 @@ export interface components {
             platforms_posted: string[];
             /** Preview Url */
             preview_url: string | null;
+            /** Purge At */
+            purge_at: string | null;
             /** Score */
             score: number;
+            /** Scrap Reason */
+            scrap_reason: string | null;
+            /** Scrapped At */
+            scrapped_at: string | null;
             /** Status */
             status: string;
             /** Thumb Url */
@@ -2532,6 +2685,16 @@ export interface components {
              * @enum {string}
              */
             status: "ok" | "warn" | "fail" | "skip";
+        };
+        /** HideIn */
+        HideIn: {
+            /** Clip Ids */
+            clip_ids: number[];
+            /**
+             * Hidden
+             * @default true
+             */
+            hidden: boolean;
         };
         /** JobOut */
         JobOut: {
@@ -3020,6 +3183,23 @@ export interface components {
             /** Saved */
             saved: boolean;
         };
+        /** PurgeIn */
+        PurgeIn: {
+            /** Clip Ids */
+            clip_ids?: number[] | null;
+            /**
+             * Old Versions
+             * @default false
+             */
+            old_versions: boolean;
+        };
+        /** PurgeOut */
+        PurgeOut: {
+            /** Bytes */
+            bytes: number;
+            /** Clips */
+            clips: number[];
+        };
         /** QuestionOut */
         QuestionOut: {
             /** Answer */
@@ -3141,6 +3321,13 @@ export interface components {
              */
             via: "dashboard" | "discord";
         };
+        /** Refused */
+        Refused: {
+            /** Id */
+            id: number;
+            /** Reason */
+            reason: string;
+        };
         /** RejectRestIn */
         RejectRestIn: {
             /**
@@ -3220,6 +3407,18 @@ export interface components {
              */
             scheduled_at: string;
         };
+        /** RestoreIn */
+        RestoreIn: {
+            /** Clip Ids */
+            clip_ids: number[];
+        };
+        /** RestoreOut */
+        RestoreOut: {
+            /** Refused */
+            refused: components["schemas"]["Refused"][];
+            /** Restored */
+            restored: number[];
+        };
         /** ReviewClip */
         ReviewClip: {
             /** Captions */
@@ -3245,6 +3444,91 @@ export interface components {
             source_range: number[];
             /** Via */
             via: string | null;
+        };
+        /** ScrapCheckOut */
+        ScrapCheckOut: {
+            /** Blocked Reason */
+            blocked_reason: string | null;
+            /**
+             * Bytes
+             * @default 0
+             */
+            bytes: number;
+            /** Can Scrap */
+            can_scrap: boolean;
+            /** Editing By */
+            editing_by: string | null;
+            /**
+             * Hook
+             * @default
+             */
+            hook: string;
+            /** Id */
+            id: number;
+            /** In Batch */
+            in_batch: number | null;
+            /** Scheduled Posts */
+            scheduled_posts: number[];
+            /**
+             * Status
+             * @default
+             */
+            status: string;
+            /** Variants */
+            variants: number[];
+        };
+        /** ScrapIn */
+        ScrapIn: {
+            /**
+             * Cancel Posts
+             * @default false
+             */
+            cancel_posts: boolean;
+            /** Clip Ids */
+            clip_ids: number[];
+            /**
+             * Include Variants
+             * @default true
+             */
+            include_variants: boolean;
+            /** Reason */
+            reason?: string | null;
+            /**
+             * Via
+             * @default dashboard
+             * @enum {string}
+             */
+            via: "dashboard" | "discord";
+        };
+        /** ScrapOut */
+        ScrapOut: {
+            /** Bytes */
+            bytes: number;
+            /** Refused */
+            refused: components["schemas"]["Refused"][];
+            /** Scrapped */
+            scrapped: number[];
+        };
+        /** ScrapPreviewIn */
+        ScrapPreviewIn: {
+            /** Clip Ids */
+            clip_ids: number[];
+            /**
+             * Include Variants
+             * @default true
+             */
+            include_variants: boolean;
+        };
+        /** ScrapPreviewOut */
+        ScrapPreviewOut: {
+            /** Bytes */
+            bytes: number;
+            /** Clips */
+            clips: components["schemas"]["ScrapCheckOut"][];
+            /** Grace Days */
+            grace_days: number;
+            /** Scrappable */
+            scrappable: number;
         };
         /** SecretIn */
         SecretIn: {
@@ -4532,6 +4816,191 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ClipRow"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cleanup_api_clips_cleanup_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CleanupGroupOut"][];
+                };
+            };
+        };
+    };
+    hide_api_clips_hide_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HideIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": number[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    purge_api_clips_purge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurgeIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurgeOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    restore_api_clips_restore_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RestoreIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RestoreOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scrap_api_clips_scrap_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    scrap_preview_api_clips_scrap_preview_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapPreviewIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapPreviewOut"];
                 };
             };
             /** @description Validation Error */

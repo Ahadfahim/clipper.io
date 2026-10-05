@@ -117,6 +117,7 @@ class Core:
         from clipper.services.attention import AttentionService
         from clipper.services.campaigns import CampaignService
         from clipper.services.insights import InsightsService
+        from clipper.services.library import LibraryService
         from clipper.services.market import MarketplaceService
         from clipper.services.media import MediaService
         from clipper.services.memory import MemoryService
@@ -148,6 +149,7 @@ class Core:
         self.toggles = ToggleService(self)
         self.notify = NotifyService(self)
         self.attention = AttentionService(self)
+        self.library = LibraryService(self)
         self.memory = MemoryService(self)
         self.agenda = AgendaService(self)
         self.wakeups = WakeupService(self)

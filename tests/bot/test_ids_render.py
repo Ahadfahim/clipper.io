@@ -139,3 +139,30 @@ def test_campaign_card_links_to_the_page_the_core_built() -> None:
     assert [(b.label, b.url) for b in buttons] == [
         ("Open on Whop", "https://whop.com/core/app/launch/?redirect=x")
     ]
+
+
+def test_a_clip_scrapped_in_the_app_reads_as_scrapped_in_discord_with_nothing_left_to_press() -> None:
+    rc = {
+        "clip": {
+            "id": 7,
+            "hook": "Nobody tells you this",
+            "score": 91.4,
+            "duration": 42.0,
+            "status": "scrapped",
+            "version": 1,
+        },
+        "decision": "rejected",
+        "decision_reason": "scrapped: weak hook",
+        "reviewer": "user",
+        "via": "dashboard",
+        "platforms": ["youtube"],
+        "platforms_allowed": ["youtube"],
+        "captions": {},
+        "source_range": [0.0, 42.0],
+        "reason": "",
+        "qa_ok": True,
+    }
+    e, v = render.clip_message(rc)
+    assert e.footer.text == "🗑 Scrapped by user · weak hook · v1"
+    assert e.colour == render.GRAY
+    assert all(getattr(c, "disabled", False) for c in v.children)

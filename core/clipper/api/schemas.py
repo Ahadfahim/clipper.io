@@ -535,6 +535,82 @@ class SourceOut(M):
     drop_folder: str | None = None  # put footage you downloaded yourself here; Clipper attaches it
 
 
+class ScrapCheckOut(M):
+    id: int
+    can_scrap: bool
+    blocked_reason: str | None = None
+    status: str = ""
+    hook: str = ""
+    scheduled_posts: list[int] = Field(default_factory=list[int])
+    in_batch: int | None = None
+    editing_by: str | None = None
+    variants: list[int] = Field(default_factory=list[int])
+    bytes: int = 0
+
+
+class ScrapPreviewIn(BaseModel):
+    clip_ids: list[int] = Field(min_length=1, max_length=500)
+    include_variants: bool = True
+
+
+class ScrapPreviewOut(M):
+    clips: list[ScrapCheckOut]
+    scrappable: int
+    bytes: int
+    grace_days: int
+
+
+class ScrapIn(BaseModel):
+    clip_ids: list[int] = Field(min_length=1, max_length=500)
+    reason: str | None = Field(default=None, max_length=200)
+    include_variants: bool = True
+    cancel_posts: bool = False
+    via: Literal["dashboard", "discord"] = "dashboard"
+
+
+class Refused(M):
+    id: int
+    reason: str
+
+
+class ScrapOut(M):
+    scrapped: list[int]
+    refused: list[Refused]
+    bytes: int
+
+
+class RestoreIn(BaseModel):
+    clip_ids: list[int] = Field(min_length=1, max_length=500)
+
+
+class RestoreOut(M):
+    restored: list[int]
+    refused: list[Refused]
+
+
+class PurgeIn(BaseModel):
+    clip_ids: list[int] | None = Field(default=None, max_length=500)  # None = every scrapped clip
+    old_versions: bool = False  # delete only the files of old versions, keep the clips
+
+
+class PurgeOut(M):
+    clips: list[int]
+    bytes: int
+
+
+class HideIn(BaseModel):
+    clip_ids: list[int] = Field(min_length=1, max_length=500)
+    hidden: bool = True
+
+
+class CleanupGroupOut(M):
+    key: str
+    label: str
+    clip_ids: list[int]
+    bytes: int
+    action: Literal["scrap", "delete_files"]
+
+
 class SkipPreview(M):
     live_unsubmitted: int  # live posts not yet submitted to the marketplace
 
@@ -596,6 +672,12 @@ class ClipRow(M):
     views: int
     decision: str | None
     editing_live: bool
+    scrapped_at: datetime | None = None
+    scrap_reason: str | None = None
+    purge_at: datetime | None = None  # when a scrapped clip's files are deleted
+    files_purged: bool = False
+    hidden: bool = False
+    bytes: int | None = None  # what a scrapped clip's files take (only worked out for scrapped clips)
 
 
 class PostOut(M):

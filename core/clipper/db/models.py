@@ -126,6 +126,9 @@ class Moment(SQLModel, table=True):
     scores_json: dict[str, Any] = _json_dict()
     final_score: float = 0.0
     reason: str = ""
+    scrapped: bool = Field(
+        default=False, sa_column_kwargs={"server_default": "0"}
+    )  # you scrapped a clip of it
     created_at: datetime = _now_dt()
 
 
@@ -145,6 +148,17 @@ class Clip(SQLModel, table=True):
     caption_style: str = "bold-pop"
     qa_json: dict[str, Any] = _json_dict()
     status: str = Field(default="draft", index=True)
+    # scrapping (services/library.py): thrown away, restorable until the files are purged
+    scrapped_at: datetime | None = _dt()
+    scrapped_by: str | None = None
+    scrap_reason: str | None = None
+    scrap_json: dict[str, Any] = Field(
+        default_factory=dict, sa_type=JSON, nullable=False, sa_column_kwargs={"server_default": "{}"}
+    )  # what to put back
+    files_purged_at: datetime | None = _dt()
+    hidden: bool = Field(
+        default=False, sa_column_kwargs={"server_default": "0"}
+    )  # posted clips are hidden, not scrapped
     created_at: datetime = _now_dt()
     updated_at: datetime = _now_dt()
 

@@ -511,3 +511,49 @@ export function useDismiss() {
     invalidate: () => [qk.overview, qk.status, qk.needsYouAll],
   });
 }
+
+/* ---------------------------------------------------------------- Library: scrap, restore, hide */
+
+const libraryKeys = [qk.clips, qk.batches, qk.overview, qk.campaigns, qk.status, qk.cleanup];
+
+function useLibraryMutation<V, R>(run: (v: V) => Promise<R>, optimistic?: (v: V, qc: QueryClient) => void) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (v: V) => {
+      optimistic?.(v, qc);
+      return run(v);
+    },
+    onSettled: () => {
+      if (FIXTURE_MODE) return;
+      for (const key of libraryKeys) void qc.invalidateQueries({ queryKey: key });
+    },
+  });
+}
+
+/** Scrap clips: they leave the Library and can never be posted; their files are deleted after a grace period. */
+export function useScrap() {
+  return useLibraryMutation(
+    (v: { ids: number[]; reason: string | null; includeVariants: boolean; cancelPosts: boolean }) =>
+      unwrap(api.POST("/api/clips/scrap", { body: { clip_ids: v.ids, reason: v.reason, include_variants: v.includeVariants, cancel_posts: v.cancelPosts, via } })),
+    (v, qc) => {
+      const gone = new Set(v.ids);
+      qc.setQueryData<Schemas["ClipRow"][]>(qk.clips, (rows) => rows?.filter((c) => !gone.has(c.id)));
+    },
+  );
+}
+
+export function useRestore() {
+  return useLibraryMutation((ids: number[]) => unwrap(api.POST("/api/clips/restore", { body: { clip_ids: ids } })));
+}
+
+/** Delete the files of scrapped clips now (all of them when `ids` is null), or only the render files of old versions. */
+export function usePurge() {
+  return useLibraryMutation((v: { ids: number[] | null; oldVersions?: boolean }) =>
+    unwrap(api.POST("/api/clips/purge", { body: { clip_ids: v.ids, old_versions: v.oldVersions ?? false } })),
+  );
+}
+
+/** Hide posted clips from the Library (or show them again). */
+export function useHide() {
+  return useLibraryMutation((v: { ids: number[]; hidden: boolean }) => unwrap(api.POST("/api/clips/hide", { body: { clip_ids: v.ids, hidden: v.hidden } })));
+}

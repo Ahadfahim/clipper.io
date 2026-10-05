@@ -33,6 +33,13 @@ def describe(ev: dict[str, Any]) -> str:
         case "post.live":
             dry = " (dry run: simulated)" if p.get("dry_run") else ""
             return f"Post {p['post_id']} of clip {p['clip_id']} is live on {p['platform']}{dry}: {p['url']}. Submit it."
+        case "clip.scrapped":
+            ids = ", ".join(str(i) for i in p.get("clip_ids", []))
+            why = f" (reason: {p['reason']})" if p.get("reason") else ""
+            return (
+                f"The user scrapped clips {ids}{why}. Don't re-cut those moments; use it to adjust your picks, "
+                "and don't plan posts for them."
+            )
         case "campaign.joined":
             return (
                 f"The user joined campaign {p['campaign_id']} on the marketplace's site. Call "

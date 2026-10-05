@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from sqlmodel import col, select
 
 from clipper.db.engine import WriteTx
-from clipper.db.models import Account, Post
-from clipper.db.types import CAP_COUNTED_POST_STATUSES, PostStatus
+from clipper.db.models import Account, Clip, Post
+from clipper.db.types import CAP_COUNTED_POST_STATUSES, ClipStatus, PostStatus
 from clipper.events.types import PostScheduled
 from clipper.rules.caps import AccountCaps, CapDecision, check_post_slot
 from clipper.settings import Settings
@@ -48,6 +48,9 @@ def schedule_post_tx(
     account = tx.session.get(Account, account_id)
     if account is None:
         return CapDecision(False, f"account {account_id} not found", 0, 0)
+    clip = tx.session.get(Clip, clip_id)
+    if clip is not None and clip.status == ClipStatus.SCRAPPED:
+        return CapDecision(False, f"clip {clip_id} was scrapped by the user and can't be posted", 0, 0)
     decision = check_post_slot(
         account_caps(account),
         counted_post_times(tx, account_id, scheduled_at),

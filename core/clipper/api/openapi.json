@@ -1399,6 +1399,46 @@
     "title": "CheckUploadIn",
     "type": "object"
    },
+   "CleanupGroupOut": {
+    "properties": {
+     "action": {
+      "enum": [
+       "scrap",
+       "delete_files"
+      ],
+      "title": "Action",
+      "type": "string"
+     },
+     "bytes": {
+      "title": "Bytes",
+      "type": "integer"
+     },
+     "clip_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Clip Ids",
+      "type": "array"
+     },
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "label",
+     "clip_ids",
+     "bytes",
+     "action"
+    ],
+    "title": "CleanupGroupOut",
+    "type": "object"
+   },
    "ClipDetail": {
     "properties": {
      "campaign_link": {
@@ -1514,6 +1554,17 @@
    },
    "ClipRow": {
     "properties": {
+     "bytes": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Bytes"
+     },
      "campaign_id": {
       "anyOf": [
        {
@@ -1566,6 +1617,16 @@
       "title": "Editing Live",
       "type": "boolean"
      },
+     "files_purged": {
+      "default": false,
+      "title": "Files Purged",
+      "type": "boolean"
+     },
+     "hidden": {
+      "default": false,
+      "title": "Hidden",
+      "type": "boolean"
+     },
      "hook": {
       "title": "Hook",
       "type": "string"
@@ -1600,9 +1661,44 @@
       ],
       "title": "Preview Url"
      },
+     "purge_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Purge At"
+     },
      "score": {
       "title": "Score",
       "type": "number"
+     },
+     "scrap_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scrap Reason"
+     },
+     "scrapped_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Scrapped At"
      },
      "status": {
       "title": "Status",
@@ -1657,7 +1753,13 @@
      "platforms_posted",
      "views",
      "decision",
-     "editing_live"
+     "editing_live",
+     "scrapped_at",
+     "scrap_reason",
+     "purge_at",
+     "files_purged",
+     "hidden",
+     "bytes"
     ],
     "title": "ClipRow",
     "type": "object"
@@ -2484,6 +2586,29 @@
      "fix"
     ],
     "title": "HealthItem",
+    "type": "object"
+   },
+   "HideIn": {
+    "properties": {
+     "clip_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Clip Ids",
+      "type": "array"
+     },
+     "hidden": {
+      "default": true,
+      "title": "Hidden",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "clip_ids"
+    ],
+    "title": "HideIn",
     "type": "object"
    },
    "JobOut": {
@@ -3978,6 +4103,53 @@
     "title": "PromptSaveOut",
     "type": "object"
    },
+   "PurgeIn": {
+    "properties": {
+     "clip_ids": {
+      "anyOf": [
+       {
+        "items": {
+         "type": "integer"
+        },
+        "maxItems": 500,
+        "type": "array"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Clip Ids"
+     },
+     "old_versions": {
+      "default": false,
+      "title": "Old Versions",
+      "type": "boolean"
+     }
+    },
+    "title": "PurgeIn",
+    "type": "object"
+   },
+   "PurgeOut": {
+    "properties": {
+     "bytes": {
+      "title": "Bytes",
+      "type": "integer"
+     },
+     "clips": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Clips",
+      "type": "array"
+     }
+    },
+    "required": [
+     "clips",
+     "bytes"
+    ],
+    "title": "PurgeOut",
+    "type": "object"
+   },
    "QuestionOut": {
     "properties": {
      "answer": {
@@ -4350,6 +4522,24 @@
     "title": "RecutIn",
     "type": "object"
    },
+   "Refused": {
+    "properties": {
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "reason": {
+      "title": "Reason",
+      "type": "string"
+     }
+    },
+    "required": [
+     "id",
+     "reason"
+    ],
+    "title": "Refused",
+    "type": "object"
+   },
    "RejectRestIn": {
     "properties": {
      "reason": {
@@ -4498,6 +4688,48 @@
     "title": "RescheduleIn",
     "type": "object"
    },
+   "RestoreIn": {
+    "properties": {
+     "clip_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Clip Ids",
+      "type": "array"
+     }
+    },
+    "required": [
+     "clip_ids"
+    ],
+    "title": "RestoreIn",
+    "type": "object"
+   },
+   "RestoreOut": {
+    "properties": {
+     "refused": {
+      "items": {
+       "$ref": "#/components/schemas/Refused"
+      },
+      "title": "Refused",
+      "type": "array"
+     },
+     "restored": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Restored",
+      "type": "array"
+     }
+    },
+    "required": [
+     "restored",
+     "refused"
+    ],
+    "title": "RestoreOut",
+    "type": "object"
+   },
    "ReviewClip": {
     "properties": {
      "captions": {
@@ -4598,6 +4830,226 @@
      "qa_ok"
     ],
     "title": "ReviewClip",
+    "type": "object"
+   },
+   "ScrapCheckOut": {
+    "properties": {
+     "blocked_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Blocked Reason"
+     },
+     "bytes": {
+      "default": 0,
+      "title": "Bytes",
+      "type": "integer"
+     },
+     "can_scrap": {
+      "title": "Can Scrap",
+      "type": "boolean"
+     },
+     "editing_by": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Editing By"
+     },
+     "hook": {
+      "default": "",
+      "title": "Hook",
+      "type": "string"
+     },
+     "id": {
+      "title": "Id",
+      "type": "integer"
+     },
+     "in_batch": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "In Batch"
+     },
+     "scheduled_posts": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Scheduled Posts",
+      "type": "array"
+     },
+     "status": {
+      "default": "",
+      "title": "Status",
+      "type": "string"
+     },
+     "variants": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Variants",
+      "type": "array"
+     }
+    },
+    "required": [
+     "id",
+     "can_scrap",
+     "blocked_reason",
+     "status",
+     "hook",
+     "scheduled_posts",
+     "in_batch",
+     "editing_by",
+     "variants",
+     "bytes"
+    ],
+    "title": "ScrapCheckOut",
+    "type": "object"
+   },
+   "ScrapIn": {
+    "properties": {
+     "cancel_posts": {
+      "default": false,
+      "title": "Cancel Posts",
+      "type": "boolean"
+     },
+     "clip_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Clip Ids",
+      "type": "array"
+     },
+     "include_variants": {
+      "default": true,
+      "title": "Include Variants",
+      "type": "boolean"
+     },
+     "reason": {
+      "anyOf": [
+       {
+        "maxLength": 200,
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Reason"
+     },
+     "via": {
+      "default": "dashboard",
+      "enum": [
+       "dashboard",
+       "discord"
+      ],
+      "title": "Via",
+      "type": "string"
+     }
+    },
+    "required": [
+     "clip_ids"
+    ],
+    "title": "ScrapIn",
+    "type": "object"
+   },
+   "ScrapOut": {
+    "properties": {
+     "bytes": {
+      "title": "Bytes",
+      "type": "integer"
+     },
+     "refused": {
+      "items": {
+       "$ref": "#/components/schemas/Refused"
+      },
+      "title": "Refused",
+      "type": "array"
+     },
+     "scrapped": {
+      "items": {
+       "type": "integer"
+      },
+      "title": "Scrapped",
+      "type": "array"
+     }
+    },
+    "required": [
+     "scrapped",
+     "refused",
+     "bytes"
+    ],
+    "title": "ScrapOut",
+    "type": "object"
+   },
+   "ScrapPreviewIn": {
+    "properties": {
+     "clip_ids": {
+      "items": {
+       "type": "integer"
+      },
+      "maxItems": 500,
+      "minItems": 1,
+      "title": "Clip Ids",
+      "type": "array"
+     },
+     "include_variants": {
+      "default": true,
+      "title": "Include Variants",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "clip_ids"
+    ],
+    "title": "ScrapPreviewIn",
+    "type": "object"
+   },
+   "ScrapPreviewOut": {
+    "properties": {
+     "bytes": {
+      "title": "Bytes",
+      "type": "integer"
+     },
+     "clips": {
+      "items": {
+       "$ref": "#/components/schemas/ScrapCheckOut"
+      },
+      "title": "Clips",
+      "type": "array"
+     },
+     "grace_days": {
+      "title": "Grace Days",
+      "type": "integer"
+     },
+     "scrappable": {
+      "title": "Scrappable",
+      "type": "integer"
+     }
+    },
+    "required": [
+     "clips",
+     "scrappable",
+     "bytes",
+     "grace_days"
+    ],
+    "title": "ScrapPreviewOut",
     "type": "object"
    },
    "SecretIn": {
@@ -7055,6 +7507,245 @@
      }
     },
     "summary": "Clip List",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/clips/cleanup": {
+   "get": {
+    "description": "Things worth throwing away, grouped, with the space each would free.",
+    "operationId": "cleanup_api_clips_cleanup_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/CleanupGroupOut"
+         },
+         "title": "Response Cleanup Api Clips Cleanup Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Cleanup",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/clips/hide": {
+   "post": {
+    "description": "Hide posted clips from the Library (or show them again). They can't be scrapped.",
+    "operationId": "hide_api_clips_hide_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/HideIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "type": "integer"
+         },
+         "title": "Response Hide Api Clips Hide Post",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Hide",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/clips/purge": {
+   "post": {
+    "description": "Delete files now: of scrapped clips (all of them, or the ones given), or just the render files of\nold versions of the clips given.",
+    "operationId": "purge_api_clips_purge_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/PurgeIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/PurgeOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Purge",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/clips/restore": {
+   "post": {
+    "operationId": "restore_api_clips_restore_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/RestoreIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/RestoreOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Restore",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/clips/scrap": {
+   "post": {
+    "description": "Scrap clips: they leave the Library and can never be posted; files are deleted after a grace period.",
+    "operationId": "scrap_api_clips_scrap_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrapIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScrapOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Scrap",
+    "tags": [
+     "library"
+    ]
+   }
+  },
+  "/api/clips/scrap/preview": {
+   "post": {
+    "description": "What scrapping these clips would do, clip by clip: which can't be (and why), scheduled posts,\nhook variants that come along, and the space their files take.",
+    "operationId": "scrap_preview_api_clips_scrap_preview_post",
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/ScrapPreviewIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/ScrapPreviewOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Scrap Preview",
     "tags": [
      "library"
     ]

@@ -99,7 +99,11 @@ def clip_message(rc: dict[str, Any], shipped: bool = False) -> tuple[discord.Emb
     """``rc`` is a ReviewClip from GET /api/review/batches/{id}."""
     c = rc["clip"]
     decision = str(rc.get("decision", "pending"))
-    colour = GREEN if decision == "approved" else RED if decision == "rejected" else GRAY
+    scrapped = c.get("status") == "scrapped"  # thrown away in the app: nothing left to decide
+    shipped = shipped or scrapped
+    colour = (
+        GRAY if scrapped else GREEN if decision == "approved" else RED if decision == "rejected" else GRAY
+    )
     e = discord.Embed(title=_cut(f"#{c['id']} · {c.get('hook') or 'Clip'}", 256), colour=colour)
     e.add_field(name="Score", value=str(round(c["score"])))
     e.add_field(name="Length", value=_dur(c.get("duration")))
@@ -114,8 +118,12 @@ def clip_message(rc: dict[str, Any], shipped: bool = False) -> tuple[discord.Emb
             e.add_field(
                 name=f"{'☑' if on else '☐'} {PLATFORM_LABEL[p]}", value=_cut(cap or "—"), inline=False
             )
-    status = DECISION_LINE.get(decision, decision)
-    if decision != "pending":
+    status = "🗑 Scrapped" if scrapped else DECISION_LINE.get(decision, decision)
+    if scrapped:
+        status += f" by {rc.get('reviewer') or 'you'}"
+        if rc.get("decision_reason"):
+            status += f" · {rc['decision_reason'].removeprefix('scrapped: ')}"
+    elif decision != "pending":
         who = rc.get("reviewer") or "someone"
         via = rc.get("via")
         status += f" by {who}" + (f" via {'the app' if via == 'dashboard' else via}" if via else "")

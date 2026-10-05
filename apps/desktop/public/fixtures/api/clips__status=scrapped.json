@@ -1,0 +1,28 @@
+[
+ {
+  "bytes": 0,
+  "campaign_id": 1,
+  "campaign_title": "MrBeast #42 clipping",
+  "caption_style": "clean",
+  "decision": "rejected",
+  "duration": 31.0,
+  "editing_live": false,
+  "files_purged": false,
+  "hidden": false,
+  "hook": "Chandler's face says it all",
+  "id": 10,
+  "layout": "split",
+  "moment_id": 10,
+  "platforms_posted": [],
+  "preview_url": "/api/files/clip/10/preview",
+  "purge_at": "2026-10-07T18:00:00Z",
+  "score": 66.0,
+  "scrap_reason": "bad hook",
+  "scrapped_at": "2026-09-30T18:00:00Z",
+  "status": "scrapped",
+  "thumb_url": "/api/files/clip/10/thumb",
+  "variant_label": null,
+  "version": 2,
+  "views": 0
+ }
+]

@@ -66,6 +66,10 @@ def route(env: EventEnvelope, *, session_of: SessionLookup, clip_campaign: ClipC
         return campaign(P1, p.get("campaign_id"))
     if t == "campaign.ending":
         return campaign(P1, p["campaign_id"])
+    if t == "clip.scrapped":
+        return campaign(
+            P2, p.get("campaign_id")
+        )  # the supervisor drops it unless the campaign is still working
     if t == "campaign.joined":
         return campaign(P0, p["campaign_id"])  # you did what the agent was waiting for
     if t == "recut.requested":

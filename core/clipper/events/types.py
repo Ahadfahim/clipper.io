@@ -149,6 +149,34 @@ class JobDone(EventPayload):
 # ---------------------------------------------------------------- clips, review
 
 
+class ClipScrapped(EventPayload):
+    TYPE = "clip.scrapped"
+    ENTITY = "campaign"
+    ENTITY_FIELD = "campaign_id"
+    clip_ids: list[int]
+    campaign_id: int | None = None
+    reason: str | None = None
+    by: str = "user"
+    via: str = "dashboard"
+
+
+class ClipRestored(EventPayload):
+    TYPE = "clip.restored"
+    ENTITY = "campaign"
+    ENTITY_FIELD = "campaign_id"
+    clip_ids: list[int]
+    campaign_id: int | None = None
+    by: str = "user"
+
+
+class ClipPurged(EventPayload):
+    """The files of scrapped clips were deleted (the rows stay)."""
+
+    TYPE = "clip.purged"
+    clip_ids: list[int]
+    bytes_freed: int = 0
+
+
 class ClipUpdated(EventPayload):
     TYPE = "clip.updated"
     ENTITY = "clip"

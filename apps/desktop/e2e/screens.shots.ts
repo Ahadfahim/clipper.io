@@ -21,6 +21,18 @@ const screens: Shot[] = [
   { name: "campaigns", path: "/campaigns", ready: "Paste campaign URL" },
   { name: "campaign-detail", path: "/campaigns?open=1", ready: "Why this score" },
   { name: "library", path: "/library", ready: "12 of 12 clips" },
+  { name: "library-scrapped", path: "/library?status=scrapped", ready: "Deleted in 5 days" },
+  { name: "library-scrap", path: "/library", ready: "12 of 12 clips", then: async (p) => {
+      const cards = p.getByRole("group", { name: "Clips" }).getByRole("button", { name: /^Clip \d+/ });
+      await cards.nth(1).click();
+      await cards.nth(3).click({ modifiers: ["Control"] });
+      await p.keyboard.press("Delete");
+      await p.getByRole("dialog", { name: "Scrap 2 clips?" }).waitFor();
+    } },
+  { name: "library-cleanup", path: "/library", ready: "12 of 12 clips", then: async (p) => {
+      await p.getByRole("button", { name: "Clean up…" }).click();
+      await p.getByRole("dialog", { name: "Clean up the Library" }).waitFor();
+    } },
   { name: "clip-detail", path: "/library/1?tab=why", ready: "Signal timeline" },
   { name: "review", path: "/review/1", ready: "Decisions sync with Discord" },
   { name: "edit", path: "/edit/3", ready: "Your notes" },

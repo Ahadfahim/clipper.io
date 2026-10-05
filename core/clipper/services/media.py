@@ -495,6 +495,8 @@ class MediaService(Service):
             moment = s.get(Moment, moment_id)
             if moment is None:
                 raise ServiceError(f"moment {moment_id} not found")
+            if moment.scrapped:
+                raise ServiceError("The user scrapped a clip of this moment; pick a different moment.")
             src = s.get(Source, moment.source_id)
             analysis = s.get(Analysis, moment.source_id)
             campaign = s.get(Campaign, moment.campaign_id) if moment.campaign_id else None
@@ -560,6 +562,8 @@ class MediaService(Service):
             clip = s.get(Clip, clip_id)
             if clip is None:
                 raise ServiceError(f"clip {clip_id} not found")
+            if clip.status == ClipStatus.SCRAPPED:
+                raise ServiceError(f"clip {clip_id} was scrapped by the user")
             cid = clip.campaign_id
         self._set_clip_status(clip_id, ClipStatus.RENDERING)
         return self.core.jobs.enqueue("render_preview", {"clip_id": clip_id}, campaign_id=cid)
@@ -569,6 +573,8 @@ class MediaService(Service):
             clip = s.get(Clip, clip_id)
             if clip is None:
                 raise ServiceError(f"clip {clip_id} not found")
+            if clip.status == ClipStatus.SCRAPPED:
+                raise ServiceError(f"clip {clip_id} was scrapped by the user")
             cid = clip.campaign_id
         return self.core.jobs.enqueue("render_final", {"clip_id": clip_id}, campaign_id=cid)
 

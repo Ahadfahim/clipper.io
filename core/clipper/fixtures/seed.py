@@ -475,7 +475,7 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
             "pending",
             "pending",
         ]
-        reasons = {4: "boring", 9: "bad hook"}
+        reasons = {4: "boring", 9: "scrapped: bad hook"}
         for i, (hook, payoff, score) in enumerate(HOOKS):
             start = 120.0 + i * 61.0
             length = [42, 38, 47, 29, 51, 33, 44, 58, 26, 31, 39, 55][i]
@@ -496,6 +496,8 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
             status = {"approved": "approved", "rejected": "rejected"}.get(decision, "in_review")
             if decision == "approved" and i in (0, 1):
                 status = "posted"
+            if i == 9:
+                status = "scrapped"  # thrown away in the app two days ago; its files are still there
             c = Clip(
                 moment_id=m.id or 0,
                 campaign_id=beast.id,
@@ -539,6 +541,18 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
             tx.flush()
             assert c.id is not None
             clip_ids.append(c.id)
+            if status == "scrapped":
+                c.scrapped_at, c.scrapped_by, c.scrap_reason = now - timedelta(days=2), "user", "bad hook"
+                c.scrap_json = {
+                    "status": "rejected",
+                    "decision": "rejected",
+                    "reason": "bad hook",
+                    "via": "discord",
+                    "reviewer": "ahad",
+                }
+                m.scrapped = True
+                tx.add(c)
+                tx.add(m)
             tx.add(
                 Review(
                     clip_id=c.id,

@@ -84,6 +84,12 @@ export function describeEvent(ev: Pick<Schemas["EventOut"], "type" | "payload">)
     case "question.answered":
       if (p["via"] === "campaign_closed") return d("question", `Closed: ${str(p["answer"])}`, "muted");
       return d("question", `${p["custom"] ? "Answered in your own words" : "Answered"}: ${str(p["answer"])}`, "accent");
+    case "clip.scrapped":
+      return d("library", `Scrapped ${(p["clip_ids"] as unknown[] | undefined)?.length ?? 0} clip${(p["clip_ids"] as unknown[] | undefined)?.length === 1 ? "" : "s"}${p["reason"] ? ` (${str(p["reason"])})` : ""}`, "muted");
+    case "clip.restored":
+      return d("library", `Restored ${(p["clip_ids"] as unknown[] | undefined)?.length ?? 0} clip(s)`, "accent");
+    case "clip.purged":
+      return d("library", `Deleted the files of ${(p["clip_ids"] as unknown[] | undefined)?.length ?? 0} scrapped clip(s)`, "muted");
     case "attention.changed":
       return d("needs you", `${str(p["key"]).replace(/:/g, " ")} ${p["state"] === "open" ? "brought back" : str(p["state"])}`, "muted");
     case "toggles.changed":

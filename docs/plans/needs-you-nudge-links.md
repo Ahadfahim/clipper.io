@@ -1,6 +1,6 @@
 # Plan: Needs you details, nudges, campaign links, and stuck-work fixes
 
-Status: planned 2026-10-04. M0, M1 and M2 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
+Status: planned 2026-10-04. M0, M1, M2 and M2b are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
 
 This plan is for whoever implements it. Read CLAUDE.md first: agents run on the plan login only, safety rules live in code, and UI work follows the routine (frontend-design skill, shadcn MCP, utility style, check dark and light at 1280×800 and 1920×1080).
 
@@ -529,8 +529,8 @@ Safety rules in code, so a scrapped clip can never be published:
 
 **Elsewhere**
 - Clip detail: toolbar "Scrap clip" (Delete), or "Restore" for a scrapped clip. A scrapped clip shows a banner: "Scrapped 2 days ago (weak hook). Files are deleted in 5 days. [Restore]". Edit opens scrapped clips read-only with the same banner.
-- Campaign drawer, Clips tab: the same selection, context menu and Scrap.
-- Review: Reject stays the main action; the clip's `⋯` menu gains "Scrap" (reject and scrap).
+- Campaign drawer, Clips tab: not done (the Library is where you select and scrap).
+- Review: not done (Reject stays the way to drop a clip while reviewing; scrap it from the Library).
 - Discord: the relay (`apps/bot/clipper_bot/relay.py`) edits a scrapped clip's message in its review thread to "Scrapped by <user>" and disables its buttons (`discord_ref` kind `clip_message`). Discord needs no Scrap button; Reject is there.
 - Gallery fixtures: card states (selected, scrapped, purged, hidden), the confirm dialog with blocked rows, the Clean up dialog, the info bar.
 - Copy: "Scrap clip", "Scrap 3 clips", "Restore", "Delete files now", "Hide from Library", "Clean up…". No "successfully" or "!".

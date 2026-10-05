@@ -2,6 +2,7 @@ import { ArrowStepBack16Regular, ArrowStepOver16Regular, Pause16Filled, Play16Fi
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { compact, duration, timecode } from "@/lib/format";
+import { purgeLabel } from "@/lib/library";
 import { Dot, type StatusTone } from "@/components/ui/status";
 import { PlatformTag, Score } from "./badges";
 import type { Schemas } from "@/api/client";
@@ -16,13 +17,16 @@ export function clipTone(c: Pick<Schemas["ClipRow"], "status" | "decision">): St
   return "muted";
 }
 
-/** 9:16 thumbnail card (Library, Review queue): score, length, status, platforms, views; plays on hover. */
+/** 9:16 thumbnail card (Library, Review queue): score, length, status, platforms, views; plays on hover.
+ * With `onSelect` a click selects the card (Ctrl and Shift extend it) and a double click or Enter opens it;
+ * without it a click opens it. A scrapped clip is greyed and says when its files are deleted. */
 export function ClipCard({
   clip,
   thumb,
   preview,
   selected,
   onOpen,
+  onSelect,
   className,
 }: {
   clip: Schemas["ClipRow"];
@@ -30,13 +34,30 @@ export function ClipCard({
   preview?: string;
   selected?: boolean;
   onOpen?: () => void;
+  onSelect?: (mods: { ctrl: boolean; shift: boolean }) => void;
   className?: string;
 }) {
   const [hover, setHover] = useState(false);
+  const scrapped = clip.status === "scrapped";
+  const canPlay = Boolean(preview) && !clip.files_purged;
   return (
     <button
       type="button"
-      onClick={onOpen}
+      aria-pressed={onSelect ? Boolean(selected) : undefined}
+      aria-label={`Clip ${clip.id}: ${clip.hook || "no hook"}`}
+      data-clip-id={clip.id}
+      onClick={(e) => (onSelect ? onSelect({ ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey }) : onOpen?.())}
+      onDoubleClick={onSelect ? onOpen : undefined}
+      onKeyDown={(e) => {
+        if (!onSelect) return;
+        if (e.key === "Enter") {
+          e.preventDefault();
+          onOpen?.();
+        } else if (e.key === " ") {
+          e.preventDefault();
+          onSelect({ ctrl: true, shift: e.shiftKey });
+        }
+      }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       onFocus={() => setHover(true)}
@@ -47,23 +68,27 @@ export function ClipCard({
         className,
       )}
     >
-      <span className="relative block aspect-[9/16] w-full bg-media">
-        {hover && preview ? (
-          <video src={preview} poster={thumb} autoPlay muted loop playsInline className="absolute inset-0 size-full object-cover" />
-        ) : thumb ? (
-          <img src={thumb} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />
-        ) : null}
+      <span className={cn("relative block aspect-[9/16] w-full bg-media", scrapped && "opacity-60 grayscale")}>
+        {/* the thumbnail stays and the preview plays over it: swapping elements under the pointer could
+            swallow a click that starts right after the mouse arrives */}
+        {thumb && <img src={thumb} alt="" loading="lazy" className="absolute inset-0 size-full object-cover" />}
+        {hover && canPlay && !scrapped && (
+          <video src={preview} poster={thumb} autoPlay muted loop playsInline className="pointer-events-none absolute inset-0 size-full object-cover" />
+        )}
         <span className="absolute top-1 left-1 rounded-[3px] bg-black/70 px-1 text-white">
           <Score value={clip.score} className={clip.score >= 80 ? "text-[#6ccb5f]" : "text-white"} />
         </span>
         <span className="num absolute top-1 right-1 rounded-[3px] bg-black/70 px-1 text-white">{duration(clip.duration)}</span>
         {clip.editing_live && <span className="absolute bottom-1 left-1 rounded-[3px] bg-black/75 px-1 text-[11px] text-[#cfc2ff]">Editing live</span>}
+        {selected && onSelect && <span aria-hidden="true" className="absolute bottom-1 right-1 flex size-4 items-center justify-center rounded-[3px] bg-accent text-[11px] text-accent-ink">✓</span>}
       </span>
       <span className="flex flex-col gap-1 px-1.5 py-1">
-        <span className="truncate-1">{clip.hook || `Clip ${clip.id}`}</span>
+        <span className={cn("truncate-1", scrapped && "text-muted")}>{clip.hook || `Clip ${clip.id}`}</span>
         <span className="flex items-center gap-1 text-muted">
-          <Dot tone={clipTone(clip)} />
-          <span className="truncate-1 flex-1">{clip.status.replace(/_/g, " ")}</span>
+          <Dot tone={scrapped ? "off" : clipTone(clip)} />
+          <span className="truncate-1 flex-1" title={scrapped ? clip.scrap_reason ?? undefined : undefined}>
+            {scrapped ? purgeLabel(clip.purge_at, clip.files_purged) : clip.status.replace(/_/g, " ")}
+          </span>
           {clip.platforms_posted.map((p) => (
             <PlatformTag key={p} platform={p} />
           ))}
