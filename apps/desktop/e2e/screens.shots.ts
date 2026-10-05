@@ -19,6 +19,15 @@ const screens: Shot[] = [
   { name: "overview", path: "/", ready: "Needs you" },
   { name: "needs-you-footage", path: "/?item=footage:5", ready: "Drop the video file here" },
   { name: "needs-you-footage-copying", path: "/?item=footage:6", ready: "Adding your file" },
+  { name: "needs-you-stuck", path: "/?item=stuck:request_blocked:3", ready: "Nudge with a message" },
+  { name: "jobs-stalled", path: "/", ready: "Needs you", then: async (p) => {
+      await p.getByRole("tab", { name: /^Jobs/ }).click();
+      await p.getByRole("table", { name: "Jobs" }).getByText("Stalled").waitFor();
+    } },
+  { name: "agents-nudge", path: "/agents?session=1", ready: "Live transcript", then: async (p) => {
+      await p.getByRole("button", { name: "Nudge" }).first().click();
+      await p.getByLabel("Message (optional)").waitFor();
+    } },
   { name: "agents", path: "/agents?session=1", ready: "Live transcript" },
   { name: "campaigns", path: "/campaigns", ready: "Paste campaign URL" },
   { name: "campaign-detail", path: "/campaigns?open=1", ready: "Why this score" },

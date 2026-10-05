@@ -99,6 +99,7 @@ def export_fixtures(out_dir: Path) -> dict[str, Any]:
         "/api/jobs",
         "/api/questions",
         "/api/needs-you",
+        "/api/stalls",
         "/api/notes",
         "/api/agents/board",
         "/api/agents/models",

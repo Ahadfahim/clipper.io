@@ -7,9 +7,10 @@
    "kind": "job.done",
    "merged": 0,
    "priority": 2,
-   "queued_at": "2026-10-02T17:58:00Z",
+   "queued_at": "2026-10-02T17:46:00Z",
    "request_id": 3,
-   "role": "campaign"
+   "role": "campaign",
+   "waiting_reason": null
   }
  ],
  "session": {
@@ -26,6 +27,7 @@
   "started": "2026-10-02T15:00:00Z",
   "status": "waiting",
   "summary": "Waiting for analysis of source 3",
-  "turns": 9
+  "turns": 9,
+  "turns_run": 0
  }
 }

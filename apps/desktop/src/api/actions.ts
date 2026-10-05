@@ -136,11 +136,42 @@ export const useInterrupt = () =>
     invalidate: (id) => [qk.board, qk.session(id), qk.sessions],
   });
 
-export const useNudge = () =>
-  useAction({
-    run: (id: number) => unwrap(api.POST("/api/agents/sessions/{session_id}/nudge", { params: { path: { session_id: id } } })),
-    invalidate: (id) => [qk.board, qk.session(id)],
+/** Tell an agent it looks stuck, with a message of your own if you like. Name a session or a campaign. */
+export function useNudge() {
+  return useAction({
+    run: (v: { sessionId?: number; campaignId?: number; text?: string }) => {
+      const body = { text: v.text ?? "" };
+      if (v.sessionId !== undefined) return unwrap(api.POST("/api/agents/sessions/{session_id}/nudge", { params: { path: { session_id: v.sessionId } }, body }));
+      return unwrap(api.POST("/api/campaigns/{campaign_id}/nudge", { params: { path: { campaign_id: v.campaignId ?? 0 } }, body }));
+    },
+    invalidate: (v) => [qk.board, qk.stalls, qk.overview, qk.needsYouAll, ...(v.sessionId !== undefined ? [qk.session(v.sessionId)] : []), ...(v.campaignId !== undefined ? [qk.campaign(v.campaignId)] : [])],
   });
+}
+
+/** Do one of a stall's actions: nudge, restart the turn, run now, release the lease, cancel and retry. */
+export function useStallAct() {
+  return useAction({
+    run: (v: { key: string; action: string; text?: string }) =>
+      unwrap(api.POST("/api/stalls/{slug}/act", { params: { path: { slug: v.key.replace(/:/g, "-") } }, body: { action: v.action, text: v.text ?? "" } })),
+    invalidate: () => [qk.stalls, qk.board, qk.jobs, qk.overview, qk.needsYouAll, qk.status],
+  });
+}
+
+/** Stop a job: a queued one is dropped, a running one has its processes killed. */
+export function useCancelJob() {
+  return useAction({
+    run: (jobId: number) => unwrap(api.POST("/api/jobs/{job_id}/cancel", { params: { path: { job_id: jobId } } })),
+    invalidate: () => [qk.jobs, qk.stalls, qk.status],
+  });
+}
+
+/** Cancel a stuck job and queue the same work again. */
+export function useCancelRetryJob() {
+  return useAction({
+    run: (jobId: number) => unwrap(api.POST("/api/jobs/{job_id}/cancel-retry", { params: { path: { job_id: jobId } } })),
+    invalidate: () => [qk.jobs, qk.stalls, qk.status, qk.overview, qk.needsYouAll],
+  });
+}
 
 export const useBump = () =>
   useAction({

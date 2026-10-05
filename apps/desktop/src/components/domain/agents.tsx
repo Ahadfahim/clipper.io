@@ -8,6 +8,7 @@ import { shortTool, type TranscriptItem } from "@/lib/transcript";
 import { Dot } from "@/components/ui/status";
 import { Tooltip } from "@/components/ui/misc";
 import type { Schemas } from "@/api/client";
+import { NudgeButton } from "./nudge";
 
 const P = (p: number | null | undefined) => (p === null || p === undefined ? "" : `P${p}`);
 
@@ -35,7 +36,7 @@ export function SlotBoard({
   showQueue?: boolean;
 }) {
   const now = nowMs();
-  const cols = "34px minmax(0,1.4fr) 34px minmax(0,1.5fr) 74px 56px";
+  const cols = "34px minmax(0,1.4fr) 34px minmax(0,1.5fr) 74px 130px";
   return (
     <div className="flex flex-wrap gap-3.5">
       <div role="table" aria-label="Agent slots" className="min-w-[380px] flex-[3_1_420px] overflow-hidden rounded-[var(--radius)] border border-line">
@@ -65,9 +66,14 @@ export function SlotBoard({
                 <span className="truncate-1">{busy ? slotName(s) : s.dimmed ? "Paused (usage)" : reserved ? "Reserved for you" : "Idle"}</span>
               </span>
               <span role="cell" className="num px-1">{busy ? P(s.priority) : reserved ? "P0" : ""}</span>
-              <span role="cell" className={cn("num truncate-1 px-2", busy ? "text-agent" : "text-muted")}>{busy ? shortTool(s.current_tool) || "thinking" : "idle"}</span>
+              <span role="cell" className={cn("num truncate-1 px-2", s.hung ? "text-warn" : busy ? "text-agent" : "text-muted")} title={s.hung ? "No activity for a while: it may be stuck" : undefined}>
+                {s.hung ? `quiet ${span((s.quiet_s ?? 0) * 1000)}` : busy ? shortTool(s.current_tool) || "thinking" : "idle"}
+              </span>
               <span role="cell" className="truncate-1 px-2 text-muted">{busy ? modelLabel(s.model) : ""}</span>
-              <span role="cell" className="num px-2 text-right">{s.started ? span(now - Date.parse(s.started)) : "—"}</span>
+              <span role="cell" className="flex items-center justify-end gap-1.5 px-2">
+                {s.hung && s.session_id !== null && <NudgeButton sessionId={s.session_id} variant="primary" />}
+                <span className="num">{s.started ? span(now - Date.parse(s.started)) : "—"}</span>
+              </span>
             </div>
           );
         })}
@@ -82,11 +88,18 @@ export function SlotBoard({
           </div>
           {board.queue.length === 0 && <div className="border-t border-line bg-panel px-2 py-1.5 text-muted">Nothing waiting.</div>}
           {board.queue.map((q) => (
-            <div key={q.request_id} role="row" className="group grid h-7 items-center border-t border-line bg-panel" style={{ gridTemplateColumns: "34px minmax(0,1fr) 64px 52px" }}>
+            <div key={q.request_id} role="row" className="group grid min-h-7 items-center border-t border-line bg-panel py-px" style={{ gridTemplateColumns: "34px minmax(0,1fr) 64px 52px" }}>
               <span role="cell" className={cn("num px-2", q.priority === 0 && "text-accent")}>{P(q.priority)}</span>
-              <span role="cell" className="truncate-1 px-2">
-                {ROLE_LABEL[q.role] ?? q.role}
-                {q.campaign_title ? ` · ${q.campaign_title}` : ""} <span className="text-muted">· {q.kind}{q.merged ? ` (+${q.merged})` : ""}</span>
+              <span role="cell" className="flex min-w-0 flex-col px-2">
+                <span className="truncate-1">
+                  {ROLE_LABEL[q.role] ?? q.role}
+                  {q.campaign_title ? ` · ${q.campaign_title}` : ""} <span className="text-muted">· {q.kind}{q.merged ? ` (+${q.merged})` : ""}</span>
+                </span>
+                {q.waiting_reason && (
+                  <span className="truncate-1 text-[11px] text-warn" title={q.waiting_reason}>
+                    {q.waiting_reason}
+                  </span>
+                )}
               </span>
               <span role="cell" className="num px-2 text-right text-muted">{clock(q.queued_at, false)}</span>
               <span role="cell" className="flex justify-end gap-0.5 px-1">

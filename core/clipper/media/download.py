@@ -7,12 +7,15 @@ import json
 import re
 import shutil
 import subprocess
+import threading
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Protocol
 
 from clipper.rules.urls import canonical_source
 from clipper.settings import Settings
+from clipper.system import PROCESS_REGISTRAR, kill_tree, popen_flags
 
 
 class DownloadError(RuntimeError):
@@ -53,6 +56,124 @@ def clean_ytdlp_error(stderr: str) -> tuple[str, str]:
 
 
 @dataclass(frozen=True)
+class Progress:
+    downloaded: int
+    total: int | None
+    speed: float | None  # bytes per second
+
+    @property
+    def fraction(self) -> float | None:
+        return min(self.downloaded / self.total, 1.0) if self.total else None
+
+    def detail(self) -> str:
+        """ "1.2 of 3.4 GB · 8 MB/s · 4 min left"."""
+        parts = [
+            f"{human_bytes(self.downloaded)} of {human_bytes(self.total)}"
+            if self.total
+            else human_bytes(self.downloaded)
+        ]
+        if self.speed:
+            parts.append(f"{human_bytes(self.speed)}/s")
+            if self.total and self.total > self.downloaded:
+                mins = (self.total - self.downloaded) / self.speed / 60
+                parts.append("under a minute left" if mins < 1 else f"{mins:.0f} min left")
+        return " · ".join(parts)
+
+
+def human_bytes(n: float | None) -> str:
+    if n is None:
+        return "?"
+    for unit in ("B", "KB", "MB", "GB"):
+        if n < 1024 or unit == "GB":
+            return f"{n:.0f} {unit}" if unit in ("B", "KB") else f"{n:.1f} {unit}"
+        n /= 1024
+    return f"{n:.1f} GB"
+
+
+PROGRESS_TEMPLATE = (
+    "download:[clipper] %(progress.downloaded_bytes)s %(progress.total_bytes)s "
+    "%(progress.total_bytes_estimate)s %(progress.speed)s"
+)
+
+
+def parse_progress(line: str) -> Progress | None:
+    """One ``[clipper] <downloaded> <total> <total estimate> <speed>`` line of yt-dlp's progress
+    template (any of the numbers can be ``NA``). Anything else is not progress."""
+    line = line.strip()
+    if not line.startswith("[clipper]"):
+        return None
+    fields = line.removeprefix("[clipper]").split()
+    if len(fields) != 4:
+        return None
+
+    def num(text: str) -> float | None:
+        try:
+            return float(text)
+        except ValueError:
+            return None
+
+    downloaded, total, estimate, speed = (num(f) for f in fields)
+    if downloaded is None:
+        return None
+    size = total or estimate
+    return Progress(int(downloaded), int(size) if size else None, speed)
+
+
+@dataclass
+class DownloadHooks:
+    """How a running download reports to the job that owns it, and how the job can stop it."""
+
+    progress: Callable[[float | None, str], None] = lambda fraction, detail: None
+    cancelled: Callable[[], bool] = lambda: False
+
+
+def stream_process(
+    cmd: list[str],
+    *,
+    on_line: Callable[[str], None],
+    timeout: float,
+) -> tuple[int, list[str], str]:
+    """Run a command and hand every line it prints to ``on_line`` as it arrives (yt-dlp reports progress
+    on the way). The process is told to the running job, so cancelling the job kills it and everything it
+    started. Returns (exit code, stdout lines, stderr text)."""
+    proc = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        **popen_flags(),
+    )
+    register = PROCESS_REGISTRAR.get()
+    if register is not None:
+        register(proc)
+    stderr_lines: list[str] = []
+
+    def drain_stderr() -> None:
+        assert proc.stderr is not None
+        for ln in proc.stderr:
+            stderr_lines.append(ln)
+            on_line(ln)
+
+    reader = threading.Thread(target=drain_stderr, daemon=True)
+    reader.start()
+    limit = threading.Timer(timeout, lambda: kill_tree(proc.pid))
+    limit.start()
+    out: list[str] = []
+    try:
+        assert proc.stdout is not None
+        for ln in proc.stdout:
+            out.append(ln.rstrip("\n"))
+            on_line(ln)
+        proc.wait()
+    finally:
+        limit.cancel()
+    reader.join(timeout=5)
+    return proc.returncode, out, "".join(stderr_lines)
+
+
+@dataclass(frozen=True)
 class DownloadResult:
     path: Path
     title: str
@@ -71,7 +192,7 @@ class Comment:
 
 
 class Downloader(Protocol):
-    def download(self, url: str, dest_dir: Path) -> DownloadResult: ...
+    def download(self, url: str, dest_dir: Path, hooks: DownloadHooks | None = None) -> DownloadResult: ...
     def comments(self, url: str, limit: int = 100) -> list[Comment]: ...
 
 
@@ -105,7 +226,7 @@ class FakeDownloader:
         ]
         self.calls: list[str] = []
 
-    def download(self, url: str, dest_dir: Path) -> DownloadResult:
+    def download(self, url: str, dest_dir: Path, hooks: DownloadHooks | None = None) -> DownloadResult:
         self.calls.append(url)
         dest_dir.mkdir(parents=True, exist_ok=True)
         key = re.sub(r"[^\w.-]+", "_", canonical_source(url))[:80]
@@ -130,17 +251,21 @@ class YtDlpDownloader:
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
-    def _base(self) -> list[str]:
-        cmd = [self.settings.paths.yt_dlp, "--no-progress", "--no-playlist"]
+    def _ffmpeg_args(self) -> list[str]:
         ffmpeg = self.settings.paths.ffmpeg("ffmpeg")
-        if Path(ffmpeg).is_absolute():
-            cmd += ["--ffmpeg-location", str(Path(ffmpeg).parent)]
-        return cmd
+        return ["--ffmpeg-location", str(Path(ffmpeg).parent)] if Path(ffmpeg).is_absolute() else []
 
-    def download(self, url: str, dest_dir: Path) -> DownloadResult:  # LOCAL-VERIFY
+    def _base(self) -> list[str]:
+        return [self.settings.paths.yt_dlp, "--no-progress", "--no-playlist", *self._ffmpeg_args()]
+
+    def download(
+        self, url: str, dest_dir: Path, hooks: DownloadHooks | None = None
+    ) -> DownloadResult:  # LOCAL-VERIFY
         dest_dir.mkdir(parents=True, exist_ok=True)
+        hooks = hooks or DownloadHooks()
         cmd = [
-            *self._base(),
+            self.settings.paths.yt_dlp, "--no-playlist", *self._ffmpeg_args(),
+            "--progress", "--newline", "--progress-template", PROGRESS_TEMPLATE,
             "-f", "bv*[height<=1080]+ba/b[height<=1080]",
             "--merge-output-format", "mp4",
             "--write-info-json", "--write-subs", "--write-auto-subs", "--sub-langs", "en.*", "--convert-subs", "srt",
@@ -148,11 +273,20 @@ class YtDlpDownloader:
             "--print", "after_move:filepath",
             url,
         ]  # fmt: skip
-        proc = subprocess.run(cmd, capture_output=True, text=True, timeout=6 * 3600, check=False)
-        if proc.returncode != 0:
-            reason, tail = clean_ytdlp_error(proc.stderr)
+
+        def on_line(line: str) -> None:
+            progress = parse_progress(line)
+            if progress is not None:
+                hooks.progress(progress.fraction, progress.detail())
+
+        code, out, err = stream_process(cmd, on_line=on_line, timeout=6 * 3600)
+        if hooks.cancelled():
+            raise DownloadError("cancelled", err)
+        if code != 0:
+            reason, tail = clean_ytdlp_error(err)
             raise DownloadError(reason, tail)
-        path = Path(proc.stdout.strip().splitlines()[-1])
+        printed = [ln.strip() for ln in out if ln.strip() and not ln.startswith("[clipper]")]
+        path = Path(printed[-1])
         info_path = path.with_suffix(".info.json")
         info: dict[str, Any] = json.loads(info_path.read_text(encoding="utf-8")) if info_path.exists() else {}
         subs = next(iter(sorted(dest_dir.glob(f"{path.stem}*.srt"))), None)

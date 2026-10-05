@@ -63,6 +63,7 @@ class EventRecorder:
     def __init__(self, core: Core, session_id: int | None) -> None:
         self.core = core
         self.session_id = session_id
+        self.turn = 0  # the turn of this run the agent is on; stored with each event
 
     def record(
         self,
@@ -77,13 +78,14 @@ class EventRecorder:
         if data:
             summary = str(data.get("text") or data.get("summary") or json.dumps(data, default=str))[:300]
         sid = self.session_id
+        stored = {**(data or {}), "turn": self.turn} if self.turn else (data or {})
 
         def job(tx: WriteTx) -> None:
             row = AgentEvent(
                 session_id=sid,
                 type=kind,
                 tool=tool,
-                input_json=data or {},
+                input_json=stored,
                 output_json=output or {},
                 tokens=tokens,
             )
@@ -164,6 +166,7 @@ class SdkAgentRunner:
             async for msg in client.receive_response():
                 if isinstance(msg, AssistantMessage):
                     turns["n"] += 1
+                    recorder.turn = turns["n"]
                     sub = msg.parent_tool_use_id
                     if msg.error == "rate_limit":
                         outcome.rate_limited = True
@@ -305,6 +308,7 @@ class FakeAgentRunner:
         hook = make_pre_tool_use_hook(self.core.guard, binding)
         for step in self._script(req):
             turns += 1
+            recorder.turn = turns
             if isinstance(step, Say):
                 recorder.record("message", data={"text": step.text})
                 continue

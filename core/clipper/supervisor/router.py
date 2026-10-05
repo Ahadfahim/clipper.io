@@ -107,6 +107,15 @@ def route(env: EventEnvelope, *, session_of: SessionLookup, clip_campaign: ClipC
         return []
     if t == "watchdog.nudge":
         return campaign(P2, p["campaign_id"])
+    if t == "user.nudge":
+        # you nudged it: first in line. Clipper's own automatic check waits its turn like any other run.
+        priority = P2 if p.get("auto") else P0
+        role = p.get("role") or "campaign"
+        if role == "campaign":
+            return campaign(priority, p.get("campaign_id"))
+        if role in ("scout", "analyst", "director"):
+            return [RequestSpec(priority, role, t, None, ev)]
+        return []
     if t == "trigger.fired":
         return [RequestSpec(P3, str(p["name"]), t, None, ev)]
     return []

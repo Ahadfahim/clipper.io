@@ -1,7 +1,7 @@
 import { Dismiss16Regular, LinkSquare16Regular } from "@fluentui/react-icons";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useJoinedCampaign, useManualCampaign, usePauseCampaign, useRetrySource, useSaveSpec, useSkipSource, useTakeCampaign } from "@/api/actions";
+import { useJoinedCampaign, useManualCampaign, useNudge, usePauseCampaign, useRetrySource, useSaveSpec, useSkipSource, useTakeCampaign } from "@/api/actions";
 import { useCampaign, useCampaigns, useClips, useManifest, useSwitches } from "@/api/queries";
 import { fileUrl, type Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import { MarketBadge, PlatformTag, Score } from "@/components/domain/badges";
 import { BudgetBurnBar, RunsOut } from "@/components/domain/meters";
 import { ClipCard } from "@/components/domain/clip";
 import { FootageDrop } from "@/components/domain/footage";
+import { NudgeButton } from "@/components/domain/nudge";
 import { CampaignLinkButton, useSkipFlow } from "@/components/domain/links";
 import { UntrustedBanner } from "@/components/domain/switches";
 import { cn } from "@/lib/cn";
@@ -137,6 +138,7 @@ function Drawer({ id, onClose }: { id: number; onClose: () => void }) {
         <MarketBadge market={c.marketplace} />
         <span className="truncate-1 flex-1 font-semibold">{c.title}</span>
         <CampaignLinkButton link={c.link} status={c.link_status} />
+        {(c.status === "active" || c.status === "ending") && <NudgeButton campaignId={c.id} label="Nudge agent" title="Tell this campaign's agent it looks stuck" />}
         <StatusPill status={c.status} />
         <button type="button" aria-label="Close detail" onClick={onClose} className="flex size-7 items-center justify-center rounded-[3px] hover:bg-panel-2">
           <Dismiss16Regular />
@@ -389,6 +391,7 @@ export function CampaignsScreen() {
   const take = useTakeCampaign();
   const skipFlow = useSkipFlow();
   const pause = usePauseCampaign();
+  const nudge = useNudge();
   const [type, setType] = useState<"all" | "clipping" | "ugc">("all");
   const tab: Tab = search.tab ?? (search.open ? (Object.entries(TAB_STATUSES).find(([, s]) => s.includes(rows.find((r) => r.id === search.open)?.status ?? ""))?.[0] as Tab | undefined) ?? ui.campaignTab : ui.campaignTab);
   const market = search.market ?? ui.campaignMarket;
@@ -566,6 +569,7 @@ export function CampaignsScreen() {
               { label: "Take", onSelect: () => take.mutate(r.id), disabled: r.status === "active" },
               { label: "Pause", onSelect: () => pause.mutate(r.id), disabled: r.status !== "active" },
               { label: "Skip", onSelect: () => skipFlow.request(r.id, r.title), disabled: r.status === "skipped" || r.status === "ended" },
+              { label: "Nudge agent", onSelect: () => nudge.mutate({ campaignId: r.id }), disabled: r.status !== "active" && r.status !== "ending" },
               { kind: "separator" },
               { label: r.link?.label ?? "Open on the marketplace", onSelect: () => r.link && void openMarketplace(r.link), disabled: !r.link },
               { label: "Copy link", onSelect: () => r.link && void navigator.clipboard?.writeText(r.link.url), disabled: !r.link },

@@ -2,8 +2,8 @@
 // (UI.md §2, §6), so every action is reachable the same way from everywhere.
 import { useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
-import { useBrowserWindow, useControl, useSwitch, useTrigger } from "@/api/actions";
-import { useBatches, useJobs, useSettings, useStatus, useSwitches } from "@/api/queries";
+import { useBrowserWindow, useControl, useStallAct, useSwitch, useTrigger } from "@/api/actions";
+import { useBatches, useJobs, useSettings, useStalls, useStatus, useSwitches } from "@/api/queries";
 import { IN_TAURI, openPath, popOut, quitApp } from "@/lib/tauri";
 import { MARKET_LABEL, PLATFORM_LABEL } from "@/lib/platforms";
 import { useUi } from "@/state/ui";
@@ -40,6 +40,8 @@ export function useCommands(onSwitchOff: (t: { level: "marketplace" | "social"; 
   const browser = useBrowserWindow();
   const sw = useSwitch();
   const trigger = useTrigger();
+  const stallAct = useStallAct();
+  const stalls = useStalls().data;
   const ui = useUi();
   const c = status?.control;
 
@@ -114,6 +116,15 @@ export function useCommands(onSwitchOff: (t: { level: "marketplace" | "social"; 
         checked: c?.slots == null,
         run: () => control.mutate({ key: "slots", value: null }),
       },
+      {
+        id: "agents.nudge_stuck",
+        label: `Nudge everything stuck${stalls?.length ? ` (${stalls.filter((x) => x.actions.some((a) => a.action === "nudge")).length})` : ""}`,
+        group: "Agents",
+        disabled: !stalls?.some((x) => x.actions.some((a) => a.action === "nudge")),
+        run: () => {
+          for (const x of stalls ?? []) if (x.actions.some((a) => a.action === "nudge")) stallAct.mutate({ key: x.key, action: "nudge" });
+        },
+      },
       { id: "agents.director", label: "Message the Director…", group: "Agents", shortcut: "Ctrl+K >", run: () => ui.openCommand(">") },
       { id: "campaigns.scout", label: "Scout now", group: "Campaigns", run: () => trigger.mutate("scout") },
       { id: "tools.analyst", label: "Run analyst now", group: "Tools", run: () => trigger.mutate("analyst") },
@@ -156,5 +167,5 @@ export function useCommands(onSwitchOff: (t: { level: "marketplace" | "social"; 
       });
     }
     return cmds;
-  }, [navigate, batches, c, control, browser, status, sw, trigger, ui, switches, onSwitchOff, settings, jobs]);
+  }, [navigate, batches, c, control, browser, status, sw, trigger, ui, switches, onSwitchOff, settings, jobs, stalls, stallAct]);
 }

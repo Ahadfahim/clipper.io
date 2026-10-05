@@ -15,6 +15,7 @@
   "started": "2026-10-02T13:00:00Z",
   "status": "done",
   "summary": "Daily report sent",
-  "turns": 31
+  "turns": 31,
+  "turns_run": 0
  }
 }

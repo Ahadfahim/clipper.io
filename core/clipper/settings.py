@@ -153,6 +153,22 @@ class TriggerSettings(_Model):
     timezone: str = "America/New_York"
 
 
+class StallSettings(_Model):
+    """When something counts as stuck, and what Clipper does about it by itself."""
+
+    session_quiet_min: int = Field(default=10, ge=1)  # a running session with no agent events
+    idle_min: int = Field(default=30, ge=1)  # a campaign waiting on nothing
+    request_blocked_min: int = Field(default=5, ge=1)  # a queued request that can't start
+    job_quiet_min: int = Field(
+        default=15, ge=1
+    )  # a running job that stopped moving (analysis waits twice as long)
+    job_waiting_min: int = Field(default=10, ge=1)  # a job that stays queued
+    post_overdue_min: int = Field(default=15, ge=1)  # a scheduled post that hasn't started
+    auto_restart_hung_min: int = Field(default=30, ge=0)  # restart a hung session after this long; 0 = never
+    auto_retry_stalled_job: bool = True
+    max_auto_nudges: int = Field(default=2, ge=0)  # automatic actions per stall before it waits for you
+
+
 class UsageSettings(_Model):
     """Claude plan usage pacing. No money is tracked: only usage-window utilization."""
 
@@ -312,6 +328,7 @@ class Settings(_Model):
     api: ApiSettings = ApiSettings()
     agents: AgentSettings = AgentSettings()
     triggers: TriggerSettings = TriggerSettings()
+    stalls: StallSettings = StallSettings()
     usage: UsageSettings = UsageSettings()
     posting: PostingSettings = PostingSettings()
     switches: SwitchSettings = SwitchSettings()

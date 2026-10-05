@@ -106,7 +106,7 @@
    "kind": "request",
    "priority": 2,
    "text": "campaign \u00b7 Ali Abdaal podcast cuts: job.done",
-   "when": "2026-10-02T17:58:00Z"
+   "when": "2026-10-02T17:46:00Z"
   },
   {
    "kind": "request",
@@ -467,6 +467,86 @@
    "timeout_at": null,
    "title": "Rules unclear: can we use the trailer footage?",
    "urgency": 1
+  },
+  {
+   "actions": [
+    {
+     "action": "cancel_retry",
+     "args": {
+      "stall": "job_stalled:2"
+     },
+     "label": "Cancel and retry"
+    },
+    {
+     "action": "show_jobs",
+     "args": {
+      "stall": "job_stalled:2"
+     },
+     "label": "Show jobs"
+    }
+   ],
+   "activity": null,
+   "campaign_id": 2,
+   "campaign_title": "Ali Abdaal podcast cuts",
+   "count": 1,
+   "detail": "Analysis of source 3: 70% done, last moved 38 min ago.",
+   "dismissable": false,
+   "key": "stuck:job_stalled:2",
+   "kind": "stuck",
+   "links": [
+    {
+     "host": "whop.com",
+     "kind": "marketplace",
+     "label": "Open Whop's campaigns",
+     "open_in": "clipper",
+     "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x"
+    }
+   ],
+   "options": [],
+   "since": "2026-10-02T17:22:00Z",
+   "timeout_at": null,
+   "title": "Analysis of source 3 hasn't moved for 38 min.",
+   "urgency": 2
+  },
+  {
+   "actions": [
+    {
+     "action": "run_now",
+     "args": {
+      "stall": "request_blocked:3"
+     },
+     "label": "Run now"
+    },
+    {
+     "action": "release_lease",
+     "args": {
+      "stall": "request_blocked:3"
+     },
+     "label": "Release lease"
+    }
+   ],
+   "activity": null,
+   "campaign_id": 2,
+   "campaign_title": "Ali Abdaal podcast cuts",
+   "count": 1,
+   "detail": "Campaign 2 is held by session 4 (a lease that stays until that session finishes or the lease is released).",
+   "dismissable": false,
+   "key": "stuck:request_blocked:3",
+   "kind": "stuck",
+   "links": [
+    {
+     "host": "whop.com",
+     "kind": "marketplace",
+     "label": "Open Whop's campaigns",
+     "open_in": "clipper",
+     "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x"
+    }
+   ],
+   "options": [],
+   "since": "2026-10-02T17:46:00Z",
+   "timeout_at": null,
+   "title": "The agent request for Ali Abdaal podcast cuts has been waiting 14 min to start.",
+   "urgency": 2
   },
   {
    "actions": [

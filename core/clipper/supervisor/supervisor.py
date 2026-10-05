@@ -24,15 +24,15 @@ from sqlmodel import col, func, select
 
 from clipper.agents.runner import AgentRunner, RunOutcome, RunRequest
 from clipper.db.engine import WriteTx
-from clipper.db.models import AgentRequest, AgentSession, Campaign, Clip, Job
+from clipper.db.models import AgentRequest, AgentSession, Campaign, Clip, Job, Lease
 from clipper.db.types import CampaignStatus, JobStatus, RequestStatus, SessionStatus
 from clipper.events.bus import EventEnvelope, Subscription
-from clipper.events.types import AgentSessionChanged, TriggerFired, WatchdogNudge
+from clipper.events.types import AgentSessionChanged, NudgeSent, TriggerFired, WatchdogNudge
 from clipper.leases import LeaseManager, campaign_resource
 from clipper.rules.caps import local_day_bounds
 from clipper.services.control import configured_slots, kv_get, kv_set_tx, read_control
 from clipper.supervisor.messages import build_prompt
-from clipper.supervisor.pool import PoolLimits, QueuedView, RunningView, pick
+from clipper.supervisor.pool import PoolLimits, QueuedView, RunningView, explain_wait, pick
 from clipper.supervisor.router import RequestSpec, SessionInfo, route
 from clipper.system import free_ram_gb
 
@@ -41,6 +41,7 @@ if TYPE_CHECKING:
 
 log = logging.getLogger(__name__)
 LEASE_TTL_S = 3 * 3600
+RESTART_WAIT_S = 10.0  # how long a restart waits for an interrupted turn to end before cancelling it
 
 
 @dataclass
@@ -54,6 +55,7 @@ class Running:
     kind: str
     started: datetime
     task: asyncio.Task[None] | None = None
+    restart: str | None = None  # set when a nudge is restarting this turn: why it ended
 
 
 class Supervisor:
@@ -68,6 +70,7 @@ class Supervisor:
         self._rate_alerted_for: datetime | None = None
         self._last_event_id = 0
         self._catch_up = False
+        self._lease_blocked: dict[int, str] = {}  # queued request id -> why its campaign lease said no
 
     # ------------------------------------------------------------ lifecycle
 
@@ -151,6 +154,7 @@ class Supervisor:
     async def tick(self) -> None:
         self.fire_triggers()
         self.core.wakeups.fire_due()
+        self.release_dead_leases()
         self.watchdog()
         self.core.notify.expire()
         self.core.library.purge_expired_daily()  # once per day: delete the files of clips scrapped long ago
@@ -259,12 +263,31 @@ class Supervisor:
             ).one()
         run_cap = self.core.settings.usage.daily_agent_run_cap
         cap_hit = run_cap > 0 and runs_today >= run_cap
+        halt_reason: str | None = None
+        if ctl.kill_switch:
+            halt_reason = "The kill switch is on."
+        elif ctl.paused:
+            halt_reason = "Clipper is paused."
+        elif snap.rate_limited:
+            when = (
+                snap.resets_at.astimezone(ZoneInfo(self.core.settings.triggers.timezone)).strftime("%H:%M")
+                if snap.resets_at
+                else "the reset"
+            )
+            halt_reason = f"The Claude usage limit is reached; agents resume at {when}."
+        p01_reason = (
+            f"The daily agent run cap ({run_cap}) is reached: only P0 and P1 requests start."
+            if cap_hit
+            else f"Claude usage is at {snap.utilization:.0%}: only P0 and P1 requests start."
+        )
         return PoolLimits(
             capacity=capacity,
             reserve_p0=agents.reserve_p0_slot,
             p01_only=usage.p01_only(snap) or cap_hit,
             halted=ctl.kill_switch or ctl.paused or snap.rate_limited,
             low_memory=free_gb is not None and free_gb < agents.min_free_ram_gb,
+            halt_reason=halt_reason,
+            p01_reason=p01_reason,
         )
 
     def queued(self) -> list[QueuedView]:
@@ -279,12 +302,43 @@ class Supervisor:
             running = [
                 RunningView(e.request_id, e.priority, e.role, e.campaign_id) for e in self._running.values()
             ]
-            choice = pick(self.queued(), running, limits)
+            queued = self.queued()
+            choice = pick(queued, running, limits)
             if choice is None:
+                self._record_waiting(queued, running, limits)
                 return started
             if not self._begin(choice, limits.capacity):
+                self._record_waiting(
+                    [q for q in queued if q.id != choice.id] + [choice], running, limits, only_blocked=True
+                )
                 return started
             started.append(choice.id)
+
+    def _record_waiting(
+        self,
+        queued: list[QueuedView],
+        running: list[RunningView],
+        limits: PoolLimits,
+        *,
+        only_blocked: bool = False,
+    ) -> None:
+        """Say on each queued request why it hasn't started (shown in Agents and in Needs you)."""
+        reasons = explain_wait(queued, running, limits, lease_blocked=self._lease_blocked)
+        live = {q.id for q in queued}
+        self._lease_blocked = {k: v for k, v in self._lease_blocked.items() if k in live}
+        if only_blocked:
+            reasons = {k: v for k, v in reasons.items() if k in self._lease_blocked}
+        if not reasons:
+            return
+
+        def job(tx: WriteTx) -> None:
+            for rid, why in reasons.items():
+                row = tx.session.get(AgentRequest, rid)
+                if row is not None and row.status == RequestStatus.QUEUED and row.waiting_reason != why:
+                    row.waiting_reason = why
+                    tx.add(row)
+
+        self.core.db.write(job)
 
     def _begin(self, choice: QueuedView, capacity: int) -> bool:
         used = {e.slot for e in self._running.values()}
@@ -293,7 +347,13 @@ class Supervisor:
         if choice.campaign_id is not None and not self.leases.acquire(
             campaign_resource(choice.campaign_id), f"session:{session_id}", LEASE_TTL_S
         ):
+            holder = self.leases.holder(campaign_resource(choice.campaign_id)) or "another session"
+            self._lease_blocked[choice.id] = (
+                f"Campaign {choice.campaign_id} is held by {holder.replace(':', ' ')} "
+                "(a lease that stays until that session finishes or the lease is released)."
+            )
             return False
+        self._lease_blocked.pop(choice.id, None)
         now = self.core.clock.now()
 
         def job(tx: WriteTx) -> dict[str, Any] | None:
@@ -382,6 +442,12 @@ class Supervisor:
         outcome: RunOutcome
         try:
             outcome = await self.runner.run(req)
+            if entry.restart:
+                outcome.error = outcome.error or entry.restart
+        except asyncio.CancelledError:
+            if entry.restart is None:
+                raise
+            outcome = RunOutcome(req.resume, error=entry.restart)  # stopped by a restart: not a crash
         except Exception as exc:
             log.exception("agent run crashed")
             outcome = RunOutcome(req.resume, error=f"{type(exc).__name__}: {exc}")
@@ -539,6 +605,66 @@ class Supervisor:
                 self.core.db.write(job)
                 nudged.append(c.id)
         return nudged
+
+    # ------------------------------------------------------------ getting unstuck
+
+    def release_dead_leases(self) -> list[str]:
+        """Release campaign leases whose holder isn't running. A lease outlives its session when the app
+        restarts or a run is torn down, and would keep that campaign from starting for hours."""
+        running = {f"session:{e.session_id}" for e in self._running.values()}
+        released: list[str] = []
+        with self.core.db.read() as s:
+            leases = list(s.exec(select(Lease).where(col(Lease.resource).like("campaign:%"))).all())
+        for lease in leases:
+            if lease.holder_session not in running and self.leases.release(
+                lease.resource, lease.holder_session
+            ):
+                released.append(lease.resource)
+                log.info("released %s: its holder %s isn't running", lease.resource, lease.holder_session)
+        return released
+
+    def release_lease(self, campaign_id: int) -> bool:
+        """Release a campaign's lease by hand. Refused while its holder is running."""
+        resource = campaign_resource(campaign_id)
+        holder = self.leases.holder(resource)
+        if holder is None:
+            return False
+        if any(f"session:{e.session_id}" == holder for e in self._running.values()):
+            raise ValueError(f"{holder.replace(':', ' ')} is running: restart its turn instead")
+        return self.leases.release(resource, holder)
+
+    def run_now(self, request_id: int) -> None:
+        """Move a queued request to the front (P0). It still can't start while Clipper is paused, the kill
+        switch is on or the usage limit is reached: its waiting reason says which."""
+        self.bump(request_id, 0)
+
+    async def restart_turn(self, session_id: int, *, why: str = "interrupted by your nudge") -> bool:
+        """Stop a running turn that hung: interrupt it, and if it doesn't end within 10 seconds cancel the
+        task. The request is marked failed with ``why`` and the lease released, so a nudge can start a new
+        turn. Returns False when that session isn't running."""
+        entry = next((e for e in self._running.values() if e.session_id == session_id), None)
+        if entry is None:
+            return False
+        entry.restart = why
+        try:
+            await asyncio.wait_for(self.runner.interrupt(session_id), timeout=RESTART_WAIT_S)
+        except Exception:
+            log.warning("interrupting session %s didn't answer; cancelling its task", session_id)
+        task = entry.task
+        if task is not None and not task.done():
+            done, _ = await asyncio.wait({task}, timeout=RESTART_WAIT_S)
+            if not done:
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+        self.core.bus.publish(
+            NudgeSent(
+                campaign_id=entry.campaign_id,
+                target=f"session:{session_id}",
+                action="restart_turn",
+                text=why,
+            )
+        )
+        return True
 
     # ------------------------------------------------------------ controls and views
 

@@ -30,6 +30,7 @@ from clipper.db.models import (
     Edl,
     Event,
     Job,
+    Lease,
     Lesson,
     Marketplace,
     Metric,
@@ -889,14 +890,14 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 {},
             ),
         ]
-        for dt, kind, tool, inp, out in transcript:
+        for n, (dt, kind, tool, inp, out) in enumerate(transcript):
             tx.add(
                 AgentEvent(
                     session_id=s_beast.id,
                     ts=now + timedelta(seconds=dt),
                     type=kind,
                     tool=tool,
-                    input_json=inp,
+                    input_json={**inp, "turn": n // 2 + 1},
                     output_json=out,
                 )
             )
@@ -954,7 +955,8 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 campaign_id=ali.id,
                 payload={"events": []},
                 status="queued",
-                queued_at=now - timedelta(minutes=2),
+                queued_at=now - timedelta(minutes=14),
+                waiting_reason="Campaign 2 is held by session 4 (a lease that stays until that session finishes or the lease is released).",
             )
         )
         tx.add(
@@ -967,6 +969,9 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 queued_at=now - timedelta(minutes=1),
             )
         )
+
+        # a lease whose session is long gone (the app restarted): it blocks the campaign's request above
+        tx.add(Lease(resource="campaign:2", holder_session="session:4", expires_at=now + timedelta(hours=2)))
 
         # jobs
         tx.add(
@@ -986,9 +991,11 @@ def seed_demo(db: Database, settings: Settings, now: datetime | None = None) -> 
                 input_json={"source_id": src3.id},
                 status="running",
                 progress=0.7,
+                detail="Tracking faces",
                 campaign_id=ali.id,
-                created_at=now - timedelta(minutes=7),
-                started_at=now - timedelta(minutes=6),
+                created_at=now - timedelta(minutes=52),
+                started_at=now - timedelta(minutes=51),
+                progress_at=now - timedelta(minutes=38),
             )
         )
         tx.add(

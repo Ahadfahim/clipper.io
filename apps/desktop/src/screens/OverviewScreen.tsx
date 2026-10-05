@@ -1,7 +1,7 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { useState } from "react";
-import { useAddNote, useAnswer, useDeleteNote, useJoinedCampaign, useResumeAccount, useRetryJob, useRetrySource, useSkipSource, useTakeCampaign } from "@/api/actions";
-import { useBoard, useOverview, useStatus } from "@/api/queries";
+import { useEffect, useState } from "react";
+import { useAddNote, useAnswer, useDeleteNote, useJoinedCampaign, useResumeAccount, useRetryJob, useRetrySource, useSkipSource, useStallAct, useTakeCampaign } from "@/api/actions";
+import { useBoard, useOverview, useStatus, useStuckByCampaign } from "@/api/queries";
 import type { Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/fields";
@@ -68,7 +68,7 @@ function Health({ items }: { items: Schemas["HealthItem"][] }) {
   );
 }
 
-function CampaignsTable({ rows }: { rows: Schemas["ActiveCampaign"][] }) {
+function CampaignsTable({ rows, stuck }: { rows: Schemas["ActiveCampaign"][]; stuck: Map<number, Schemas["StallOut"]> }) {
   const navigate = useNavigate();
   const cols = "60px minmax(0,2fr) minmax(150px,1.1fr) minmax(0,1.2fr) 90px";
   return (
@@ -99,7 +99,7 @@ function CampaignsTable({ rows }: { rows: Schemas["ActiveCampaign"][] }) {
             <CampaignLinkButton link={c.link} />
           </span>
           <span role="cell" className="px-2">
-            <StageStepper stages={c.stages} />
+            <StageStepper stages={c.stages} stuck={stuck.get(c.id)?.summary} />
           </span>
           <span role="cell" className="px-2">
             <BudgetBurnBar left={c.budget_left} total={c.budget_total} runsOut={c.runs_out_at} deadline={c.deadline} />
@@ -229,6 +229,17 @@ export function OverviewScreen() {
   const retryJob = useRetryJob();
   const retrySource = useRetrySource(null);
   const skipSource = useSkipSource(null);
+  const stallAct = useStallAct();
+  const setOutputTab = useUi((st) => st.setOutputTab);
+  const toggleOutput = useUi((st) => st.toggleOutput);
+  const stuckBy = useStuckByCampaign();
+  // what the last stuck-item action did (or why it couldn't), shown above the list for a few seconds
+  const [flash, setFlash] = useState<{ text: string; bad: boolean } | null>(null);
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(null), 8000);
+    return () => clearTimeout(t);
+  }, [flash]);
   // also rendered by /settings (the dialog opens over Overview), so don't insist on this route's search
   const search = useSearch({ strict: false }) as { item?: string };
   const openItem = search.item ?? null;
@@ -269,6 +280,29 @@ export function OverviewScreen() {
       case "retry_job":
         retryJob.mutate(Number(args["job_id"]));
         break;
+      case "nudge":
+      case "restart_turn":
+      case "run_now":
+      case "release_lease":
+      case "cancel_retry":
+        stallAct.mutate(
+          { key: String(args["stall"]), action: a.action },
+          { onSuccess: (r) => setFlash({ text: (r as { detail?: string | null }).detail ?? "Done.", bad: false }), onError: (e) => setFlash({ text: e.message, bad: true }) },
+        );
+        break;
+      case "show_jobs":
+        setOutputTab("jobs");
+        toggleOutput(true);
+        break;
+      case "show_browser":
+        void openProfile("main");
+        break;
+      case "open_calendar":
+        void navigate({ to: "/publishing" });
+        break;
+      case "show_agents":
+        void navigate({ to: "/agents" });
+        break;
       case "retry_source":
         retrySource.mutate({ sourceId: Number(args["source_id"]), force: args["force"] === true });
         break;
@@ -303,6 +337,11 @@ export function OverviewScreen() {
       <div className="flex flex-wrap gap-3.5">
         <section aria-label="Needs you" className="min-w-0 flex-[4_1_560px]">
           <SectionTitle count={ov?.needs_you.length ?? 0}>Needs you</SectionTitle>
+          {flash && (
+            <div role="status" className={cn("mb-1.5 rounded-[var(--radius)] border px-2.5 py-1.5", flash.bad ? "border-bad text-bad" : "border-line bg-panel")}>
+              {flash.text}
+            </div>
+          )}
           <NeedsYouList
             items={ov?.needs_you ?? []}
             onAction={onAction}
@@ -315,7 +354,7 @@ export function OverviewScreen() {
       </div>
       <section aria-label="Campaigns">
         <SectionTitle count={`${ov?.active_campaigns.length ?? 0} active`}>Campaigns</SectionTitle>
-        <CampaignsTable rows={ov?.active_campaigns ?? []} />
+        <CampaignsTable rows={ov?.active_campaigns ?? []} stuck={stuckBy} />
       </section>
       <div className="flex flex-wrap gap-3.5">
         <section aria-label="Agent slots" className="min-w-0 flex-[3_1_420px]">

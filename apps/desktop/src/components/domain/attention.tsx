@@ -18,6 +18,7 @@ const KIND: Record<NeedsItem["kind"], { label: string; tone: StatusTone }> = {
   challenge: { label: "Blocked", tone: "bad" },
   question: { label: "Question", tone: "agent" },
   footage: { label: "Footage", tone: "warn" },
+  stuck: { label: "Stuck", tone: "bad" },
   join: { label: "Join", tone: "accent" },
   review: { label: "Review", tone: "warn" },
   campaign: { label: "Campaign", tone: "accent" },
@@ -26,6 +27,8 @@ const KIND: Record<NeedsItem["kind"], { label: string; tone: StatusTone }> = {
 };
 
 const PRIMARY = new Set(["review", "take", "resume_account", "retry_job", "open_link"]);
+/** Your own words on a stuck item are the message of a nudge. */
+const REPLY_STUCK = { label: "Nudge with a message", placeholder: "Tell the agent what to try", send: "Nudge agent", sent: "Nudged. The agent reads it first in line." };
 const SOON_MS = 2 * 3_600_000;
 const REPLY: Record<Schemas["NeedsYouDetail"]["reply_to"], { label: string; placeholder: string; send: string; sent: string }> = {
   question: { label: "Something else", placeholder: "Answer in your own words", send: "Send answer", sent: "Answered." },
@@ -174,7 +177,7 @@ export function NeedsYouList({
                   <Button
                     key={a.label}
                     size="sm"
-                    variant={PRIMARY.has(a.action) ? "primary" : "default"}
+                    variant={PRIMARY.has(a.action) || (n.kind === "stuck" && a === n.actions[0]) ? "primary" : "default"}
                     title={a.label}
                     className="max-w-[160px]"
                     onClick={() => (a.action === "expand" ? setOpen(n.key) : onAction(a, n))}
@@ -223,7 +226,7 @@ export function NeedsYouPanel({ item, onAction, onClose }: { item: NeedsItem; on
     );
   }
 
-  const r = REPLY[d.reply_to];
+  const r = item.kind === "stuck" ? REPLY_STUCK : REPLY[d.reply_to];
   const send = () => {
     const t = text.trim();
     if (!t || reply.isPending) return;
@@ -363,7 +366,7 @@ export function NeedsYouPanel({ item, onAction, onClose }: { item: NeedsItem; on
             rest.length > 0 && (
               <div className="mb-3 flex flex-wrap gap-1.5">
                 {rest.map((a) => (
-                  <Button key={a.label} variant={PRIMARY.has(a.action) ? "primary" : "default"} onClick={() => onAction(a, item)}>
+                  <Button key={a.label} variant={PRIMARY.has(a.action) || (item.kind === "stuck" && a === rest[0]) ? "primary" : "default"} onClick={() => onAction(a, item)}>
                     {a.label}
                   </Button>
                 ))}

@@ -132,6 +132,7 @@ class JobProgress(EventPayload):
     kind: str
     progress: float
     campaign_id: int | None = None
+    detail: str | None = None
 
 
 class JobDone(EventPayload):
@@ -506,6 +507,38 @@ class WatchdogNudge(EventPayload):
     ENTITY_FIELD = "campaign_id"
     campaign_id: int
     idle_minutes: float
+
+
+class UserNudge(EventPayload):
+    """Someone told an agent it looks stuck (you, or Clipper's own check). The supervisor resumes it."""
+
+    TYPE = "user.nudge"
+    ENTITY = "campaign"
+    ENTITY_FIELD = "campaign_id"
+    campaign_id: int | None = None
+    role: str = "campaign"
+    session_id: int | None = None
+    text: str = ""
+    stall_key: str | None = None
+    summary: str = ""
+    evidence: str = ""
+    auto: bool = False
+    by: str = "user"
+
+
+class NudgeSent(EventPayload):
+    """A nudge or a repair that went with it (restart turn, run now, release lease, cancel and retry)."""
+
+    TYPE = "nudge.sent"
+    ENTITY = "campaign"
+    ENTITY_FIELD = "campaign_id"
+    campaign_id: int | None = None
+    target: str  # campaign:2, session:5, job:7, request:9
+    action: str  # nudge | restart_turn | run_now | release_lease | cancel_retry
+    stall_key: str | None = None
+    text: str = ""
+    auto: bool = False
+    by: str = "user"
 
 
 class TriggerFired(EventPayload):

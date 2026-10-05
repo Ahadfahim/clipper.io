@@ -41,6 +41,7 @@ URGENCY = {
     "challenge": 0,
     "question": 1,
     "footage": 1,
+    "stuck": 2,
     "join": 2,
     "review": 3,
     "campaign": 4,
@@ -53,6 +54,16 @@ FAILURE_AGE = timedelta(days=7)
 MERGE_WINDOW = timedelta(hours=1)
 MAX_ALERTS = 5
 MAX_FAILURES = 5
+MAX_STUCK = 6
+STALL_NAMES = {
+    "session_hung": "Agent not responding",
+    "waiting_on_nothing": "Waiting on nothing",
+    "request_blocked": "Request can't start",
+    "job_stalled": "Job stopped moving",
+    "job_waiting": "Job waiting",
+    "recipe_stuck": "Upload stuck",
+    "post_overdue": "Post overdue",
+}
 SNOOZE_MINUTES = [60, 240, 1440]
 MARKET_NAMES = {"vyro": "Vyro", "whop": "Whop"}
 SUPPORT_TEXT = {
@@ -217,6 +228,7 @@ def build(core: Core, *, include_hidden: bool = False) -> list[S.NeedsYouItem]:
         footage, covered = _footage(core, s, now, camps)
         items += footage
         items += _failures(core, s, now, titles, covered)
+        items += _stuck(core, titles)
     for i in items:
         camp = camps.get(i.campaign_id)
         if camp is not None:
@@ -269,6 +281,33 @@ def _alerts(
             )
         )
     return sorted(out, key=lambda i: i.since or now, reverse=True)[:MAX_ALERTS]
+
+
+def _stuck(core: Core, titles: dict[int | None, str]) -> list[S.NeedsYouItem]:
+    """Things that look stuck (a hung agent, a job that stopped moving, a request that can't start), each
+    with the actions that could help. The detector is ``supervisor/stalls.py``."""
+    from clipper.supervisor.stall_actions import LABELS
+    from clipper.supervisor.stalls import build_snapshot, detect_stalls
+
+    out: list[S.NeedsYouItem] = []
+    for st in detect_stalls(build_snapshot(core), core.settings.stalls)[:MAX_STUCK]:
+        out.append(
+            S.NeedsYouItem(
+                kind="stuck",
+                urgency=URGENCY["stuck"],
+                key=f"stuck:{st.key}",
+                title=st.summary,
+                detail=st.evidence[0] if st.evidence else STALL_NAMES.get(st.kind, st.kind),
+                campaign_id=st.campaign_id,
+                campaign_title=titles.get(st.campaign_id),
+                since=st.since,
+                actions=[
+                    S.NeedsYouAction(label=LABELS.get(a, a), action=a, args={"stall": st.key})
+                    for a in st.actions
+                ],
+            )
+        )
+    return out
 
 
 def source_link(src: Source) -> S.Link | None:
@@ -565,6 +604,28 @@ def detail(core: Core, key: str) -> S.NeedsYouDetail | None:
                 evidence = S.EvidenceOut(
                     error=j.error, raw_tail=str(j.result_json.get("raw_tail") or "") or None
                 )
+        elif kind == "stuck":
+            from clipper.supervisor.stalls import build_snapshot, detect_stalls
+
+            stall = next(
+                (
+                    x
+                    for x in detect_stalls(build_snapshot(core), core.settings.stalls)
+                    if f"stuck:{x.key}" == key
+                ),
+                None,
+            )
+            if stall is not None:
+                body = stall.summary
+                facts = [
+                    S.FactRow(label="What", value=STALL_NAMES.get(stall.kind, stall.kind)),
+                    S.FactRow(label="Campaign", value=item.campaign_title or "none"),
+                    S.FactRow(label="Since", value="", at=stall.since),
+                    *(
+                        S.FactRow(label="Evidence" if i == 0 else "", value=line)
+                        for i, line in enumerate(stall.evidence)
+                    ),
+                ]
         elif kind == "footage":
             src = s.get(Source, ident)
             if src is not None:

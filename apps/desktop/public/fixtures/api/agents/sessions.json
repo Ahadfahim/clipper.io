@@ -13,7 +13,8 @@
   "started": "2026-10-01T16:00:00Z",
   "status": "running",
   "summary": "Editing clip 3: removing filler words",
-  "turns": 46
+  "turns": 46,
+  "turns_run": 5
  },
  {
   "campaign_id": null,
@@ -29,7 +30,8 @@
   "started": "2026-10-02T17:51:00Z",
   "status": "done",
   "summary": "2 new campaigns scored; 1 card posted",
-  "turns": 14
+  "turns": 14,
+  "turns_run": 0
  },
  {
   "campaign_id": 2,
@@ -45,7 +47,8 @@
   "started": "2026-10-02T15:00:00Z",
   "status": "waiting",
   "summary": "Waiting for analysis of source 3",
-  "turns": 9
+  "turns": 9,
+  "turns_run": 0
  },
  {
   "campaign_id": null,
@@ -61,7 +64,8 @@
   "started": "2026-09-30T18:00:00Z",
   "status": "waiting",
   "summary": null,
-  "turns": 12
+  "turns": 12,
+  "turns_run": 0
  },
  {
   "campaign_id": null,
@@ -77,6 +81,7 @@
   "started": "2026-10-02T13:00:00Z",
   "status": "done",
   "summary": "Daily report sent",
-  "turns": 31
+  "turns": 31,
+  "turns_run": 0
  }
 ]

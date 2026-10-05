@@ -14,11 +14,13 @@ from typing import Any
 from sqlmodel import select
 
 from clipper.db.engine import WriteTx
-from clipper.db.models import Attention, Event, Job, ReviewBatch, Source
+from clipper.db.models import AgentRequest, AgentSession, Attention, Event, Job, Post, ReviewBatch, Source
 from clipper.events.types import AttentionChanged, UserChat
 from clipper.services.base import Service, ServiceError
 
-KEY = re.compile(r"^(?:(?:challenge|question|footage|join|review|campaign|alert):\d+|failure:job:\d+)$")
+KEY = re.compile(
+    r"^(?:(?:challenge|question|footage|join|review|campaign|alert):\d+|failure:job:\d+|stuck:[a-z_]+:\d+)$"
+)
 # Only these can be dismissed. A question, a blocked account or a review that is waiting for you would
 # stay unanswered if it vanished, and an agent or a posting schedule would wait on it silently.
 DISMISSABLE = ("alert", "failure")
@@ -110,6 +112,21 @@ class AttentionService(Service):
             if kind == "review":
                 batch = s.get(ReviewBatch, ident)
                 return batch.campaign_id if batch else None
+            if kind == "stuck":
+                what, _, ident_text = rest.partition(":")
+                ident = int(ident_text)
+                if what == "waiting_on_nothing":
+                    return ident
+                table = {
+                    "session_hung": AgentSession,
+                    "request_blocked": AgentRequest,
+                    "job_stalled": Job,
+                    "job_waiting": Job,
+                    "recipe_stuck": Post,
+                    "post_overdue": Post,
+                }.get(what)
+                row = s.get(table, ident) if table is not None else None
+                return getattr(row, "campaign_id", None)
             if kind == "footage":
                 src = s.get(Source, ident)
                 return src.campaign_id if src else None
@@ -137,6 +154,13 @@ class AttentionService(Service):
             qid = int(key.split(":")[1])
             self.core.notify.answer(qid, text, by=by, via=via, custom=True)
             return {"routed_to": "question", "id": qid}
+        if kind_of(key) == "stuck":
+            # your words go to the stuck agent as the message of a nudge
+            out = self.core.nudge.nudge_stall(key.split(":", 1)[1], text=text, by=by)
+            return {
+                "routed_to": "campaign" if out["role"] == "campaign" else "director",
+                "id": out["event_id"],
+            }
         campaign_id = self.campaign_of(key)
         framed = f"About: {about}. {text}"
         if campaign_id is not None:

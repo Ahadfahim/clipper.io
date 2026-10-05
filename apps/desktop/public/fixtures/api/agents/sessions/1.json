@@ -3,7 +3,8 @@
   {
    "id": 1,
    "input": {
-    "text": "Batch 1 is in review. Meanwhile I'll polish clip 3: the hook lands late."
+    "text": "Batch 1 is in review. Meanwhile I'll polish clip 3: the hook lands late.",
+    "turn": 1
    },
    "output": {},
    "session_id": 1,
@@ -18,7 +19,8 @@
    "input": {
     "args": {
      "campaign_id": 1
-    }
+    },
+    "turn": 1
    },
    "output": {},
    "session_id": 1,
@@ -33,7 +35,8 @@
    "input": {
     "args": {
      "campaign_id": 1
-    }
+    },
+    "turn": 2
    },
    "output": {
     "clips": 12,
@@ -50,7 +53,8 @@
    "id": 4,
    "input": {
     "subagent": "cutter",
-    "text": "cutter: edit clip 3 (cold open, silences, fillers, captions)"
+    "text": "cutter: edit clip 3 (cold open, silences, fillers, captions)",
+    "turn": 2
    },
    "output": {},
    "session_id": 1,
@@ -69,7 +73,8 @@
      "start": 31.0,
      "type": "cold_open"
     },
-    "subagent": "cutter"
+    "subagent": "cutter",
+    "turn": 3
    },
    "output": {},
    "session_id": 1,
@@ -82,7 +87,8 @@
   {
    "id": 6,
    "input": {
-    "args": {}
+    "args": {},
+    "turn": 3
    },
    "output": {
     "summary": "cold open from 31.00s (1.4s)"
@@ -98,7 +104,8 @@
    "id": 7,
    "input": {
     "subagent": "cutter",
-    "text": "The pause at 0:12 kills momentum; medium silence removal should keep the laugh."
+    "text": "The pause at 0:12 kills momentum; medium silence removal should keep the laugh.",
+    "turn": 4
    },
    "output": {},
    "session_id": 1,
@@ -115,7 +122,8 @@
      "clip_id": 3,
      "level": "medium"
     },
-    "subagent": "cutter"
+    "subagent": "cutter",
+    "turn": 4
    },
    "output": {},
    "session_id": 1,
@@ -131,7 +139,8 @@
     "args": {
      "account_id": 4,
      "clip_id": 3
-    }
+    },
+    "turn": 5
    },
    "output": {
     "reason": "clip 3 has no approved review; publishing requires a human approved review",
@@ -150,7 +159,8 @@
     "args": {
      "clip_id": 3
     },
-    "subagent": "cutter"
+    "subagent": "cutter",
+    "turn": 5
    },
    "output": {},
    "session_id": 1,
@@ -170,7 +180,8 @@
    "priority": 0,
    "queued_at": "2026-10-02T17:59:30Z",
    "request_id": 2,
-   "role": "campaign"
+   "role": "campaign",
+   "waiting_reason": null
   },
   {
    "campaign_id": 1,
@@ -180,7 +191,8 @@
    "priority": 2,
    "queued_at": "2026-10-02T17:49:00Z",
    "request_id": 1,
-   "role": "campaign"
+   "role": "campaign",
+   "waiting_reason": null
   }
  ],
  "session": {
@@ -197,6 +209,7 @@
   "started": "2026-10-01T16:00:00Z",
   "status": "running",
   "summary": "Editing clip 3: removing filler words",
-  "turns": 46
+  "turns": 46,
+  "turns_run": 5
  }
 }

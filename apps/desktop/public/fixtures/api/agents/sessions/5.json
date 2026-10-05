@@ -29,6 +29,7 @@
   "started": "2026-09-30T18:00:00Z",
   "status": "waiting",
   "summary": null,
-  "turns": 12
+  "turns": 12,
+  "turns_run": 0
  }
 }

@@ -140,24 +140,25 @@ export function RunsOut({ at, deadline }: { at: string | null | undefined; deadl
 }
 
 /** Brief → Sources → Analyze → Clips → Review → Post → Submit. */
-export function StageStepper({ stages, showLabel = true, className }: { stages: Schemas["Stage"][]; showLabel?: boolean; className?: string }) {
+export function StageStepper({ stages, showLabel = true, className, stuck }: { stages: Schemas["Stage"][]; showLabel?: boolean; className?: string; /** Why this campaign looks stuck: the current stage turns red and says so. */ stuck?: string }) {
   const id = useId();
   const activeIdx = stages.findIndex((s) => s.state === "active");
   const current = stages[activeIdx] ?? stages[stages.length - 1];
   const label = current ? `${current.name} (${activeIdx >= 0 ? activeIdx + 1 : stages.length} of ${stages.length})` : "";
   return (
     <span className={cn("flex min-w-0 items-center gap-1.5", className)} aria-labelledby={id}>
-      <span className="flex min-w-[84px] flex-1 items-center gap-0.5" title={stages.map((s) => `${s.name}: ${s.state}`).join(" · ")}>
+      <span className="flex min-w-[84px] flex-1 items-center gap-0.5" title={stuck ? `Looks stuck: ${stuck}` : stages.map((s) => `${s.name}: ${s.state}`).join(" · ")}>
         {stages.map((s) => (
           <span
             key={s.name}
-            className={cn("h-2 flex-1", s.state === "done" ? "bg-ok" : s.state === "active" ? "bg-warn-strong" : "bg-line")}
+            className={cn("h-2 flex-1", s.state === "done" ? "bg-ok" : s.state === "active" ? (stuck ? "bg-bad" : "bg-warn-strong") : "bg-line")}
           />
         ))}
       </span>
       {showLabel && (
-        <span id={id} className="shrink-0 text-muted">
+        <span id={id} className={cn("shrink-0", stuck ? "text-bad" : "text-muted")}>
           {current?.name}
+          {stuck ? " · stuck" : ""}
         </span>
       )}
       {!showLabel && <span id={id} className="sr-only">{label}</span>}

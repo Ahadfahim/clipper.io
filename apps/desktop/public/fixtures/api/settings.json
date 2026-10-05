@@ -213,6 +213,17 @@
    "mode": "suggest",
    "prefetch_sources": true
   },
+  "stalls": {
+   "auto_restart_hung_min": 30,
+   "auto_retry_stalled_job": true,
+   "idle_min": 30,
+   "job_quiet_min": 15,
+   "job_waiting_min": 10,
+   "max_auto_nudges": 2,
+   "post_overdue_min": 15,
+   "request_blocked_min": 5,
+   "session_quiet_min": 10
+  },
   "switches": {
    "marketplaces": {
     "vyro": true,

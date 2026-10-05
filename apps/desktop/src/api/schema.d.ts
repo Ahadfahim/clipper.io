@@ -215,7 +215,10 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Nudge */
+        /**
+         * Nudge
+         * @description Tell an agent it looks stuck, with a message of your own if you like. Works for every role.
+         */
         post: operations["nudge_api_agents_sessions__session_id__nudge_post"];
         delete?: never;
         options?: never;
@@ -409,6 +412,26 @@ export interface paths {
          * @description You joined the campaign on the marketplace's site: its agent carries on.
          */
         post: operations["joined_api_campaigns__campaign_id__joined_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/campaigns/{campaign_id}/nudge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Campaign Nudge
+         * @description Tell a campaign's agent it looks stuck, with a message of your own if you like.
+         */
+        post: operations["campaign_nudge_api_campaigns__campaign_id__nudge_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1005,6 +1028,46 @@ export interface paths {
         get: operations["jobs_api_jobs_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Job Cancel
+         * @description Stop a job: a queued one is dropped, a running one has its processes killed.
+         */
+        post: operations["job_cancel_api_jobs__job_id__cancel_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/jobs/{job_id}/cancel-retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Job Cancel Retry
+         * @description Cancel a stuck job and queue it again (at most a few times for the same input).
+         */
+        post: operations["job_cancel_retry_api_jobs__job_id__cancel_retry_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1779,6 +1842,47 @@ export interface paths {
          * @description Don't use this source (the campaign's agent is told to use the others).
          */
         post: operations["source_skip_api_sources__source_id__skip_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stalls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stalls List
+         * @description Everything that looks stuck right now: a hung agent, a job that stopped moving, a request that can't start.
+         */
+        get: operations["stalls_list_api_stalls_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stalls/{slug}/act": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stall Act
+         * @description Do one of a stall's actions: nudge (with a message), restart the turn, run now, release the lease,
+         *     cancel and retry. The address is the stall key with dashes (``session_hung-3``).
+         */
+        post: operations["stall_act_api_stalls__slug__act_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2866,6 +2970,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** Detail */
+            detail: string | null;
             /** Error */
             error: string | null;
             /** Finished At */
@@ -2874,8 +2980,20 @@ export interface components {
             id: number;
             /** Kind */
             kind: string;
+            /**
+             * Label
+             * @default
+             */
+            label: string;
             /** Progress */
             progress: number;
+            /** Progress At */
+            progress_at: string | null;
+            /**
+             * Stalled
+             * @default false
+             */
+            stalled: boolean;
             /** Started At */
             started_at: string | null;
             /** Status */
@@ -3132,7 +3250,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "challenge" | "question" | "footage" | "join" | "review" | "campaign" | "alert" | "failure";
+            kind: "challenge" | "question" | "footage" | "stuck" | "join" | "review" | "campaign" | "alert" | "failure";
             /** Links */
             links: components["schemas"]["Link"][];
             /** Options */
@@ -3185,6 +3303,14 @@ export interface components {
             /** Scope Id */
             scope_id: string | null;
             /** Text */
+            text: string;
+        };
+        /** NudgeIn */
+        NudgeIn: {
+            /**
+             * Text
+             * @default
+             */
             text: string;
         };
         /** OkOut */
@@ -3408,6 +3534,8 @@ export interface components {
             request_id: number;
             /** Role */
             role: string;
+            /** Waiting Reason */
+            waiting_reason: string | null;
         };
         /** RecipeHealth */
         RecipeHealth: {
@@ -3755,6 +3883,11 @@ export interface components {
             summary: string | null;
             /** Turns */
             turns: number;
+            /**
+             * Turns Run
+             * @default 0
+             */
+            turns_run: number;
         };
         /** SettingsOut */
         SettingsOut: {
@@ -3805,12 +3938,19 @@ export interface components {
             current_tool: string | null;
             /** Dimmed */
             dimmed: boolean;
+            /**
+             * Hung
+             * @default false
+             */
+            hung: boolean;
             /** Kind */
             kind: string | null;
             /** Model */
             model: string | null;
             /** Priority */
             priority: number | null;
+            /** Quiet S */
+            quiet_s: number | null;
             /** Request Id */
             request_id: number | null;
             /** Role */
@@ -3884,6 +4024,55 @@ export interface components {
              * @enum {string}
              */
             state: "done" | "active" | "todo";
+        };
+        /** StallActIn */
+        StallActIn: {
+            /** Action */
+            action: string;
+            /**
+             * Text
+             * @default
+             */
+            text: string;
+        };
+        /** StallActionOut */
+        StallActionOut: {
+            /** Action */
+            action: string;
+            /** Label */
+            label: string;
+            /** Server */
+            server: boolean;
+        };
+        /** StallOut */
+        StallOut: {
+            /** Actions */
+            actions: components["schemas"]["StallActionOut"][];
+            /** Campaign Id */
+            campaign_id: number | null;
+            /** Campaign Title */
+            campaign_title: string | null;
+            /** Evidence */
+            evidence: string[];
+            /** Job Id */
+            job_id: number | null;
+            /** Key */
+            key: string;
+            /** Kind */
+            kind: string;
+            /** Post Id */
+            post_id: number | null;
+            /** Request Id */
+            request_id: number | null;
+            /** Session Id */
+            session_id: number | null;
+            /**
+             * Since
+             * Format: date-time
+             */
+            since: string;
+            /** Summary */
+            summary: string;
         };
         /** StatusOut */
         StatusOut: {
@@ -4484,7 +4673,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["NudgeIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -4794,6 +4987,41 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    campaign_nudge_api_campaigns__campaign_id__nudge_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                campaign_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["NudgeIn"] | null;
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {
@@ -5823,6 +6051,68 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["JobOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_cancel_api_jobs__job_id__cancel_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    job_cancel_retry_api_jobs__job_id__cancel_retry_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                job_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
                 };
             };
             /** @description Validation Error */
@@ -7279,6 +7569,61 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OkOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stalls_list_api_stalls_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StallOut"][];
+                };
+            };
+        };
+    };
+    stall_act_api_stalls__slug__act_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StallActIn"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

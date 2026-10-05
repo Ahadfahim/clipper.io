@@ -2866,6 +2866,17 @@
       "title": "Created At",
       "type": "string"
      },
+     "detail": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Detail"
+     },
      "error": {
       "anyOf": [
        {
@@ -2897,9 +2908,31 @@
       "title": "Kind",
       "type": "string"
      },
+     "label": {
+      "default": "",
+      "title": "Label",
+      "type": "string"
+     },
      "progress": {
       "title": "Progress",
       "type": "number"
+     },
+     "progress_at": {
+      "anyOf": [
+       {
+        "format": "date-time",
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Progress At"
+     },
+     "stalled": {
+      "default": false,
+      "title": "Stalled",
+      "type": "boolean"
      },
      "started_at": {
       "anyOf": [
@@ -2927,7 +2960,11 @@
      "error",
      "created_at",
      "started_at",
-     "finished_at"
+     "finished_at",
+     "detail",
+     "progress_at",
+     "stalled",
+     "label"
     ],
     "title": "JobOut",
     "type": "object"
@@ -3658,6 +3695,7 @@
        "challenge",
        "question",
        "footage",
+       "stuck",
        "join",
        "review",
        "campaign",
@@ -3848,6 +3886,18 @@
      "created_at"
     ],
     "title": "NoteOut",
+    "type": "object"
+   },
+   "NudgeIn": {
+    "properties": {
+     "text": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "title": "NudgeIn",
     "type": "object"
    },
    "OkOut": {
@@ -4544,6 +4594,17 @@
      "role": {
       "title": "Role",
       "type": "string"
+     },
+     "waiting_reason": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Waiting Reason"
      }
     },
     "required": [
@@ -4554,7 +4615,8 @@
      "campaign_id",
      "campaign_title",
      "merged",
-     "queued_at"
+     "queued_at",
+     "waiting_reason"
     ],
     "title": "QueueItem",
     "type": "object"
@@ -5478,6 +5540,11 @@
      "turns": {
       "title": "Turns",
       "type": "integer"
+     },
+     "turns_run": {
+      "default": 0,
+      "title": "Turns Run",
+      "type": "integer"
      }
     },
     "required": [
@@ -5487,6 +5554,7 @@
      "campaign_title",
      "status",
      "turns",
+     "turns_run",
      "max_turns",
      "input_tokens",
      "output_tokens",
@@ -5619,6 +5687,11 @@
       "title": "Dimmed",
       "type": "boolean"
      },
+     "hung": {
+      "default": false,
+      "title": "Hung",
+      "type": "boolean"
+     },
      "kind": {
       "anyOf": [
        {
@@ -5651,6 +5724,17 @@
        }
       ],
       "title": "Priority"
+     },
+     "quiet_s": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Quiet S"
      },
      "request_id": {
       "anyOf": [
@@ -5714,7 +5798,9 @@
      "started",
      "current_tool",
      "dimmed",
-     "model"
+     "model",
+     "quiet_s",
+     "hung"
     ],
     "title": "SlotOut",
     "type": "object"
@@ -5905,6 +5991,167 @@
      "state"
     ],
     "title": "Stage",
+    "type": "object"
+   },
+   "StallActIn": {
+    "properties": {
+     "action": {
+      "maxLength": 40,
+      "minLength": 1,
+      "title": "Action",
+      "type": "string"
+     },
+     "text": {
+      "default": "",
+      "maxLength": 1000,
+      "title": "Text",
+      "type": "string"
+     }
+    },
+    "required": [
+     "action"
+    ],
+    "title": "StallActIn",
+    "type": "object"
+   },
+   "StallActionOut": {
+    "properties": {
+     "action": {
+      "title": "Action",
+      "type": "string"
+     },
+     "label": {
+      "title": "Label",
+      "type": "string"
+     },
+     "server": {
+      "title": "Server",
+      "type": "boolean"
+     }
+    },
+    "required": [
+     "action",
+     "label",
+     "server"
+    ],
+    "title": "StallActionOut",
+    "type": "object"
+   },
+   "StallOut": {
+    "properties": {
+     "actions": {
+      "items": {
+       "$ref": "#/components/schemas/StallActionOut"
+      },
+      "title": "Actions",
+      "type": "array"
+     },
+     "campaign_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Id"
+     },
+     "campaign_title": {
+      "anyOf": [
+       {
+        "type": "string"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Campaign Title"
+     },
+     "evidence": {
+      "items": {
+       "type": "string"
+      },
+      "title": "Evidence",
+      "type": "array"
+     },
+     "job_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Job Id"
+     },
+     "key": {
+      "title": "Key",
+      "type": "string"
+     },
+     "kind": {
+      "title": "Kind",
+      "type": "string"
+     },
+     "post_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Post Id"
+     },
+     "request_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Request Id"
+     },
+     "session_id": {
+      "anyOf": [
+       {
+        "type": "integer"
+       },
+       {
+        "type": "null"
+       }
+      ],
+      "title": "Session Id"
+     },
+     "since": {
+      "format": "date-time",
+      "title": "Since",
+      "type": "string"
+     },
+     "summary": {
+      "title": "Summary",
+      "type": "string"
+     }
+    },
+    "required": [
+     "key",
+     "kind",
+     "since",
+     "summary",
+     "evidence",
+     "actions",
+     "campaign_id",
+     "campaign_title",
+     "session_id",
+     "request_id",
+     "job_id",
+     "post_id"
+    ],
+    "title": "StallOut",
     "type": "object"
    },
    "StatusOut": {
@@ -6975,6 +7222,7 @@
   },
   "/api/agents/sessions/{session_id}/nudge": {
    "post": {
+    "description": "Tell an agent it looks stuck, with a message of your own if you like. Works for every role.",
     "operationId": "nudge_api_agents_sessions__session_id__nudge_post",
     "parameters": [
      {
@@ -6987,6 +7235,23 @@
       }
      }
     ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/NudgeIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
     "responses": {
      "200": {
       "content": {
@@ -7478,6 +7743,66 @@
      }
     },
     "summary": "Joined",
+    "tags": [
+     "campaigns"
+    ]
+   }
+  },
+  "/api/campaigns/{campaign_id}/nudge": {
+   "post": {
+    "description": "Tell a campaign's agent it looks stuck, with a message of your own if you like.",
+    "operationId": "campaign_nudge_api_campaigns__campaign_id__nudge_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "campaign_id",
+      "required": true,
+      "schema": {
+       "title": "Campaign Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "anyOf": [
+         {
+          "$ref": "#/components/schemas/NudgeIn"
+         },
+         {
+          "type": "null"
+         }
+        ],
+        "title": "Body"
+       }
+      }
+     }
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Campaign Nudge",
     "tags": [
      "campaigns"
     ]
@@ -8963,6 +9288,92 @@
      }
     },
     "summary": "Jobs",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/jobs/{job_id}/cancel": {
+   "post": {
+    "description": "Stop a job: a queued one is dropped, a running one has its processes killed.",
+    "operationId": "job_cancel_api_jobs__job_id__cancel_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "job_id",
+      "required": true,
+      "schema": {
+       "title": "Job Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Job Cancel",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/jobs/{job_id}/cancel-retry": {
+   "post": {
+    "description": "Cancel a stuck job and queue it again (at most a few times for the same input).",
+    "operationId": "job_cancel_retry_api_jobs__job_id__cancel_retry_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "job_id",
+      "required": true,
+      "schema": {
+       "title": "Job Id",
+       "type": "integer"
+      }
+     }
+    ],
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Job Cancel Retry",
     "tags": [
      "system"
     ]
@@ -11128,6 +11539,85 @@
      }
     },
     "summary": "Source Skip",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/stalls": {
+   "get": {
+    "description": "Everything that looks stuck right now: a hung agent, a job that stopped moving, a request that can't start.",
+    "operationId": "stalls_list_api_stalls_get",
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "items": {
+          "$ref": "#/components/schemas/StallOut"
+         },
+         "title": "Response Stalls List Api Stalls Get",
+         "type": "array"
+        }
+       }
+      },
+      "description": "Successful Response"
+     }
+    },
+    "summary": "Stalls List",
+    "tags": [
+     "system"
+    ]
+   }
+  },
+  "/api/stalls/{slug}/act": {
+   "post": {
+    "description": "Do one of a stall's actions: nudge (with a message), restart the turn, run now, release the lease,\ncancel and retry. The address is the stall key with dashes (``session_hung-3``).",
+    "operationId": "stall_act_api_stalls__slug__act_post",
+    "parameters": [
+     {
+      "in": "path",
+      "name": "slug",
+      "required": true,
+      "schema": {
+       "title": "Slug",
+       "type": "string"
+      }
+     }
+    ],
+    "requestBody": {
+     "content": {
+      "application/json": {
+       "schema": {
+        "$ref": "#/components/schemas/StallActIn"
+       }
+      }
+     },
+     "required": true
+    },
+    "responses": {
+     "200": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/OkOut"
+        }
+       }
+      },
+      "description": "Successful Response"
+     },
+     "422": {
+      "content": {
+       "application/json": {
+        "schema": {
+         "$ref": "#/components/schemas/HTTPValidationError"
+        }
+       }
+      },
+      "description": "Validation Error"
+     }
+    },
+    "summary": "Stall Act",
     "tags": [
      "system"
     ]

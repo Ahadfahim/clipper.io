@@ -39,6 +39,7 @@ from clipper.services.attention import key_of
 from clipper.services.base import ServiceError
 from clipper.services.control import set_control
 from clipper.services.recipe_check import CLIP_NAME, run_check_upload
+from clipper.supervisor.stalls import Stall
 
 
 def get_core(request: Request) -> Core:
@@ -179,6 +180,24 @@ def jobs(core: CoreDep, limit: int = 50) -> list[S.JobOut]:
     return views.jobs(core, limit)
 
 
+@system.post("/jobs/{job_id}/cancel", response_model=S.OkOut)
+def job_cancel(core: CoreDep, job_id: int) -> S.OkOut:
+    """Stop a job: a queued one is dropped, a running one has its processes killed."""
+    if not (core.jobs.cancel(job_id) or core.jobs.cancel_running(job_id)):
+        raise HTTPException(409, f"job {job_id} isn't queued or running")
+    return S.OkOut(id=job_id, detail="cancelled")
+
+
+@system.post("/jobs/{job_id}/cancel-retry", response_model=S.OkOut)
+def job_cancel_retry(core: CoreDep, job_id: int) -> S.OkOut:
+    """Cancel a stuck job and queue it again (at most a few times for the same input)."""
+    try:
+        new_id = core.jobs.cancel_and_retry(job_id)
+    except ValueError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    return S.OkOut(id=new_id, detail=f"queued again as job {new_id}")
+
+
 @system.post("/jobs/{job_id}/retry", response_model=S.OkOut)
 def job_retry(core: CoreDep, job_id: int) -> S.OkOut:
     """Run a failed or cancelled job again (same input)."""
@@ -237,6 +256,55 @@ def source_attach_file(core: CoreDep, source_id: int, body: S.AttachFileIn) -> S
     except ServiceError as exc:
         raise _fail(exc) from exc
     return S.OkOut(id=job_id, detail=f"adding {Path(body.path).name}")
+
+
+def _stall_out(core: Core, st: Stall, titles: dict[int | None, str]) -> S.StallOut:
+    from clipper.supervisor.stall_actions import LABELS, SERVER_ACTIONS
+
+    return S.StallOut(
+        key=st.key,
+        kind=st.kind,
+        since=st.since,
+        summary=st.summary,
+        evidence=st.evidence,
+        actions=[
+            S.StallActionOut(action=a, label=LABELS.get(a, a), server=a in SERVER_ACTIONS) for a in st.actions
+        ],
+        campaign_id=st.campaign_id,
+        campaign_title=titles.get(st.campaign_id),
+        session_id=st.session_id,
+        request_id=st.request_id,
+        job_id=st.job_id,
+        post_id=st.post_id,
+    )
+
+
+@system.get("/stalls", response_model=list[S.StallOut])
+def stalls_list(core: CoreDep) -> list[S.StallOut]:
+    """Everything that looks stuck right now: a hung agent, a job that stopped moving, a request that can't start."""
+    from clipper.supervisor.stalls import build_snapshot, detect_stalls
+
+    with core.db.read() as s:
+        titles: dict[int | None, str] = {c.id: c.title for c in s.exec(select(Campaign)).all()}
+    return [_stall_out(core, st, titles) for st in detect_stalls(build_snapshot(core), core.settings.stalls)]
+
+
+@system.post("/stalls/{slug}/act", response_model=S.OkOut)
+async def stall_act(request: Request, core: CoreDep, slug: str, body: S.StallActIn) -> S.OkOut:
+    """Do one of a stall's actions: nudge (with a message), restart the turn, run now, release the lease,
+    cancel and retry. The address is the stall key with dashes (``session_hung-3``)."""
+    from clipper.supervisor.stall_actions import run_action
+    from clipper.supervisor.stalls import build_snapshot, detect_stalls
+
+    key = key_of(slug)
+    stall = next((x for x in detect_stalls(build_snapshot(core), core.settings.stalls) if x.key == key), None)
+    if stall is None:
+        raise HTTPException(404, "that isn't stuck any more")
+    try:
+        done = await run_action(core, request.app.state.supervisor, stall, body.action, text=body.text)
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(detail=done)
 
 
 @system.get("/needs-you", response_model=list[S.NeedsYouItem])
@@ -440,15 +508,13 @@ async def interrupt(request: Request, session_id: int) -> S.OkOut:
 
 
 @agents.post("/sessions/{session_id}/nudge", response_model=S.OkOut)
-def nudge(core: CoreDep, session_id: int) -> S.OkOut:
-    from clipper.events.types import WatchdogNudge
-
-    with core.db.read() as s:
-        sess = s.get(AgentSession, session_id)
-    if sess is None or sess.campaign_id is None:
-        raise HTTPException(400, "only campaign sessions can be nudged")
-    core.bus.publish(WatchdogNudge(campaign_id=sess.campaign_id, idle_minutes=0))
-    return S.OkOut(id=session_id)
+def nudge(core: CoreDep, session_id: int, body: S.NudgeIn | None = None) -> S.OkOut:
+    """Tell an agent it looks stuck, with a message of your own if you like. Works for every role."""
+    try:
+        core.nudge.nudge(session_id=session_id, text=body.text if body else "")
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(id=session_id, detail="nudged")
 
 
 @agents.post("/requests/{request_id}/bump", response_model=S.OkOut)
@@ -690,6 +756,16 @@ def skip(core: CoreDep, campaign_id: int, via: str = "dashboard", keep_submittin
     except ServiceError as exc:
         raise _fail(exc) from exc
     return S.OkOut(id=campaign_id, detail=status)
+
+
+@campaigns.post("/{campaign_id}/nudge", response_model=S.OkOut)
+def campaign_nudge(core: CoreDep, campaign_id: int, body: S.NudgeIn | None = None) -> S.OkOut:
+    """Tell a campaign's agent it looks stuck, with a message of your own if you like."""
+    try:
+        core.nudge.nudge(campaign_id=campaign_id, text=body.text if body else "")
+    except ServiceError as exc:
+        raise _fail(exc) from exc
+    return S.OkOut(id=campaign_id, detail="nudged")
 
 
 @campaigns.post("/{campaign_id}/joined", response_model=S.OkOut)

@@ -190,6 +190,19 @@ CASES: list[Case] = [
     Case("campaign has no web", call("WebFetch", {"url": "https://example.com"}), False, "access"),
     Case("research has web", call("WebSearch", {"query": "creator"}, role="research"), True),
     Case("unknown tool denied", call("mcp__shell__run", {"cmd": "rm -rf /"}), False, "access"),
+    # ---------------------------------------------------------------- subagents run in the foreground
+    Case(
+        "background subagent denied",
+        call("Agent", {"subagent_type": "editor", "prompt": "rank moments", "run_in_background": True}),
+        False,
+        "foreground_subagents",
+    ),
+    Case("foreground subagent allowed", call("Agent", {"subagent_type": "editor", "prompt": "rank moments"}), True),
+    Case(
+        "explicitly foreground subagent allowed",
+        call("Agent", {"subagent_type": "editor", "prompt": "x", "run_in_background": False}),
+        True,
+    ),
     # ---------------------------------------------------------------- campaign scope
     Case("other campaign by id", call(fq("state", "get_campaign"), {"campaign_id": 2}), False, "campaign_scope"),
     # the campaign's subagents read clips for it, and are bound to the same campaign

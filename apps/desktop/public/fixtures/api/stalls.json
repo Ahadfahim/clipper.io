@@ -1,0 +1,58 @@
+[
+ {
+  "actions": [
+   {
+    "action": "cancel_retry",
+    "label": "Cancel and retry",
+    "server": true
+   },
+   {
+    "action": "show_jobs",
+    "label": "Show jobs",
+    "server": false
+   }
+  ],
+  "campaign_id": 2,
+  "campaign_title": "Ali Abdaal podcast cuts",
+  "evidence": [
+   "Analysis of source 3: 70% done, last moved 38 min ago.",
+   "Last report: Tracking faces"
+  ],
+  "job_id": 2,
+  "key": "job_stalled:2",
+  "kind": "job_stalled",
+  "post_id": null,
+  "request_id": null,
+  "session_id": null,
+  "since": "2026-10-02T17:22:00Z",
+  "summary": "Analysis of source 3 hasn't moved for 38 min."
+ },
+ {
+  "actions": [
+   {
+    "action": "run_now",
+    "label": "Run now",
+    "server": true
+   },
+   {
+    "action": "release_lease",
+    "label": "Release lease",
+    "server": true
+   }
+  ],
+  "campaign_id": 2,
+  "campaign_title": "Ali Abdaal podcast cuts",
+  "evidence": [
+   "Campaign 2 is held by session 4 (a lease that stays until that session finishes or the lease is released).",
+   "Queued 14 min ago at priority P2 (job.done)."
+  ],
+  "job_id": null,
+  "key": "request_blocked:3",
+  "kind": "request_blocked",
+  "post_id": null,
+  "request_id": 3,
+  "session_id": null,
+  "since": "2026-10-02T17:46:00Z",
+  "summary": "The agent request for Ali Abdaal podcast cuts has been waiting 14 min to start."
+ }
+]

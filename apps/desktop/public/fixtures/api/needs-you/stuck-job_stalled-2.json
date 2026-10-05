@@ -1,0 +1,86 @@
+{
+ "agent": null,
+ "body": "Analysis of source 3 hasn't moved for 38 min.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "What",
+   "link": null,
+   "value": "Job stopped moving"
+  },
+  {
+   "at": null,
+   "label": "Campaign",
+   "link": null,
+   "value": "Ali Abdaal podcast cuts"
+  },
+  {
+   "at": "2026-10-02T17:22:00Z",
+   "label": "Since",
+   "link": null,
+   "value": ""
+  },
+  {
+   "at": null,
+   "label": "Evidence",
+   "link": null,
+   "value": "Analysis of source 3: 70% done, last moved 38 min ago."
+  },
+  {
+   "at": null,
+   "label": "",
+   "link": null,
+   "value": "Last report: Tracking faces"
+  }
+ ],
+ "footage": null,
+ "item": {
+  "actions": [
+   {
+    "action": "cancel_retry",
+    "args": {
+     "stall": "job_stalled:2"
+    },
+    "label": "Cancel and retry"
+   },
+   {
+    "action": "show_jobs",
+    "args": {
+     "stall": "job_stalled:2"
+    },
+    "label": "Show jobs"
+   }
+  ],
+  "activity": null,
+  "campaign_id": 2,
+  "campaign_title": "Ali Abdaal podcast cuts",
+  "count": 1,
+  "detail": "Analysis of source 3: 70% done, last moved 38 min ago.",
+  "dismissable": false,
+  "key": "stuck:job_stalled:2",
+  "kind": "stuck",
+  "links": [
+   {
+    "host": "whop.com",
+    "kind": "marketplace",
+    "label": "Open Whop's campaigns",
+    "open_in": "clipper",
+    "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x"
+   }
+  ],
+  "options": [],
+  "since": "2026-10-02T17:22:00Z",
+  "timeout_at": null,
+  "title": "Analysis of source 3 hasn't moved for 38 min.",
+  "urgency": 2
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

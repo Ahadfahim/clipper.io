@@ -2,7 +2,7 @@ import * as D from "@radix-ui/react-dialog";
 import { Command as Cmdk } from "cmdk";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useDirectorChat } from "@/api/actions";
+import { useDirectorChat, useNudge } from "@/api/actions";
 import { useCampaigns, useClips, useDirector } from "@/api/queries";
 import { clock } from "@/lib/format";
 import { MARKET_LABEL } from "@/lib/platforms";
@@ -28,6 +28,7 @@ export function CommandBox({ commands }: { commands: Command[] }) {
   const clips = useClips().data ?? [];
   const director = useDirector().data ?? NONE;
   const chat = useDirectorChat();
+  const nudge = useNudge();
   const input = useRef<HTMLInputElement>(null);
   const director_mode = q.startsWith(">");
 
@@ -101,6 +102,19 @@ export function CommandBox({ commands }: { commands: Command[] }) {
                     </Cmdk.Item>
                   ))}
                 </Cmdk.Group>
+                {/* only when you type "nudge": one line per campaign whose agent can be nudged */}
+                {q.toLowerCase().includes("nudge") && (
+                  <Cmdk.Group heading="Nudge an agent" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:text-muted">
+                    {campaigns
+                      .filter((c) => c.status === "active" || c.status === "ending")
+                      .map((c) => (
+                        <Cmdk.Item key={c.id} value={`nudge ${c.title}`} onSelect={() => run(() => nudge.mutate({ campaignId: c.id }))} className={item}>
+                          <span className="flex-1">{`Nudge ${c.title}`}</span>
+                          <span className="text-muted">says it looks stuck</span>
+                        </Cmdk.Item>
+                      ))}
+                  </Cmdk.Group>
+                )}
                 <Cmdk.Group heading="Campaigns" className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:text-muted">
                   {campaigns.map((c) => (
                     <Cmdk.Item key={c.id} value={`campaign ${c.title} ${c.brand ?? ""} ${c.marketplace}`} onSelect={() => run(() => void navigate({ to: "/campaigns", search: { open: c.id } }))} className={item}>

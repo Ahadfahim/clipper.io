@@ -1,0 +1,8 @@
+[youtube] Extracting URL: https://www.youtube.com/watch?v=abc123
+[info] abc123: Downloading 1 format(s): 616+251
+[clipper] 0 NA 3567890123 NA
+[clipper] 20971520 NA 3567890123 8388608.0
+[clipper] 1073741824 3567890123 NA 12582912.5
+[clipper] 3567890123 3567890123 NA 9437184.0
+[Merger] Merging formats into "abc123.mp4"
+C:\ClipperData\sources\campaign_1\abc123.mp4

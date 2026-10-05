@@ -490,11 +490,28 @@ def rule_edit_lock(call: ToolCall, ctx: GuardContext) -> Verdict | None:
     return None
 
 
+def rule_foreground_subagents(call: ToolCall, ctx: GuardContext) -> Verdict | None:
+    """A subagent started in the background is abandoned when the agent ends its turn (the session waits
+    for something that never comes). Launch them in the foreground, several in one message if they can
+    run side by side, and wait for what they bring back."""
+    if call.tool != "Agent":
+        return None
+    flag = call.args.get("run_in_background")
+    if flag is True or (isinstance(flag, str) and flag.strip().lower() in ("true", "1", "yes")):
+        return deny(
+            "foreground_subagents",
+            "don't run subagents in the background: they are abandoned when your turn ends. "
+            "Start them in the foreground (several in one message to run them side by side) and wait for the results",
+        )
+    return None
+
+
 RULES: Sequence[tuple[str, Rule]] = (
     ("kill_switch", rule_kill_switch),
     ("paused", rule_paused),
     ("max_turns", rule_max_turns),
     ("access", rule_access),
+    ("foreground_subagents", rule_foreground_subagents),
     ("campaign_scope", rule_campaign_scope),
     ("marketplace_switch", rule_marketplace_switch),
     ("account_switch", rule_account_switch),

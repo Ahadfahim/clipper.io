@@ -23,7 +23,8 @@
    "priority": 3,
    "queued_at": "2026-10-02T17:59:00Z",
    "request_id": 4,
-   "role": "scout"
+   "role": "scout",
+   "waiting_reason": null
   }
  ],
  "session": {
@@ -40,6 +41,7 @@
   "started": "2026-10-02T17:51:00Z",
   "status": "done",
   "summary": "2 new campaigns scored; 1 card posted",
-  "turns": 14
+  "turns": 14,
+  "turns_run": 0
  }
 }

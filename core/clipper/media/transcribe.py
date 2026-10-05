@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import json
 import os
-import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Protocol
 
 from clipper.settings import Settings
+from clipper.system import run_cancellable
 
 GPU_SCRIPT = Path(__file__).parent / "gpu_scripts" / "whisperx_transcribe.py"
 
@@ -100,7 +100,7 @@ class WhisperXTranscriber:
             env["HF_TOKEN"] = self.hf_token
         if self.settings.paths.ffmpeg_bin:
             env["PATH"] = str(self.settings.paths.ffmpeg_bin) + os.pathsep + env.get("PATH", "")
-        proc = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=3 * 3600, check=False)
+        proc = run_cancellable(cmd, env=env, timeout=3 * 3600)
         if proc.returncode != 0:
             raise RuntimeError(f"WhisperX failed ({proc.returncode}): {proc.stderr.strip()[-800:]}")
         return Transcript.from_json(json.loads(out.read_text(encoding="utf-8")))

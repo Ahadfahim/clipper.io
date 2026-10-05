@@ -39,7 +39,7 @@
  "jobs_queued": 1,
  "jobs_running": 3,
  "library_count": 12,
- "needs_you": 10,
+ "needs_you": 12,
  "review_pending": 5,
  "usage": {
   "max_slots": 4,

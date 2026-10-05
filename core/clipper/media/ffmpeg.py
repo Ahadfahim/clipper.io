@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from clipper.settings import Settings, get_settings
+from clipper.system import run_cancellable
 
 
 class FfmpegError(RuntimeError):
@@ -34,16 +35,7 @@ def run_ffmpeg(
 ) -> str:
     """Run ffmpeg with ``args`` (without the binary). Returns stderr (where ffmpeg logs)."""
     cmd = [ffmpeg_bin(settings), "-hide_banner", "-nostdin", *args]
-    proc = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True,
-        cwd=cwd,
-        timeout=timeout,
-        check=False,
-        encoding="utf-8",
-        errors="replace",
-    )
+    proc = run_cancellable(cmd, timeout=timeout, cwd=cwd)
     if proc.returncode != 0:
         raise FfmpegError(cmd, proc.returncode, proc.stderr)
     return proc.stderr

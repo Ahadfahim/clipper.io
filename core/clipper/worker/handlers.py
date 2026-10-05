@@ -14,7 +14,7 @@ from clipper.db.engine import WriteTx
 from clipper.db.models import Analysis, Campaign, Clip, Moment, Review, ReviewBatch, Source
 from clipper.db.types import BatchStatus, ClipStatus, SourceStatus
 from clipper.events.types import ClipUpdated, PreviewReplaced
-from clipper.media.download import DownloadError, file_hash
+from clipper.media.download import DownloadError, DownloadHooks, file_hash
 from clipper.media.edl.qa import measure, qa_report
 from clipper.media.edl.render import encode_to_size, render_edl, thumbnail
 from clipper.media.encode import final_profile, review_profile
@@ -57,9 +57,20 @@ def download(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
     src = _source(core, source_id)
     _set_source(core, source_id, status=SourceStatus.DOWNLOADING)
     dest = core.dir("sources") / f"campaign_{src.campaign_id}"
+
+    def on_progress(fraction: float | None, detail: str) -> None:
+        ctx.detail(detail)
+        if fraction is not None:
+            ctx.progress(0.8 * fraction)  # the rest is checking and filing the download
+        else:
+            ctx.beat()
+
     try:
-        res = core.adapters.downloader.download(str(data["url"]), dest)
+        res = core.adapters.downloader.download(
+            str(data["url"]), dest, DownloadHooks(progress=on_progress, cancelled=lambda: ctx.cancelled)
+        )
     except Exception as exc:
+        ctx.check_cancelled()  # cancelled from outside: not a failure, and the source stays as it was
         reason = exc.reason if isinstance(exc, DownloadError) else f"{type(exc).__name__}: {exc}"
         _set_source(
             core, source_id, status=SourceStatus.FAILED, reason=reason[:300], waiting_since=core.clock.now()
@@ -138,10 +149,12 @@ def analyze(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
     if info.has_audio:
         run_ffmpeg(["-y", "-i", str(video), "-vn", "-ac", "1", "-ar", "16000", str(wav)], settings=settings)
     ctx.progress(0.1)
+    ctx.detail("Transcribing")
     transcript = core.adapters.transcriber.transcribe(wav, media=video)
     transcript_path = work / "transcript.json"
     transcript_path.write_text(json.dumps(transcript.to_json()), encoding="utf-8")
     ctx.progress(0.5)
+    ctx.detail("Finding scene changes and quiet parts")
     cuts = scene_cuts(video, settings)
     curve = energy_curve(video, settings) if info.has_audio else []
     silences = (
@@ -151,6 +164,7 @@ def analyze(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
     )
     (work / "energy.json").write_text(json.dumps(curve), encoding="utf-8")
     ctx.progress(0.7)
+    ctx.detail("Tracking faces")
     try:
         faces = core.adapters.faces.track(video, info.duration)
     except Exception as exc:  # faces only guide reframing: center crop without them
@@ -159,6 +173,7 @@ def analyze(ctx: JobContext, data: dict[str, Any]) -> dict[str, Any]:
     faces_path = work / "faces.json"
     faces_path.write_text(json.dumps([[t, b.model_dump()] for t, b in faces]), encoding="utf-8")
     proxy = work / "proxy.mp4"
+    ctx.detail("Making the preview copy")
     run_ffmpeg(
         ["-y", "-i", str(video), "-vf", f"scale=-2:{settings.media.proxy_height}", "-c:v", "libx264", "-preset", "ultrafast", "-crf", "30",
          "-g", "15", "-c:a", "aac", "-b:a", "64k", str(proxy)],

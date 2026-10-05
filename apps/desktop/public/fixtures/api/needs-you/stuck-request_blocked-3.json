@@ -1,0 +1,86 @@
+{
+ "agent": null,
+ "body": "The agent request for Ali Abdaal podcast cuts has been waiting 14 min to start.",
+ "evidence": null,
+ "facts": [
+  {
+   "at": null,
+   "label": "What",
+   "link": null,
+   "value": "Request can't start"
+  },
+  {
+   "at": null,
+   "label": "Campaign",
+   "link": null,
+   "value": "Ali Abdaal podcast cuts"
+  },
+  {
+   "at": "2026-10-02T17:46:00Z",
+   "label": "Since",
+   "link": null,
+   "value": ""
+  },
+  {
+   "at": null,
+   "label": "Evidence",
+   "link": null,
+   "value": "Campaign 2 is held by session 4 (a lease that stays until that session finishes or the lease is released)."
+  },
+  {
+   "at": null,
+   "label": "",
+   "link": null,
+   "value": "Queued 14 min ago at priority P2 (job.done)."
+  }
+ ],
+ "footage": null,
+ "item": {
+  "actions": [
+   {
+    "action": "run_now",
+    "args": {
+     "stall": "request_blocked:3"
+    },
+    "label": "Run now"
+   },
+   {
+    "action": "release_lease",
+    "args": {
+     "stall": "request_blocked:3"
+    },
+    "label": "Release lease"
+   }
+  ],
+  "activity": null,
+  "campaign_id": 2,
+  "campaign_title": "Ali Abdaal podcast cuts",
+  "count": 1,
+  "detail": "Campaign 2 is held by session 4 (a lease that stays until that session finishes or the lease is released).",
+  "dismissable": false,
+  "key": "stuck:request_blocked:3",
+  "kind": "stuck",
+  "links": [
+   {
+    "host": "whop.com",
+    "kind": "marketplace",
+    "label": "Open Whop's campaigns",
+    "open_in": "clipper",
+    "url": "https://whop.com/core/app/launch/?redirect=https%3A%2F%2Fb4e0vdqv6zgqeqj4pfgm.apps.whop.com%2Fc%2Fexp_zeADOv9rOOKk2x"
+   }
+  ],
+  "options": [],
+  "since": "2026-10-02T17:46:00Z",
+  "timeout_at": null,
+  "title": "The agent request for Ali Abdaal podcast cuts has been waiting 14 min to start.",
+  "urgency": 2
+ },
+ "reply_to": "campaign",
+ "snooze_options": [
+  60,
+  240,
+  1440
+ ],
+ "thumbs": [],
+ "timeline": []
+}

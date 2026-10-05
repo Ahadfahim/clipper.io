@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 import { clock, relative } from "@/lib/format";
 import { describeEvent, TONE_VAR } from "@/api/describe";
 import { useLive } from "@/api/live";
-import { useRetryJob } from "@/api/actions";
+import { useCancelJob, useCancelRetryJob, useRetryJob } from "@/api/actions";
 import { useJobs, useOverview } from "@/api/queries";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/misc";
@@ -39,30 +39,65 @@ function LogRows({ filter }: { filter: (d: ReturnType<typeof describeEvent>) => 
   );
 }
 
+/** What needs a look comes first: a stalled job, then the ones still running or waiting, then the finished ones. */
+const rank = (j: { stalled: boolean; status: string }) => (j.stalled ? 0 : j.status === "running" ? 1 : j.status === "queued" ? 2 : 3);
+
 function JobRows() {
-  const jobs = useJobs().data ?? [];
+  const all = useJobs().data;
+  const jobs = [...(all ?? [])].sort((a, b) => rank(a) - rank(b) || b.id - a.id);
   const retry = useRetryJob();
+  const cancel = useCancelJob();
+  const cancelRetry = useCancelRetryJob();
   if (!jobs.length) return <div className="px-3 py-2 text-muted">No jobs.</div>;
   return (
     <div role="table" aria-label="Jobs" className="flex flex-col">
-      {jobs.map((j) => (
-        <div key={j.id} role="row" className="grid h-7 items-center border-b border-line-soft px-3" style={{ gridTemplateColumns: "48px 120px 110px minmax(80px,1fr) 64px 160px" }}>
-          <span className="num text-muted">#{j.id}</span>
-          <span>{j.kind.replace(/_/g, " ")}</span>
-          <StatusPill status={j.status} />
-          <span className="flex items-center gap-2 pr-4">
-            {j.status === "running" ? <Progress value={j.progress} label={`${j.kind} progress`} /> : <span className="truncate-1 text-muted" title={j.error ?? undefined}>{j.error ?? ""}</span>}
-          </span>
-          <span>
-            {(j.status === "failed" || j.status === "cancelled") && (
-              <Button size="sm" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}>
-                Retry
-              </Button>
-            )}
-          </span>
-          <span className="num text-right text-muted">{relative(j.finished_at ?? j.started_at ?? j.created_at)}</span>
-        </div>
-      ))}
+      {jobs.map((j) => {
+        const live = j.status === "running" || j.status === "queued";
+        return (
+          <div
+            key={j.id}
+            role="row"
+            className={cn("grid h-7 items-center border-b border-line-soft px-3", j.stalled && "bg-warn-soft")}
+            style={{ gridTemplateColumns: "48px 120px 110px minmax(80px,1fr) 150px 84px" }}
+          >
+            <span className="num text-muted">#{j.id}</span>
+            <span title={j.label || undefined}>{j.kind.replace(/_/g, " ")}</span>
+            {j.stalled ? <span className="text-warn">Stalled</span> : <StatusPill status={j.status} />}
+            <span className="flex min-w-0 items-center gap-2 pr-4">
+              {j.status === "running" ? (
+                <>
+                  <Progress value={j.progress} label={`${j.kind} progress`} className="max-w-[160px] shrink-0" />
+                  <span className="truncate-1 min-w-0 text-muted" title={j.detail ?? undefined}>
+                    {[j.detail, j.stalled ? `no progress for ${relative(j.progress_at ?? j.started_at ?? j.created_at).replace(" ago", "")}` : null].filter(Boolean).join(" · ")}
+                  </span>
+                </>
+              ) : (
+                <span className="truncate-1 text-muted" title={j.error ?? undefined}>
+                  {j.error ?? ""}
+                </span>
+              )}
+            </span>
+            <span className="flex gap-1">
+              {live && (
+                <Button size="sm" disabled={cancel.isPending} onClick={() => cancel.mutate(j.id)}>
+                  Cancel
+                </Button>
+              )}
+              {j.stalled && (
+                <Button size="sm" variant="primary" disabled={cancelRetry.isPending} onClick={() => cancelRetry.mutate(j.id)} title="Cancel it and queue the same work again">
+                  Retry
+                </Button>
+              )}
+              {(j.status === "failed" || j.status === "cancelled") && (
+                <Button size="sm" disabled={retry.isPending} onClick={() => retry.mutate(j.id)}>
+                  Retry
+                </Button>
+              )}
+            </span>
+            <span className="num text-right text-muted">{relative(j.finished_at ?? j.started_at ?? j.created_at)}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -73,7 +108,7 @@ const filters: Record<Exclude<OutputTab, "jobs" | "problems">, (d: ReturnType<ty
 };
 
 const isBlock = (d: ReturnType<typeof describeEvent>) => d.problem && d.source === "guard";
-const PROBLEM_KINDS = new Set(["challenge", "alert", "failure"]);
+const PROBLEM_KINDS = new Set(["challenge", "alert", "failure", "stuck", "footage"]);
 
 /** What is wrong right now: the same unresolved items Overview lists (blocked accounts, alerts, failed
  * jobs), plus the calls the safety rules blocked. A fixed problem leaves; it doesn't stay in a log. */
@@ -107,8 +142,8 @@ function ProblemRows() {
         >
           <span className="num w-10 shrink-0 text-muted">{age(i.since)}</span>
           <span className="flex w-[120px] shrink-0 items-center gap-1.5">
-            <Dot tone={i.kind === "alert" ? "warn" : "bad"} />
-            {i.kind === "challenge" ? "Blocked" : i.kind === "alert" ? "Alert" : "Failed"}
+            <Dot tone={i.kind === "alert" || i.kind === "footage" ? "warn" : "bad"} />
+            {{ challenge: "Blocked", alert: "Alert", stuck: "Stuck", footage: "Footage" }[i.kind as string] ?? "Failed"}
           </span>
           <span className="truncate-1 min-w-0 flex-1">{i.title}</span>
           {i.campaign_title && <span className="truncate-1 max-w-[200px] text-muted">{i.campaign_title}</span>}

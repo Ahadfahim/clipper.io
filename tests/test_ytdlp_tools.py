@@ -124,7 +124,7 @@ def test_a_failed_download_job_stores_the_reason_and_the_full_output(
     camp = make_campaign(core.db)
     assert camp.id is not None
 
-    def boom(url: str, dest: Path) -> None:
+    def boom(url: str, dest: Path, hooks: object = None) -> None:
         reason, tail = clean_ytdlp_error(FRAMEIO_STDERR)
         raise DownloadError(reason, tail)
 

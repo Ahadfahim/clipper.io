@@ -500,6 +500,20 @@ function Agents({ ctx }: { ctx: Ctx }) {
           ))}
         </div>
       </Fieldset>
+      <Fieldset legend="Stalls and nudges">
+        <p className="m-0 text-muted">When something counts as stuck and shows up in Needs you. A nudge only wakes the agent: it still follows every safety rule.</p>
+        <div className="grid gap-x-6 gap-y-2" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))" }}>
+          <NumField ctx={ctx} k="stalls.session_quiet_min" label="Agent quiet for (minutes)" hint="A running agent with no activity for this long." min={1} />
+          <NumField ctx={ctx} k="stalls.idle_min" label="Campaign waiting on nothing (minutes)" min={1} />
+          <NumField ctx={ctx} k="stalls.request_blocked_min" label="Request that can't start (minutes)" min={1} />
+          <NumField ctx={ctx} k="stalls.job_quiet_min" label="Job without progress (minutes)" hint="Analysis waits twice as long." min={1} />
+          <NumField ctx={ctx} k="stalls.job_waiting_min" label="Job that stays queued (minutes)" min={1} />
+          <NumField ctx={ctx} k="stalls.post_overdue_min" label="Post past its time (minutes)" min={1} />
+          <NumField ctx={ctx} k="stalls.auto_restart_hung_min" label="Restart a hung agent after (minutes)" hint="0 turns it off." min={0} />
+          <NumField ctx={ctx} k="stalls.max_auto_nudges" label="Automatic actions per stall" hint="After this many it waits for you." min={0} />
+        </div>
+        <Check checked={Boolean(val<boolean>(ctx, "stalls.auto_retry_stalled_job"))} onChange={(v) => ctx.set("stalls.auto_retry_stalled_job", v)} label="Cancel and retry a stalled job once by itself" />
+      </Fieldset>
       <Fieldset legend="Prompts">
         <div className="flex items-center gap-2">
           <Select aria-label="Prompt" value={name} onChange={(e) => setName(e.target.value)} className="w-56">

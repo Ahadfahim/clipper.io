@@ -253,6 +253,8 @@ class Job(SQLModel, table=True):
     input_json: dict[str, Any] = _json_dict()
     status: str = "queued"
     progress: float = 0.0
+    progress_at: datetime | None = _dt()  # when it last moved: a job that stops moving is stalled
+    detail: str | None = None  # "1.2 of 3.4 GB · 8 MB/s · 4 min left"
     result_json: dict[str, Any] = _json_dict()
     error: str | None = None
     campaign_id: int | None = Field(default=None, foreign_key="campaign.id", index=True)
@@ -417,6 +419,7 @@ class AgentRequest(SQLModel, table=True):
     started_at: datetime | None = _dt()
     finished_at: datetime | None = _dt()
     error: str | None = None
+    waiting_reason: str | None = None  # why a queued request hasn't started (set by the supervisor)
 
 
 class Lease(SQLModel, table=True):

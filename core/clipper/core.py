@@ -122,6 +122,7 @@ class Core:
         from clipper.services.media import MediaService
         from clipper.services.memory import MemoryService
         from clipper.services.notify import NotifyService
+        from clipper.services.nudge import NudgeService
         from clipper.services.publishing import PublishingService
         from clipper.services.review import ReviewService
         from clipper.services.toggles import ToggleService
@@ -149,6 +150,7 @@ class Core:
         self.toggles = ToggleService(self)
         self.notify = NotifyService(self)
         self.attention = AttentionService(self)
+        self.nudge = NudgeService(self)
         self.library = LibraryService(self)
         self.memory = MemoryService(self)
         self.agenda = AgendaService(self)

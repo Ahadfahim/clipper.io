@@ -1,6 +1,6 @@
 # Plan: Needs you details, nudges, campaign links, and stuck-work fixes
 
-Status: planned 2026-10-04. M0, M1, M2, M2b and M3 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
+Status: planned 2026-10-04. M0, M1, M2, M2b, M3 and M4 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
 
 This plan is for whoever implements it. Read CLAUDE.md first: agents run on the plan login only, safety rules live in code, and UI work follows the routine (frontend-design skill, shadcn MCP, utility style, check dark and light at 1280×800 and 1920×1080).
 
@@ -672,6 +672,16 @@ Each milestone ends with `just lint`, `just test`, the e2e run and the screensho
 **M4. Stalls and nudges (B1–B3, B5)**
 - The detector, the nudge API and events, job progress/heartbeat/cancel, the UI on every surface, 7.6, 7.9, 7.10 and 7.14.
 - Done when each stall kind can be produced on purpose (a hung fake runner, a stalled dummy job, a lease held by a dead session) and cleared from Needs you with one action.
+- As built (differences from the design above):
+  - The detector has seven kinds. `recipe_stuck` has no in-flight recipe record to look at, so it means "a post has been in `posting` for 10 minutes". A running turn counts as hung when the newest `agent_event` of its session is older than `stalls.session_quiet_min`.
+  - Jobs report through `ctx.progress`, `ctx.detail` and `ctx.beat` (liveness without a percentage); `progress_at` is what the detector reads. A job's subprocesses are registered through a context variable (`system.PROCESS_REGISTRAR`) and `run_cancellable`, so ffmpeg and WhisperX are killed with the job (`taskkill /T /F`); the face-tracking ffmpeg and the OCR calls are not (they are short). yt-dlp streams its progress through a template (`parse_progress`, tested on a recorded sample).
+  - `cancel_retry` allows at most 3 retries per input. When the job's process is gone (the app restarted) the row is closed by hand.
+  - `restart_turn` interrupts the turn, waits 10 s, then cancels the task; the request ends failed with "interrupted by your nudge", the lease is released and a nudge follows.
+  - A nudge to Scout, Analyst or the Director starts a fresh run at P0 (P2 for an automatic one). Your words on a stuck item are the nudge's message.
+  - 7.10: the guard refuses `run_in_background` on the Agent tool (rule `foreground_subagents`), and `campaign.md` says to start subagents together in the foreground.
+  - 7.14: the Director chat can be folded down to its input row, and the pane keeps at least 16%.
+  - Settings → Agents has "Stalls and nudges" (the thresholds and the two automatic actions; the automatic checks themselves are M5).
+  - Not done: a right-click "Nudge" on the Overview campaigns table (the Campaigns grid has it), the Discord nudge, and the automatic checks (M5).
 
 **M5. Automatic nudges and Discord (B4, A4's "Other…" modal, Discord parts of B5 and C3)**
 - Done when an automatic restart happens once, escalates after `max_auto_nudges`, and Discord can nudge and send a custom answer.

@@ -71,6 +71,20 @@ def describe(ev: dict[str, Any]) -> str:
             return f"Wake-up #{p['wakeup_id']} you scheduled: {p['reason']}"
         case "watchdog.nudge":
             return f"Status check: no events for {p['idle_minutes']:.0f} min. What's blocked? Unblock it or ask the user."
+        case "user.nudge":
+            who = "Automatic check" if p.get("auto") else "The user nudged you"
+            said = (p.get("text") or "").strip() or "You look stuck."
+            line = f"{who}: {said}"
+            if p.get("summary"):
+                line += f" What looks stuck: {p['summary']}"
+            if p.get("evidence"):
+                line += f" Evidence: {p['evidence']}"
+            follow = (
+                "Check state.get_campaign, then carry on or ask the user."
+                if p.get("role", "campaign") == "campaign"
+                else "Work out where you stopped, then carry on or ask the user."
+            )
+            return f"{line} {follow}"
         case "trigger.fired":
             return f"Scheduled {p['name']} run."
         case _:

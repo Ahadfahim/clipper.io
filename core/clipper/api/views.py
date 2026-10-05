@@ -16,6 +16,7 @@ from clipper import __version__
 from clipper.agents.access import ACCESS, CATALOG, SUBAGENTS
 from clipper.agents.models import model_for
 from clipper.api import schemas as S  # noqa: N812
+from clipper.clock import ensure_utc
 from clipper.db.models import (
     Account,
     AgendaItem,
@@ -594,6 +595,7 @@ def board(core: Core) -> S.BoardOut:
             for a in s.exec(select(AgentSession).order_by(col(AgentSession.id))).all()
         }
         tools: dict[int, str | None] = {}
+        last_seen: dict[int, datetime] = {}
         for sess in sessions.values():
             if sess.id is not None:
                 ev = s.exec(
@@ -603,6 +605,14 @@ def board(core: Core) -> S.BoardOut:
                     .limit(1)
                 ).first()
                 tools[sess.id] = ev.tool if ev else None
+                newest = s.exec(
+                    select(AgentEvent.ts)
+                    .where(AgentEvent.session_id == sess.id)
+                    .order_by(col(AgentEvent.id).desc())
+                    .limit(1)
+                ).first()
+                if newest is not None:
+                    last_seen[sess.id] = newest
     by_slot = {r.slot: r for r in running}
     slots: list[S.SlotOut] = []
     # an unlimited pool shows its busy slots plus one free row
@@ -610,6 +620,14 @@ def board(core: Core) -> S.BoardOut:
     for i in range(rows):
         r = by_slot.get(i)
         sess = sessions.get((r.role, r.campaign_id)) if r else None
+        quiet: int | None = None
+        if r is not None and r.started_at is not None:
+            since = (
+                max(ensure_utc(r.started_at), ensure_utc(last_seen[sess.id]))
+                if sess and sess.id in last_seen
+                else ensure_utc(r.started_at)
+            )
+            quiet = max(0, int((core.clock.now() - since).total_seconds()))
         slots.append(
             S.SlotOut(
                 slot=i,
@@ -624,6 +642,8 @@ def board(core: Core) -> S.BoardOut:
                 current_tool=tools.get(sess.id) if sess and sess.id else None,
                 dimmed=capacity != UNLIMITED and i >= capacity,
                 model=model_for(core.settings, core.db, r.role) if r else None,
+                quiet_s=quiet,
+                hung=quiet is not None and quiet >= core.settings.stalls.session_quiet_min * 60,
             )
         )
     queue = [
@@ -636,6 +656,7 @@ def board(core: Core) -> S.BoardOut:
             campaign_title=camps.get(r.campaign_id),
             merged=r.merged_count,
             queued_at=r.queued_at,
+            waiting_reason=r.waiting_reason,
         )
         for r in queued
     ]
@@ -651,6 +672,15 @@ def board(core: Core) -> S.BoardOut:
 
 def session_out(core: Core, a: AgentSession, titles: dict[int | None, str]) -> S.SessionOut:
     role_cfg = core.settings.agents.roles.get(a.role)
+    with core.db.read() as s:
+        newest = s.exec(
+            select(AgentEvent)
+            .where(AgentEvent.session_id == a.id)
+            .order_by(col(AgentEvent.id).desc())
+            .limit(1)
+        ).first()
+    seen = newest.input_json if newest is not None else {}
+    turns_run = int(seen.get("turn") or seen.get("turns") or 0)
     return S.SessionOut(
         id=a.id or 0,
         role=a.role,
@@ -658,6 +688,7 @@ def session_out(core: Core, a: AgentSession, titles: dict[int | None, str]) -> S
         campaign_title=titles.get(a.campaign_id),
         status=a.status,
         turns=a.turns,
+        turns_run=turns_run,
         max_turns=role_cfg.max_turns if role_cfg else 0,
         input_tokens=a.input_tokens,
         output_tokens=a.output_tokens,
@@ -881,6 +912,12 @@ def event_text(e: Event) -> str:
         "spec.updated": f"Spec saved by {p.get('by')}",
         "agent.log": str(p.get("text", "")),
         "watchdog.nudge": f"Watchdog nudge after {p.get('idle_minutes', 0):.0f} min",
+        "user.nudge": (
+            f"{'Automatic check' if p.get('auto') else 'Nudged by ' + str(p.get('by', 'you'))}"
+            + (f": {p['text']}" if p.get("text") else "")
+        ),
+        "nudge.sent": f"{str(p.get('action', 'nudge')).replace('_', ' ').capitalize()} ({p.get('target')})"
+        + (" by an automatic check" if p.get("auto") else ""),
     }
     return texts.get(e.type, e.type)
 
@@ -1386,6 +1423,13 @@ def questions(core: Core, status: str | None = "open") -> list[S.QuestionOut]:
 
 
 def jobs(core: Core, limit: int = 50) -> list[S.JobOut]:
+    from clipper.supervisor.stalls import build_snapshot, detect_stalls, job_label
+
+    stalled = {
+        st.job_id
+        for st in detect_stalls(build_snapshot(core), core.settings.stalls)
+        if st.kind == "job_stalled" and st.job_id is not None
+    }
     with core.db.read() as s:
         rows = s.exec(select(Job).order_by(col(Job.id).desc()).limit(limit)).all()
     return [
@@ -1399,6 +1443,10 @@ def jobs(core: Core, limit: int = 50) -> list[S.JobOut]:
             created_at=j.created_at,
             started_at=j.started_at,
             finished_at=j.finished_at,
+            detail=j.detail,
+            progress_at=j.progress_at,
+            stalled=j.id in stalled,
+            label=job_label(j),
         )
         for j in rows
     ]

@@ -13,10 +13,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import subprocess
 import threading
 import time
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from sqlmodel import col, select
@@ -26,6 +27,7 @@ from clipper.db.models import Job
 from clipper.db.types import JobStatus
 from clipper.events.types import JobDone, JobProgress, JobQueued
 from clipper.services.control import read_control
+from clipper.system import PROCESS_REGISTRAR, kill_tree
 
 if TYPE_CHECKING:
     from clipper.core import Core
@@ -46,6 +48,10 @@ class JobFailed(RuntimeError):
         self.raw_tail = raw_tail
 
 
+BEAT_EVERY_S = 5.0  # how often a job that is busy but has nothing new to report says it is alive
+DETAIL_EVERY_S = 1.0
+
+
 @dataclass
 class JobContext:
     core: Core
@@ -54,21 +60,89 @@ class JobContext:
     campaign_id: int | None
     _last_progress: float = 0.0
     _last_write: float = 0.0
+    _last_beat: float = 0.0
+    _last_detail: float = 0.0
+    _detail: str | None = None
+    _cancel: threading.Event = field(default_factory=threading.Event)
+    _processes: list[subprocess.Popen[Any]] = field(default_factory=lambda: [])
+
+    @property
+    def cancelled(self) -> bool:
+        """True once someone cancelled this job while it runs. Long handlers check it between steps."""
+        return self._cancel.is_set()
+
+    def check_cancelled(self) -> None:
+        if self._cancel.is_set():
+            raise JobCancelled("cancelled")
+
+    def register_process(self, proc: subprocess.Popen[Any]) -> None:
+        """Tell the queue about a subprocess this job runs, so cancelling the job can kill it (and the
+        processes it started). If the job was cancelled just before, it is killed at once."""
+        self._processes.append(proc)
+        if self._cancel.is_set():
+            kill_tree(proc.pid)
+
+    def cancel(self) -> None:
+        self._cancel.set()
+        for proc in self._processes:
+            if proc.poll() is None:
+                kill_tree(proc.pid)
 
     def progress(self, value: float) -> None:
+        self.check_cancelled()
         value = max(0.0, min(1.0, value))
         now = time.monotonic()
         if value < 1.0 and (value - self._last_progress < 0.05 or now - self._last_write < 0.5):
-            return
-        self._last_progress, self._last_write = value, now
-        job_id, kind, cid = self.job_id, self.kind, self.campaign_id
+            return self.beat()
+        self._last_progress, self._last_write, self._last_beat = value, now, now
+        job_id, kind, cid, detail = self.job_id, self.kind, self.campaign_id, self._detail
+        stamp = self.core.clock.now()
 
         def write(tx: WriteTx) -> None:
             row = tx.session.get(Job, job_id)
             if row is not None:
                 row.progress = value
+                row.progress_at = stamp
+                row.detail = detail
                 tx.add(row)
-            tx.publish(JobProgress(job_id=job_id, kind=kind, progress=value, campaign_id=cid))
+            tx.publish(JobProgress(job_id=job_id, kind=kind, progress=value, campaign_id=cid, detail=detail))
+
+        self.core.db.write(write)
+
+    def beat(self) -> None:
+        """Say the job is alive without new progress (a long step with no percentage). A stall is judged by
+        the last time a job moved or beat, so a slow step is not mistaken for a hung one."""
+        now = time.monotonic()
+        if now - self._last_beat < BEAT_EVERY_S:
+            return
+        self._last_beat = now
+        job_id = self.job_id
+        stamp = self.core.clock.now()
+
+        def write(tx: WriteTx) -> None:
+            row = tx.session.get(Job, job_id)
+            if row is not None:
+                row.progress_at = stamp
+                tx.add(row)
+
+        self.core.db.write(write)
+
+    def detail(self, text: str) -> None:
+        """What the job is doing right now, in words ("transcribing", "1.2 of 3.4 GB · 8 MB/s")."""
+        self._detail = text[:200]
+        now = time.monotonic()
+        if now - self._last_detail < DETAIL_EVERY_S:
+            return
+        self._last_detail = now
+        job_id, detail = self.job_id, self._detail
+        stamp = self.core.clock.now()
+
+        def write(tx: WriteTx) -> None:
+            row = tx.session.get(Job, job_id)
+            if row is not None:
+                row.detail = detail
+                row.progress_at = stamp
+                tx.add(row)
 
         self.core.db.write(write)
 
@@ -100,6 +174,7 @@ class JobQueue:
         }
         self.handlers: dict[str, Registered] = {}
         self._running: dict[str, int] = {}
+        self._live: dict[int, JobContext] = {}
         self._lock = threading.Lock()
         self._wake: asyncio.Event | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
@@ -139,6 +214,49 @@ class JobQueue:
             return True
 
         return self.core.db.write(job)
+
+    def cancel_running(self, job_id: int) -> bool:
+        """Stop a job that is running: its subprocesses are killed (the whole tree), and the handler raises
+        ``JobCancelled`` at its next step. Returns False when it isn't running in this process."""
+        with self._lock:
+            ctx = self._live.get(job_id)
+        if ctx is None:
+            return False
+        ctx.cancel()
+        return True
+
+    def cancel_and_retry(self, job_id: int, *, max_retries: int = 3) -> int:
+        """Cancel a stalled job and queue it again, unless this input has been tried too often already.
+        Returns the new job's id."""
+        with self.core.db.read() as s:
+            row = s.get(Job, job_id)
+            if row is None:
+                raise ValueError(f"job {job_id} not found")
+            kind, status, data, cid = row.kind, row.status, dict(row.input_json), row.campaign_id
+            tried = [
+                j
+                for j in s.exec(select(Job).where(Job.kind == kind).order_by(col(Job.id).desc()).limit(60))
+                if j.input_json == data
+            ]
+        if len(tried) > max_retries:
+            raise ValueError(f"this {kind} has been tried {len(tried)} times already; look at it yourself")
+        if status == JobStatus.RUNNING:
+            if not self.cancel_running(job_id):
+                self._close(job_id)  # the process that ran it is gone (the app restarted)
+        elif status == JobStatus.QUEUED:
+            self.cancel(job_id)
+        return self.enqueue(kind, data, campaign_id=cid)
+
+    def _close(self, job_id: int) -> None:
+        def job(tx: WriteTx) -> None:
+            r = tx.session.get(Job, job_id)
+            if r is None or r.status in (JobStatus.DONE, JobStatus.FAILED, JobStatus.CANCELLED):
+                return
+            r.status, r.error, r.finished_at = JobStatus.CANCELLED, "cancelled", self.core.clock.now()
+            tx.add(r)
+            tx.publish(JobDone(job_id=job_id, kind=r.kind, status="cancelled", campaign_id=r.campaign_id))
+
+        self.core.db.write(job)
 
     def retry(self, job_id: int) -> int:
         """Queue a failed or cancelled job again with the same input. Returns the new job's id."""
@@ -186,7 +304,7 @@ class JobQueue:
                     continue
                 free[reg.resource] -= 1
                 r.status = JobStatus.RUNNING
-                r.started_at = self.core.clock.now()
+                r.started_at = r.progress_at = self.core.clock.now()
                 tx.add(r)
                 assert r.id is not None
                 claimed.append((r.id, r.kind))
@@ -206,6 +324,9 @@ class JobQueue:
             assert row is not None
             kind, data, cid = row.kind, dict(row.input_json), row.campaign_id
         ctx = JobContext(self.core, job_id, kind, cid)
+        with self._lock:
+            self._live[job_id] = ctx
+        token = PROCESS_REGISTRAR.set(ctx.register_process)
         try:
             result = reg.handler(ctx, data)
             status, error = JobStatus.DONE, None
@@ -219,12 +340,16 @@ class JobQueue:
             log.exception("job %s (%s) failed", job_id, kind)
             result, status, error = {}, JobStatus.FAILED, f"{type(exc).__name__}: {exc}"[:2000]
         finally:
+            PROCESS_REGISTRAR.reset(token)
             with self._lock:
                 self._running[reg.resource] -= 1
+                self._live.pop(job_id, None)
 
         def finish(tx: WriteTx) -> None:
             r = tx.session.get(Job, job_id)
             assert r is not None
+            if r.status == JobStatus.CANCELLED:
+                return  # closed from outside while it was running: that stands
             r.status = status
             r.result_json = result
             r.error = error

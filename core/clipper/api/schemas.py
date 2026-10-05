@@ -274,7 +274,9 @@ class JobActivity(M):
 
 
 class NeedsYouItem(M):
-    kind: Literal["challenge", "question", "footage", "join", "review", "campaign", "alert", "failure"]
+    kind: Literal[
+        "challenge", "question", "footage", "stuck", "join", "review", "campaign", "alert", "failure"
+    ]
     urgency: int
     title: str
     detail: str
@@ -340,6 +342,36 @@ class NeedsYouDetail(M):
     reply_to: Literal["question", "campaign", "director"]
     snooze_options: list[int] = Field(default_factory=list[int])  # minutes
     footage: FootageOut | None = None
+
+
+class StallActionOut(M):
+    action: str
+    label: str
+    server: bool  # false: a link the app follows (Show jobs, Open calendar)
+
+
+class StallOut(M):
+    key: str  # "session_hung:3"
+    kind: str
+    since: datetime
+    summary: str
+    evidence: list[str]
+    actions: list[StallActionOut]  # the first is the default
+    campaign_id: int | None = None
+    campaign_title: str | None = None
+    session_id: int | None = None
+    request_id: int | None = None
+    job_id: int | None = None
+    post_id: int | None = None
+
+
+class NudgeIn(BaseModel):
+    text: str = Field(default="", max_length=1000)
+
+
+class StallActIn(BaseModel):
+    action: str = Field(min_length=1, max_length=40)
+    text: str = Field(default="", max_length=1000)
 
 
 class SnoozeIn(BaseModel):
@@ -445,6 +477,8 @@ class SlotOut(M):
     current_tool: str | None
     dimmed: bool
     model: str | None = None  # the model this role runs on now
+    quiet_s: int | None = None  # seconds since its last activity (a running agent)
+    hung: bool = False  # quiet for longer than stalls.session_quiet_min
 
 
 class QueueItem(M):
@@ -456,6 +490,7 @@ class QueueItem(M):
     campaign_title: str | None
     merged: int
     queued_at: datetime
+    waiting_reason: str | None = None  # why it hasn't started
 
 
 class BoardOut(M):
@@ -473,7 +508,8 @@ class SessionOut(M):
     campaign_id: int | None
     campaign_title: str | None
     status: str
-    turns: int
+    turns: int  # all runs together
+    turns_run: int = 0  # the current run (or the last one), against max_turns
     max_turns: int
     input_tokens: int
     output_tokens: int
@@ -1114,3 +1150,7 @@ class JobOut(M):
     created_at: datetime
     started_at: datetime | None
     finished_at: datetime | None
+    detail: str | None = None  # what it is doing right now
+    progress_at: datetime | None = None  # when it last moved
+    stalled: bool = False
+    label: str = ""  # what it works on, in words

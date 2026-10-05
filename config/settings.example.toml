@@ -90,6 +90,18 @@ watchdog_stale_min = 180   # resume a campaign with "status check" after this lo
 wakeup_poll_s = 30
 timezone = "America/New_York"
 
+[stalls]
+# What counts as stuck, and what Clipper does about it by itself.
+session_quiet_min = 10        # a running agent with no activity for this long is flagged
+idle_min = 30                 # a campaign waiting on nothing for this long is flagged
+request_blocked_min = 5       # a queued agent request that can't start
+job_quiet_min = 15            # a running job that stopped moving (analysis waits twice as long)
+job_waiting_min = 10          # a job that stays queued
+post_overdue_min = 15         # a scheduled post that hasn't started
+auto_restart_hung_min = 30    # restart a hung agent turn after this long; 0 = never
+auto_retry_stalled_job = true # cancel and retry a stalled job once
+max_auto_nudges = 2           # automatic actions per stall before it waits for you
+
 [usage]
 # Claude plan usage pacing. There is no $ tracking: agents run on your Claude plan login.
 daily_agent_run_cap = 300        # 0 = no daily cap

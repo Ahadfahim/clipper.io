@@ -15,6 +15,7 @@ export const qk = {
   needsYouAll: ["needs-you"],
   needsYou: (key: string) => ["needs-you", key],
   candidates: (sourceId: number) => ["candidates", sourceId],
+  stalls: ["stalls"],
   notes: ["notes"],
   board: ["board"],
   models: ["models"],
@@ -75,6 +76,21 @@ export const useSourceCandidates = (sourceId: number, enabled = true) =>
     refetchInterval: FIXTURE_MODE ? false : 10_000, // a download that finishes while this is open shows up
     ...live,
   });
+/** Everything that looks stuck right now: a hung agent, a job that stopped moving, a request that can't start. */
+export const useStalls = () =>
+  useQuery({
+    queryKey: qk.stalls,
+    queryFn: () => unwrap(api.GET("/api/stalls")),
+    refetchInterval: FIXTURE_MODE ? false : 30_000, // a stall appears with time, not with an event
+    ...live,
+  });
+/** What is stuck, by campaign: the sentence to show on the campaign's row and stage bar. */
+export function useStuckByCampaign(): Map<number, Schemas["StallOut"]> {
+  const stalls = useStalls().data;
+  const out = new Map<number, Schemas["StallOut"]>();
+  for (const st of stalls ?? []) if (st.campaign_id !== null && !out.has(st.campaign_id)) out.set(st.campaign_id, st);
+  return out;
+}
 export const useJobs = () => useQuery({ queryKey: qk.jobs, queryFn: () => unwrap(api.GET("/api/jobs")), ...live });
 export const useQuestions = () => useQuery({ queryKey: qk.questions, queryFn: () => unwrap(api.GET("/api/questions")), ...live });
 export const useNotes = () => useQuery({ queryKey: qk.notes, queryFn: () => unwrap(api.GET("/api/notes")), ...live });

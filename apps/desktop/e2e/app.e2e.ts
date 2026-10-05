@@ -50,6 +50,10 @@ test("needs you: open a question, see every option, answer in your own words", a
   await expect(page.getByRole("region", { name: /Details: Download failed/ })).toHaveCount(0);
 });
 
+/** Drop files on the newest drop zone, as the desktop app would (fixture builds expose the hook). */
+const dropFiles = (page: Page, paths: string[]) =>
+  page.evaluate((p) => (globalThis as unknown as { __clipperTestDrop?: (x: string[]) => boolean }).__clipperTestDrop?.(p), paths);
+
 test("needs you: a source that can't be downloaded has its link, and takes a dropped video file", async ({ page }) => {
   await page.goto("/?item=footage:5");
   const detail = page.getByRole("region", { name: /Details: Add the video from next.frame.io/ });
@@ -57,15 +61,61 @@ test("needs you: a source that can't be downloaded has its link, and takes a dro
   await expect(detail.getByRole("button", { name: "Try the download anyway" })).toBeVisible();
   await expect(detail.getByText("Recent downloads")).toBeVisible();
   // a file that isn't a video is turned away with the reason
-  await page.evaluate(() => window.__clipperTestDrop?.(["C:/Users/you/Downloads/notes.txt"]));
+  await dropFiles(page, ["C:/Users/you/Downloads/notes.txt"]);
   await expect(detail.getByText(/notes.txt isn't a video/)).toBeVisible();
   // a video is checked, then added: the box turns into its progress
-  await page.evaluate(() => window.__clipperTestDrop?.(["C:/Users/you/Downloads/episode-212.mp4"]));
+  await dropFiles(page, ["C:/Users/you/Downloads/episode-212.mp4"]);
   await expect(detail.getByText("Adding episode-212.mp4")).toBeVisible();
   await expect(detail.getByRole("group", { name: "Drop the video file here" })).toHaveCount(0);
   // the other item is already copying a file: its row says how far
   await page.goto("/?item=footage:6");
   await expect(page.getByRole("row", { name: /Add the video from drive.google.com/ }).getByText("Adding your file: 40%")).toBeVisible();
+});
+
+test("needs you: a stalled job and a blocked request say what is wrong and offer the way out", async ({ page }) => {
+  await open(page, "/?item=stuck:job_stalled:2");
+  const job = page.getByRole("region", { name: /Details: Analysis of source 3 hasn't moved/ });
+  await expect(job.getByText("Analysis of source 3: 70% done, last moved 38 min ago.")).toBeVisible();
+  await job.getByRole("button", { name: "Cancel and retry" }).click();
+  await expect(page.getByRole("status").filter({ hasText: "not saved" })).toBeVisible(); // fixture mode saves nothing
+  await page.goto("/?item=stuck:request_blocked:3");
+  const blocked = page.getByRole("region", { name: /Details: The agent request for Ali Abdaal/ });
+  await expect(blocked.getByText(/held by session 4/).first()).toBeVisible();
+  await expect(blocked.getByRole("button", { name: "Release lease" })).toBeVisible();
+  await blocked.getByPlaceholder("Tell the agent what to try").fill("Carry on with the second source");
+  await blocked.getByRole("button", { name: /Nudge agent/ }).click();
+  await expect(blocked.getByText(/Nudged\./)).toBeVisible();
+  // the campaign's stage bar says it too
+  await open(page, "/");
+  await expect(page.getByRole("table", { name: "Active campaigns" }).getByText(/Analyze · stuck|stuck/).first()).toBeVisible();
+});
+
+test("jobs: a stalled job is flagged and can be cancelled and retried", async ({ page }) => {
+  await open(page, "/");
+  await page.getByRole("tab", { name: /^Jobs/ }).click();
+  const row = page.getByRole("table", { name: "Jobs" }).getByRole("row").filter({ hasText: "Stalled" });
+  await expect(row).toHaveCount(1);
+  await expect(row.getByText("Tracking faces", { exact: false })).toBeVisible();
+  await expect(row.getByRole("button", { name: "Cancel" })).toBeVisible();
+  await expect(row.getByRole("button", { name: "Retry" })).toBeVisible();
+});
+
+test("agents: nudge an agent with a message from the Context pane", async ({ page }) => {
+  await open(page, "/agents?session=1");
+  await page.getByRole("button", { name: "Nudge" }).first().click();
+  const box = page.getByLabel("Message (optional)");
+  await box.fill("Check the second source");
+  await page.getByRole("button", { name: /Nudge agent/ }).click();
+  await expect(box).toHaveCount(0);
+  await expect(page.getByText("This run 5 / 80 · total 46", { exact: false })).toBeVisible();
+  await expect(page.getByText(/held by session 4/)).toBeVisible(); // why a queued request waits
+  // the Director chat folds down to its input row, and back
+  const chat = page.getByRole("region", { name: "Director chat" });
+  await chat.getByRole("button", { name: "Collapse to the input" }).click();
+  await expect(chat.getByRole("button", { name: "Show the conversation" })).toBeVisible();
+  await expect(chat.getByPlaceholder(/Ask about earnings/)).toBeVisible();
+  await chat.getByRole("button", { name: "Show the conversation" }).click();
+  await expect(chat.getByRole("button", { name: "Collapse to the input" })).toBeVisible();
 });
 
 test("library: select cards like Explorer, scrap them with Delete, undo, and find them in Scrapped", async ({ page }) => {

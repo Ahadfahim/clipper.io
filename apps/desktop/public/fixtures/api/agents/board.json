@@ -12,7 +12,8 @@
    "priority": 0,
    "queued_at": "2026-10-02T17:59:30Z",
    "request_id": 2,
-   "role": "campaign"
+   "role": "campaign",
+   "waiting_reason": null
   },
   {
    "campaign_id": 2,
@@ -20,9 +21,10 @@
    "kind": "job.done",
    "merged": 0,
    "priority": 2,
-   "queued_at": "2026-10-02T17:58:00Z",
+   "queued_at": "2026-10-02T17:46:00Z",
    "request_id": 3,
-   "role": "campaign"
+   "role": "campaign",
+   "waiting_reason": "Campaign 2 is held by session 4 (a lease that stays until that session finishes or the lease is released)."
   },
   {
    "campaign_id": null,
@@ -32,7 +34,8 @@
    "priority": 3,
    "queued_at": "2026-10-02T17:59:00Z",
    "request_id": 4,
-   "role": "scout"
+   "role": "scout",
+   "waiting_reason": null
   }
  ],
  "slots": [
@@ -41,9 +44,11 @@
    "campaign_title": "MrBeast #42 clipping",
    "current_tool": "mcp__edit__remove_fillers",
    "dimmed": false,
+   "hung": false,
    "kind": "job.done",
    "model": "claude-opus-5-5",
    "priority": 2,
+   "quiet_s": 60,
    "request_id": 1,
    "role": "campaign",
    "session_id": 1,
@@ -55,9 +60,11 @@
    "campaign_title": null,
    "current_tool": null,
    "dimmed": false,
+   "hung": false,
    "kind": null,
    "model": null,
    "priority": null,
+   "quiet_s": null,
    "request_id": null,
    "role": null,
    "session_id": null,
@@ -69,9 +76,11 @@
    "campaign_title": null,
    "current_tool": null,
    "dimmed": false,
+   "hung": false,
    "kind": null,
    "model": null,
    "priority": null,
+   "quiet_s": null,
    "request_id": null,
    "role": null,
    "session_id": null,
@@ -83,9 +92,11 @@
    "campaign_title": null,
    "current_tool": null,
    "dimmed": false,
+   "hung": false,
    "kind": null,
    "model": null,
    "priority": null,
+   "quiet_s": null,
    "request_id": null,
    "role": null,
    "session_id": null,

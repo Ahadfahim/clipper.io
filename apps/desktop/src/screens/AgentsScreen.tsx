@@ -1,6 +1,8 @@
+import { ChevronDown12Regular, ChevronUp12Regular } from "@fluentui/react-icons";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useMemo, useRef, useState, useEffect } from "react";
-import { useBump, useCancelRequest, useDirectorChat, useInterrupt, useNudge, useReplay } from "@/api/actions";
+import type { ImperativePanelHandle } from "react-resizable-panels";
+import { useBump, useCancelRequest, useDirectorChat, useInterrupt, useReplay } from "@/api/actions";
 import { useBoard, useDirector, useSession, useSessions, useStatus } from "@/api/queries";
 import type { Schemas } from "@/api/client";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import { Pane, Panes, Splitter } from "@/components/ui/splitter";
 import { Dot } from "@/components/ui/status";
 import { AgentEventRow, SlotBoard } from "@/components/domain/agents";
 import { UsageMeter } from "@/components/domain/meters";
+import { NudgeButton } from "@/components/domain/nudge";
 import { cn } from "@/lib/cn";
 import { clock, compact, relative } from "@/lib/format";
 import { ROLE_LABEL, modelLabel } from "@/lib/platforms";
@@ -56,7 +59,7 @@ function SessionList({ sessions, selected, onSelect }: { sessions: Schemas["Sess
                   </span>
                   <span className="num flex gap-2 pl-3.5 text-[11px] text-muted">
                     <span>
-                      {s.turns}/{s.max_turns} turns
+                      {s.status === "running" ? s.turns_run : s.turns}/{s.max_turns} turns
                     </span>
                     <span>{compact(s.input_tokens + s.output_tokens)} tok</span>
                     <span className="ml-auto">{relative(s.last_active)}</span>
@@ -123,7 +126,6 @@ function Transcript({ detail, onReplay }: { detail?: Schemas["SessionDetail"]; o
 
 function Context({ detail }: { detail?: Schemas["SessionDetail"] }) {
   const interrupt = useInterrupt();
-  const nudge = useNudge();
   const navigate = useNavigate();
   if (!detail) return <PaneHeader>Context</PaneHeader>;
   const s = detail.session;
@@ -149,8 +151,8 @@ function Context({ detail }: { detail?: Schemas["SessionDetail"] }) {
             ["Model", s.model ? <span key="m" title={s.model}>{modelLabel(s.model)}</span> : "—"],
             [
               "Turns",
-              <span key="t" className="num">
-                {s.turns} / {s.max_turns}
+              <span key="t" className="num" title="This run against the limit for one run; the total counts every run of this session">
+                This run {s.turns_run} / {s.max_turns} · total {s.turns}
               </span>,
             ],
             ["Tokens", <span key="k" className="num">{`${compact(s.input_tokens)} in · ${compact(s.output_tokens)} out`}</span>],
@@ -164,15 +166,7 @@ function Context({ detail }: { detail?: Schemas["SessionDetail"] }) {
           <Button size="sm" onClick={() => interrupt.mutate(s.id)} disabled={s.status !== "running"}>
             Interrupt
           </Button>
-          <Button size="sm" onClick={() => nudge.mutate(s.id)} disabled={!s.campaign_id}>
-            Nudge
-          </Button>
-          <Button size="sm" onClick={() => nudge.mutate(s.id)} disabled={s.status === "running" || !s.campaign_id} title="Wake the session with a resume message">
-            Resume
-          </Button>
-          <Button size="sm" disabled title="Forking a session needs SDK session forks (not wired yet)">
-            Fork
-          </Button>
+          <NudgeButton sessionId={s.id} />
         </div>
         <div className="border-t border-line">
           <div className="px-2.5 pt-2 pb-1 text-[11px] text-muted">Events → resumes</div>
@@ -190,7 +184,7 @@ function Context({ detail }: { detail?: Schemas["SessionDetail"] }) {
   );
 }
 
-function DirectorChat() {
+function DirectorChat({ small, onToggle }: { small: boolean; onToggle: () => void }) {
   const msgs = useDirector().data ?? [];
   const chat = useDirectorChat();
   const [text, setText] = useState("");
@@ -200,7 +194,15 @@ function DirectorChat() {
   }, [msgs.length]);
   return (
     <section aria-label="Director chat" className="flex min-h-0 flex-1 flex-col">
-      <PaneHeader>Director · same conversation as #control in Discord</PaneHeader>
+      <PaneHeader
+        actions={
+          <button type="button" aria-label={small ? "Show the conversation" : "Collapse to the input"} aria-expanded={!small} title={small ? "Show the conversation" : "Collapse to the input"} onClick={onToggle} className="flex size-5 items-center justify-center rounded-[3px] text-fg hover:bg-panel-2">
+            {small ? <ChevronUp12Regular /> : <ChevronDown12Regular />}
+          </button>
+        }
+      >
+        Director · same conversation as #control in Discord
+      </PaneHeader>
       <div className="min-h-0 flex-1 overflow-auto bg-panel px-3 py-2" aria-live="polite">
         {msgs.map((m) => (
           <div key={m.id} className="mb-1.5 flex gap-2.5">
@@ -247,6 +249,8 @@ export function AgentsScreen() {
   const cancel = useCancelRequest();
   const replay = useReplay();
   const [replayOut, setReplayOut] = useState<Schemas["ReplayOut"] | null>(null);
+  const chatPane = useRef<ImperativePanelHandle>(null);
+  const [chatSmall, setChatSmall] = useState(false);
   const busy = board?.slots.filter((s) => s.role).length ?? 0;
 
   return (
@@ -282,7 +286,7 @@ export function AgentsScreen() {
         <span className="text-muted">{sessions.length} sessions</span>
       </Toolbar>
       <Panes direction="vertical" autoSaveId="clipper.agents.v" className="flex-1">
-        <Pane defaultSize={68} minSize={30}>
+        <Pane defaultSize={64} minSize={30}>
           <Panes direction="horizontal" autoSaveId="clipper.agents.h">
             <Pane defaultSize={22} minSize={14} className="bg-panel">
               <SessionList sessions={filtered} selected={selected} onSelect={(id) => void navigate({ to: "/agents", search: { session: id } })} />
@@ -305,8 +309,8 @@ export function AgentsScreen() {
           </Panes>
         </Pane>
         <Splitter direction="vertical" />
-        <Pane defaultSize={32} minSize={14}>
-          <DirectorChat />
+        <Pane ref={chatPane} defaultSize={36} minSize={16} onResize={(size) => setChatSmall(size <= 18)}>
+          <DirectorChat small={chatSmall} onToggle={() => chatPane.current?.resize(chatSmall ? 40 : 16)} />
         </Pane>
       </Panes>
       <Dialog open={replayOut !== null} onOpenChange={(o) => !o && setReplayOut(null)} title="Replay in dry-run" width={560}>

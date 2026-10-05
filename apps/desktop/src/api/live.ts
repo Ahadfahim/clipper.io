@@ -59,10 +59,10 @@ function baseKeys(ev: Pick<LiveEvent, "type" | "payload">): QueryKey[] {
   const withC = (keys: QueryKey[]) => (campaign !== undefined ? [...keys, qk.campaign(campaign)] : keys);
   const t = ev.type;
   if (t === "agent.event" || t === "agent.session" || t === "agent.log")
-    return [qk.board, qk.sessions, ...(session !== undefined ? [qk.session(session)] : []), ...(t === "agent.session" ? [qk.director] : [])];
+    return [qk.board, qk.sessions, ...(t === "agent.session" ? [qk.stalls] : []), ...(session !== undefined ? [qk.session(session)] : []), ...(t === "agent.session" ? [qk.director] : [])];
   if (t.startsWith("job."))
     // a file being copied in shows its progress on its Needs you item, and a job that failed is one
-    return withC([qk.jobs, qk.status, ...(t === "job.done" ? [qk.clips] : []), ...(t === "job.done" || p["kind"] === "import" ? [qk.overview] : [])]);
+    return withC([qk.jobs, qk.status, ...(t === "job.done" ? [qk.clips, qk.stalls] : []), ...(t === "job.done" || p["kind"] === "import" ? [qk.overview] : [])]);
   if (t === "clip.scrapped" || t === "clip.restored" || t === "clip.purged") return withC([qk.clips, qk.cleanup, qk.batches, qk.overview]);
   if (t === "clip.updated" || t === "review.preview_replaced")
     return withC([qk.clips, ...(clip !== undefined ? [qk.clip(clip), qk.edit(clip)] : []), qk.batches, ...(batch !== undefined ? [qk.batch(batch)] : [])]);
@@ -73,6 +73,7 @@ function baseKeys(ev: Pick<LiveEvent, "type" | "payload">): QueryKey[] {
   if (t.startsWith("campaign.") || t === "spec.updated") return withC([qk.campaigns, qk.overview, qk.status]);
   if (t.startsWith("question.")) return [qk.questions, qk.overview, qk.status];
   if (t.startsWith("source.")) return withC([qk.overview, qk.status, qk.needsYouAll, qk.jobs]);
+  if (t === "nudge.sent" || t === "user.nudge") return withC([qk.stalls, qk.board, qk.overview, qk.needsYouAll]);
   if (t === "toggles.changed" || t === "control.changed") return [qk.switches, qk.status, qk.overview, qk.board, qk.campaigns, qk.accounts];
   if (t === "edit.op") return clip !== undefined ? [qk.edit(clip), qk.clip(clip)] : [];
   if (t === "agenda.updated" || t === "note.added")
