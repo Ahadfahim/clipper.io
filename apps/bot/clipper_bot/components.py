@@ -11,8 +11,8 @@ import discord
 from discord.ui import DynamicItem
 
 from clipper_bot import ids
-from clipper_bot.actions import NO_ROLE, PLATFORMS, Actions, Actor
-from clipper_bot.render import PLATFORM_LABEL, reason_picker
+from clipper_bot.actions import MAX_OTHER, NO_ROLE, PLATFORMS, Actions, Actor
+from clipper_bot.render import PLATFORM_LABEL, STALL_LABEL, reason_picker
 
 
 class HasActions(Protocol):
@@ -385,6 +385,78 @@ class AnswerButton(
         )
 
 
+class OtherModal(discord.ui.Modal):
+    """An answer in your own words, for when none of the buttons fit."""
+
+    def __init__(self, question_id: int) -> None:
+        super().__init__(title="Answer in your own words", custom_id=ids.make("modal", "other", question_id))
+        self.question_id = question_id
+        self.text: discord.ui.TextInput[Any] = discord.ui.TextInput(
+            label="Your answer",
+            style=discord.TextStyle.paragraph,
+            required=True,
+            max_length=MAX_OTHER,
+            custom_id="text",
+        )
+        self.add_item(self.text)
+
+    async def on_submit(self, interaction: discord.Interaction[Any]) -> None:
+        await reply(
+            interaction,
+            await actions_of(interaction).answer_custom(
+                actor_of(interaction), self.question_id, self.text.value
+            ),
+        )
+
+
+class OtherButton(DynamicItem[discord.ui.Button[Any]], template=ids.template(*ids.QUESTION_OTHER)):
+    def __init__(self, question_id: int) -> None:
+        super().__init__(
+            discord.ui.Button(label="Other…", custom_id=ids.make(*ids.QUESTION_OTHER, question_id))
+        )
+        self.question_id = question_id
+
+    @classmethod
+    async def from_custom_id(
+        cls, interaction: discord.Interaction[Any], item: discord.ui.Item[Any], match: re.Match[str], /
+    ) -> OtherButton:
+        return cls(_id(match))
+
+    async def callback(self, interaction: discord.Interaction[Any]) -> None:
+        if not actions_of(interaction).allowed(actor_of(interaction)):
+            await reply(interaction, NO_ROLE)
+            return
+        await interaction.response.send_modal(OtherModal(self.question_id))
+
+
+# ---------------------------------------------------------------- stuck things
+
+
+class StallButton(DynamicItem[discord.ui.Button[Any]], template=ids.STALL_TEMPLATE):
+    """The button on an alert about something stuck: restart the turn, run it now, cancel and retry, nudge."""
+
+    def __init__(self, action: str, ident: int, kind: str, label: str | None = None) -> None:
+        super().__init__(
+            discord.ui.Button(
+                label=label or STALL_LABEL.get(action, action.replace("_", " ").capitalize()),
+                custom_id=ids.make("stall", action, ident, kind),
+            )
+        )
+        self.action, self.ident, self.kind = action, ident, kind
+
+    @classmethod
+    async def from_custom_id(
+        cls, interaction: discord.Interaction[Any], item: discord.ui.Item[Any], match: re.Match[str], /
+    ) -> StallButton:
+        return cls(match["action"], int(match["id"]), match["kind"])
+
+    async def callback(self, interaction: discord.Interaction[Any]) -> None:
+        await reply(
+            interaction,
+            await actions_of(interaction).stall(actor_of(interaction), self.action, self.ident, self.kind),
+        )
+
+
 DYNAMIC_ITEMS: tuple[type[DynamicItem[Any]], ...] = (
     TakeButton,
     SkipButton,
@@ -398,4 +470,6 @@ DYNAMIC_ITEMS: tuple[type[DynamicItem[Any]], ...] = (
     ApproveAllButton,
     RejectRestButton,
     AnswerButton,
+    OtherButton,
+    StallButton,
 )

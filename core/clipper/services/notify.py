@@ -49,12 +49,22 @@ def close_questions_tx(tx: WriteTx, campaign_id: int, why: str, now: Any) -> lis
 
 
 class NotifyService(Service):
-    def alert(self, level: str, text: str, *, source: str = "system", campaign_id: int | None = None) -> None:
+    def alert(
+        self,
+        level: str,
+        text: str,
+        *,
+        source: str = "system",
+        campaign_id: int | None = None,
+        stall_key: str | None = None,
+    ) -> None:
         if level not in ("info", "warning", "error"):
             level = "warning"
         self.db.write(
             lambda tx: tx.publish(
-                Alert(level=level, text=text[:1000], source=source, campaign_id=campaign_id)
+                Alert(
+                    level=level, text=text[:1000], source=source, campaign_id=campaign_id, stall_key=stall_key
+                )
             )
         )  # type: ignore[arg-type]
         self._push(level, text)

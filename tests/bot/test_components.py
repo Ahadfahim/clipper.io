@@ -150,3 +150,72 @@ async def test_ship_button(actions: Actions, core_env: CoreEnv) -> None:
     i = interaction(actions, ["clipper"])  # role names match case-insensitively
     await (await _match(ShipButton, ids.make(*ids.BATCH_SHIP, core_env.ids["batch"]))).callback(i)
     assert i.response.send_message.await_args.args[0].startswith("Shipped:")
+
+
+# ---------------------------------------------------------------- answers in your own words, stuck things
+
+
+async def _open_question(env: CoreEnv) -> int:
+    return next(q["id"] for q in await env.client.questions() if q["status"] == "open")
+
+
+async def test_other_opens_a_modal_and_the_answer_goes_in_as_your_own_words(
+    actions: Actions, core_env: CoreEnv
+) -> None:
+    from clipper_bot.components import OtherButton, OtherModal
+
+    qid = await _open_question(core_env)
+    i = interaction(actions, ["Clipper"])
+    await (await _match(OtherButton, ids.make(*ids.QUESTION_OTHER, qid))).callback(i)
+    modal: OtherModal = i.response.send_modal.await_args.args[0]
+    assert isinstance(modal, OtherModal) and modal.text.max_length == 500
+    modal.text._value = "Use the trailer, but only the first minute"
+    j = interaction(actions, ["Clipper"])
+    await modal.on_submit(j)
+    j.response.send_message.assert_awaited_once_with(
+        "Answered in your own words. The agent picks it up from here.", ephemeral=True
+    )
+    q = await core_env.client.question(qid)
+    assert (
+        q is not None
+        and q["status"] == "answered"
+        and q["answer"] == "Use the trailer, but only the first minute"
+    )
+    again = interaction(actions, ["Clipper"])
+    await modal.on_submit(again)
+    again.response.send_message.assert_awaited_once_with(
+        "That question was already answered.", ephemeral=True
+    )
+
+
+async def test_other_is_for_reviewers_only(actions: Actions, core_env: CoreEnv) -> None:
+    from clipper_bot.components import OtherButton
+
+    qid = await _open_question(core_env)
+    i = interaction(actions, ["everyone"])
+    await (await _match(OtherButton, ids.make(*ids.QUESTION_OTHER, qid))).callback(i)
+    i.response.send_message.assert_awaited_once_with(NO_ROLE, ephemeral=True)
+    i.response.send_modal.assert_not_awaited()
+
+
+async def test_a_stall_button_rebuilds_from_its_id_and_runs_the_action(
+    actions: Actions, core_env: CoreEnv
+) -> None:
+    from clipper_bot.components import StallButton
+
+    # the demo has a job that stopped moving (job 2): cancel and retry it from the button
+    stall = next(s for s in await core_env.client.stalls() if s["kind"] == "job_stalled")
+    ident = stall["job_id"]
+    item = await _match(StallButton, f"clipper:stall:cancel_retry:{ident}:job_stalled")
+    assert (item.action, item.ident, item.kind) == ("cancel_retry", ident, "job_stalled")
+    assert item.item.label == "Cancel and retry"
+    i = interaction(actions, ["Clipper"])
+    await item.callback(i)
+    assert "queued it again as job" in i.response.send_message.await_args.args[0]
+    assert not [s for s in await core_env.client.stalls() if s["kind"] == "job_stalled"]
+    out = interaction(actions, ["everyone"])
+    await item.callback(out)
+    out.response.send_message.assert_awaited_once_with(NO_ROLE, ephemeral=True)
+    gone = interaction(actions, ["Clipper"])
+    await item.callback(gone)
+    assert "isn't stuck any more" in gone.response.send_message.await_args.args[0]

@@ -280,6 +280,14 @@ def question_message(q: dict[str, Any]) -> tuple[discord.Embed, discord.ui.View]
                 disabled=answered,
             )
         )
+    v.add_item(
+        discord.ui.Button(
+            label="Other…",
+            style=discord.ButtonStyle.secondary,
+            custom_id=ids.make(*ids.QUESTION_OTHER, q["id"]),
+            disabled=answered,
+        )
+    )
     return e, v
 
 
@@ -290,6 +298,34 @@ def alert_message(level: str, text: str, source: str) -> discord.Embed:
         description=_cut(text, 4000),
         colour=colour,
     )
+
+
+STALL_LABEL = {
+    "nudge": "Nudge",
+    "restart_turn": "Restart turn",
+    "run_now": "Run now",
+    "release_lease": "Release lease",
+    "cancel_retry": "Cancel and retry",
+}
+
+
+def stall_view(stall: dict[str, Any]) -> discord.ui.View | None:
+    """The buttons for a stuck thing: its first two actions that the core can do. None when there is none
+    (a late post: look at the calendar)."""
+    server = [a for a in stall.get("actions", []) if a.get("server")]
+    if not server:
+        return None
+    kind, _, ident = str(stall["key"]).partition(":")
+    v = discord.ui.View(timeout=None)
+    for i, a in enumerate(server[:2]):
+        v.add_item(
+            discord.ui.Button(
+                label=STALL_LABEL.get(a["action"], str(a.get("label") or a["action"])),
+                style=discord.ButtonStyle.primary if i == 0 else discord.ButtonStyle.secondary,
+                custom_id=ids.make("stall", a["action"], int(ident), kind),
+            )
+        )
+    return v
 
 
 def published_message(p: dict[str, Any]) -> discord.Embed:

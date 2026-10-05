@@ -18,6 +18,7 @@ from clipper.settings import Settings
 from clipper.supervisor.pool import PoolLimits, QueuedView, RunningView, pick
 from clipper.supervisor.router import P0, P1, P2, P3, RequestSpec
 from clipper.supervisor.supervisor import Supervisor
+from tests.conftest import tune
 from tests.factories import make_campaign
 
 T0 = datetime(2026, 10, 1, 12, 0, tzinfo=UTC)
@@ -229,7 +230,7 @@ async def test_daily_run_cap_keeps_p0_p1_only(
     env: tuple[Core, FakeAgentRunner, Supervisor, FakeClock], settings: Settings
 ) -> None:
     core, runner, sup, _clock = env
-    object.__setattr__(core.settings.usage, "daily_agent_run_cap", 1)
+    tune(core, "usage", daily_agent_run_cap=1)
     runner.scripts["scout"] = lambda req: [Say("scouted")]
     runner.scripts["director"] = lambda req: [Say("hi")]
     sup.enqueue(

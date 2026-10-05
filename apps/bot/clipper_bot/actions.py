@@ -25,6 +25,7 @@ SWITCHES: dict[str, str] = {
     "x": "social",
 }
 NO_ROLE = "Only members with the reviewer role can do this."
+MAX_OTHER = 500  # what the modal for an answer in your own words allows
 
 
 @dataclass(frozen=True)
@@ -190,6 +191,56 @@ class Actions:
         except CoreError as e:
             return f"Couldn't answer: {e.detail}"
         return f"Answered: {options[option_index]}. The agent picks it up from here."
+
+    async def answer_custom(self, actor: Actor, question_id: int, text: str) -> str:
+        """An answer in your own words (the modal behind the Other... button)."""
+        if not self.allowed(actor):
+            return NO_ROLE
+        text = text.strip()
+        if not text:
+            return "Write your answer first."
+        try:
+            q = await self.core.question(question_id)
+            if q is None or q.get("status") != "open":
+                return "That question was already answered."
+            await self.core.answer(question_id, text[:MAX_OTHER], by=actor.name, custom=True)
+        except CoreError as e:
+            return f"Couldn't answer: {e.detail}"
+        return "Answered in your own words. The agent picks it up from here."
+
+    async def nudge(self, actor: Actor, campaign: str, text: str) -> str:
+        """``/clipper nudge``: tell a campaign's agent it looks stuck. The campaign is its number or part of its title."""
+        if not self.allowed(actor):
+            return NO_ROLE
+        ref = campaign.strip()
+        try:
+            rows = [c for c in await self.core.campaigns() if c.get("status") in ("active", "ending")]
+            if ref.isdigit():
+                found = [c for c in rows if int(c["id"]) == int(ref)]
+            else:
+                found = [c for c in rows if ref.casefold() in str(c["title"]).casefold()]
+            if not found:
+                names = ", ".join(str(c["title"]) for c in rows[:6]) or "none are running"
+                return f"No running campaign matches {ref!r}. Running: {names}."
+            if len(found) > 1:
+                return (
+                    "That matches several campaigns: "
+                    + ", ".join(f"{c['id']} {c['title']}" for c in found[:6])
+                    + ". Use the number."
+                )
+            await self.core.nudge_campaign(int(found[0]["id"]), text.strip()[:1000])
+        except CoreError as e:
+            return f"Couldn't nudge: {e.detail}"
+        return f"Nudged the agent for {found[0]['title']}. It reads it first in line."
+
+    async def stall(self, actor: Actor, action: str, ident: int, kind: str) -> str:
+        """The button on a stuck-thing alert: run one of that stall's actions."""
+        if not self.allowed(actor):
+            return NO_ROLE
+        try:
+            return await self.core.stall_act(f"{kind}:{ident}", action)
+        except CoreError as e:
+            return f"Couldn't do that: {e.detail}"
 
     async def toggle(self, actor: Actor, name: str, on: bool) -> str:
         if not self.allowed(actor):

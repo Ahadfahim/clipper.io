@@ -103,7 +103,10 @@ class Relay:
             elif t == "alert":
                 if p.get("level") in ("warning", "error"):
                     await self.alert(
-                        str(p.get("level")), str(p.get("text", "")), str(p.get("source", "alert"))
+                        str(p.get("level")),
+                        str(p.get("text", "")),
+                        str(p.get("source", "alert")),
+                        stall_key=p.get("stall_key"),
                     )
             elif t == "account.paused":
                 await self.alert(
@@ -243,9 +246,16 @@ class Relay:
         embed, view = render.question_message(q)
         await self.gw.edit(int(ref["channel_id"]), int(ref["message_id"]), embed=embed, view=view)
 
-    async def alert(self, level: str, text: str, source: str) -> None:
-        if self.cfg.channels.alerts:
-            await self.gw.send(self.cfg.channels.alerts, embed=render.alert_message(level, text, source))
+    async def alert(self, level: str, text: str, source: str, stall_key: str | None = None) -> None:
+        if not self.cfg.channels.alerts:
+            return
+        view: discord.ui.View | None = None
+        if stall_key:  # something stuck: offer the way out right on the alert
+            stall = next((x for x in await self.core.stalls() if x["key"] == stall_key), None)
+            view = render.stall_view(stall) if stall else None
+        await self.gw.send(
+            self.cfg.channels.alerts, embed=render.alert_message(level, text, source), view=view
+        )
 
     async def published(self, p: dict[str, Any]) -> None:
         if not self.cfg.channels.published or await self.core.ref("post", p["post_id"]):

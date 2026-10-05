@@ -66,6 +66,31 @@ class ClipperBot(discord.Client):
             text = await self.actions.toggle(actor_of(interaction), name.value, state.value == "on")
             await interaction.response.send_message(text, ephemeral=True)
 
+        @group.command(name="nudge", description="Tell a campaign's agent it looks stuck")
+        @app_commands.describe(
+            campaign="The campaign: start typing its name", message="What to tell it (optional)"
+        )
+        async def nudge(
+            interaction: discord.Interaction[Any], campaign: str, message: str | None = None
+        ) -> None:
+            text = await self.actions.nudge(actor_of(interaction), campaign, message or "")
+            await interaction.response.send_message(text, ephemeral=True)
+
+        @nudge.autocomplete("campaign")
+        async def nudge_campaigns(
+            interaction: discord.Interaction[Any], current: str
+        ) -> list[app_commands.Choice[str]]:
+            try:
+                rows = [c for c in await self.core.campaigns() if c.get("status") in ("active", "ending")]
+            except CoreError:
+                return []
+            wanted = current.casefold()
+            return [
+                app_commands.Choice(name=str(c["title"])[:100], value=str(c["id"]))
+                for c in rows
+                if wanted in str(c["title"]).casefold()
+            ][:25]
+
         @group.command(name="status", description="What the agents are doing")
         async def status(interaction: discord.Interaction[Any]) -> None:
             s = await self.core.status()

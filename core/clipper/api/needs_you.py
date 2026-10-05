@@ -250,6 +250,8 @@ def _alerts(
         text = str(p.get("text", ""))
         if p.get("level") not in ("warning", "error") or now - _utc(e.ts) > ALERT_AGE:
             continue
+        if p.get("source") == "stalls":
+            continue  # the stuck item says it, and goes away when it is fixed
         if any(handle in text for handle in paused):
             continue  # the blocked account is listed on its own
         if text.startswith("Claude usage limit reached") and not rate_limited:

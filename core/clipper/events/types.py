@@ -447,6 +447,7 @@ class Alert(EventPayload):
     text: str
     source: str = "system"
     campaign_id: int | None = None
+    stall_key: str | None = None  # the stuck thing this is about ("session_hung:3"): Discord offers a button
 
 
 class Report(EventPayload):

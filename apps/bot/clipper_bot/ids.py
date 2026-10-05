@@ -61,3 +61,6 @@ BATCH_SHIP = ("batch", "ship")
 BATCH_APPROVE_ALL = ("batch", "approveall")
 BATCH_REJECT_REST = ("batch", "rejectrest")
 QUESTION_ANSWER = ("question", "answer")  # extra = option index
+QUESTION_OTHER = ("question", "other")  # opens the modal for an answer in your own words
+# a button on a stuck-thing alert: clipper:stall:<action>:<id>:<kind>, e.g. clipper:stall:restart_turn:3:session_hung
+STALL_TEMPLATE = rf"{PREFIX}:stall:(?P<action>[a-z_]+):(?P<id>\d+):(?P<kind>[a-z_]+)$"

@@ -59,7 +59,8 @@ class CoreClient:
         return await self._req("GET", f"/api/clips/{clip_id}")
 
     async def question(self, question_id: int) -> dict[str, Any] | None:
-        for q in await self.questions():
+        """One question, open or answered (the message is re-drawn once it is answered)."""
+        for q in await self._req("GET", "/api/questions", params={"status": ""}):
             if q["id"] == question_id:
                 return q
         return None
@@ -182,10 +183,24 @@ class CoreClient:
             "POST", f"/api/review/batches/{batch_id}/ship", json={"reviewer": reviewer, "via": VIA}
         )
 
-    async def answer(self, question_id: int, answer: str, by: str) -> None:
+    async def answer(self, question_id: int, answer: str, by: str, custom: bool = False) -> None:
         await self._req(
-            "POST", f"/api/questions/{question_id}/answer", json={"answer": answer, "by": by, "via": VIA}
+            "POST",
+            f"/api/questions/{question_id}/answer",
+            json={"answer": answer, "by": by, "via": VIA, "custom": custom},
         )
+
+    async def nudge_campaign(self, campaign_id: int, text: str) -> None:
+        await self._req("POST", f"/api/campaigns/{campaign_id}/nudge", json={"text": text})
+
+    async def stalls(self) -> list[dict[str, Any]]:
+        return list(await self._req("GET", "/api/stalls"))
+
+    async def stall_act(self, key: str, action: str, text: str = "") -> str:
+        out = await self._req(
+            "POST", f"/api/stalls/{key.replace(':', '-')}/act", json={"action": action, "text": text}
+        )
+        return str((out or {}).get("detail") or "Done.")
 
     async def chat(self, text: str, reply_to: str | None) -> None:
         await self._req(

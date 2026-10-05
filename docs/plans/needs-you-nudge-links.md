@@ -1,6 +1,6 @@
 # Plan: Needs you details, nudges, campaign links, and stuck-work fixes
 
-Status: planned 2026-10-04. M0, M1, M2, M2b, M3 and M4 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
+Status: planned 2026-10-04. M0, M1, M2, M2b, M3, M4 and M5 are implemented (see the commit log); the rest is not. Based on `claude/affectionate-davinci-f3xmlm` at `e66b2f7`. The questions in §12 all have defaults written into the plan, so work can start at M0 without waiting for answers.
 
 This plan is for whoever implements it. Read CLAUDE.md first: agents run on the plan login only, safety rules live in code, and UI work follows the routine (frontend-design skill, shadcn MCP, utility style, check dark and light at 1280×800 and 1920×1080).
 
@@ -685,6 +685,11 @@ Each milestone ends with `just lint`, `just test`, the e2e run and the screensho
 
 **M5. Automatic nudges and Discord (B4, A4's "Other…" modal, Discord parts of B5 and C3)**
 - Done when an automatic restart happens once, escalates after `max_auto_nudges`, and Discord can nudge and send a custom answer.
+- As built:
+  - `supervisor/auto.py` runs from the supervisor tick (not while paused or with the kill switch on). A hung turn is restarted once it has been quiet for `auto_restart_hung_min`; a stalled job is cancelled and retried when `auto_retry_stalled_job` is on; each stall gets at most `max_auto_nudges` automatic actions, counted in `kv` and forgotten after 6 hours without the stall. An automatic action that is refused (a job already retried three times) counts as spent. When the actions are used up, or the stall has none (a request that can't start, a late post), Clipper raises one alert (`source = "stalls"`, with the stall's key), which Discord shows with the stall's buttons. Needs you does not list that alert again: the stuck item stands for it.
+  - Discord: question messages have an "Other…" button with a modal (500 characters) that answers in your own words; `/clipper nudge <campaign> [message]` (autocomplete from the running campaigns, or the campaign's number); stall alerts carry up to two buttons (restart turn, run now, release lease, cancel and retry).
+  - Found on the way: the relay never re-drew a question message after it was answered, because the bot's `question()` only looked among open questions. It looks at all of them now.
+  - Tests that change settings use `tune(core, section, ...)` (it replaces the section with a copy): changing the shared default in place leaked into the fixture export test.
 
 **M6. Polish**
 - 7.17, the pop-out show-when-ready (§5.7), and a review pass against UI.md.

@@ -106,3 +106,35 @@ async def test_campaign_question_toggle_and_chat(actions: Actions, core_env: Cor
     assert await actions.chat(REVIEWER, "how are we doing?", 777) is None
     chat = [e for e in core_env.core.bus.since(0, limit=1000) if e.type == "user.chat"][-1]
     assert chat.payload == {"text": "how are we doing?", "via": "discord", "reply_to": "777"}
+
+
+async def test_nudge_by_number_or_part_of_the_title(actions: Actions, core_env: CoreEnv) -> None:
+    from tests.bot.conftest import OUTSIDER, REVIEWER
+
+    assert await actions.nudge(OUTSIDER, "1", "") == "Only members with the reviewer role can do this."
+    said = await actions.nudge(REVIEWER, "mrbeast", "Use the second source")
+    assert said == "Nudged the agent for MrBeast #42 clipping. It reads it first in line."
+    assert (await actions.nudge(REVIEWER, "1", "")).startswith("Nudged the agent for MrBeast")
+    events = await core_env.client._req(
+        "GET", "/api/events", params={"latest": "true", "types": "user.nudge", "limit": 5}
+    )
+    assert [e["payload"]["text"] for e in events] == ["Use the second source", ""]
+    assert all(e["payload"]["campaign_id"] == 1 for e in events)
+    nothing = await actions.nudge(REVIEWER, "nonesuch", "")
+    assert nothing.startswith("No running campaign matches 'nonesuch'. Running: ")
+    both = await actions.nudge(REVIEWER, "a", "")  # "MrBeast", "Ali Abdaal", "Kai Cenat" all have an a
+    assert both.startswith("That matches several campaigns: ") and "Use the number" in both
+
+
+async def test_custom_answers_are_trimmed_and_need_something_to_say(
+    actions: Actions, core_env: CoreEnv
+) -> None:
+    from tests.bot.conftest import REVIEWER
+
+    qid = next(q["id"] for q in await core_env.client.questions() if q["status"] == "open")
+    assert await actions.answer_custom(REVIEWER, qid, "   ") == "Write your answer first."
+    assert (await actions.answer_custom(REVIEWER, qid, " Yes, but cut it short ")).startswith(
+        "Answered in your own words"
+    )
+    q = await core_env.client.question(qid)
+    assert q is not None and q["answer"] == "Yes, but cut it short"

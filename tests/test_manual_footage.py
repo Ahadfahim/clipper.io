@@ -15,6 +15,7 @@ from clipper.db.models import Job, Question, Source
 from clipper.db.types import JobStatus, SourceStatus
 from clipper.services.base import ServiceError
 from clipper.services.recipe_check import check_clip
+from tests.conftest import tune
 from tests.factories import make_campaign, make_source
 
 pytestmark = pytest.mark.ffmpeg
@@ -305,7 +306,7 @@ def test_recent_downloads_are_offered_newest_first_and_only_videos(
 
     downloads = tmp_path / "Recent"
     downloads.mkdir()
-    object.__setattr__(core.settings.media, "downloads_dirs", [downloads])
+    tune(core, "media", downloads_dirs=[downloads])
     _cid, sid = _failed_source(core)
     now = time.time()
     for name, age_h in (("new.mp4", 1), ("older.mp4", 5), ("ancient.mp4", 80)):

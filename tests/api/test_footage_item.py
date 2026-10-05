@@ -19,7 +19,7 @@ from clipper.db.engine import WriteTx
 from clipper.db.models import Job, Source
 from clipper.db.types import CampaignStatus, SourceStatus
 from clipper.services.recipe_check import check_clip
-from tests.conftest import call
+from tests.conftest import call, tune
 from tests.factories import make_campaign, make_source
 
 FRAMEIO = "https://next.frame.io/share/9d3a07f5-9dbf-4acd-8028-86879ad0028b/view/3ea7e8a1"
@@ -194,7 +194,7 @@ def client(core: Core) -> Iterator[TestClient]:
 def test_inspect_candidates_and_add_a_file(core: Core, client: TestClient, tmp_path: Path) -> None:
     downloads = tmp_path / "Recent"
     downloads.mkdir()
-    object.__setattr__(core.settings.media, "downloads_dirs", [downloads])
+    tune(core, "media", downloads_dirs=[downloads])
     video = downloads / "episode.mp4"
     shutil.copy(check_clip(core), video)
     _cid, sid = _waiting(core)

@@ -21,6 +21,7 @@ from clipper.media.edl.ops import EditError
 from clipper.services.base import ServiceError
 from clipper.supervisor.messages import describe
 from clipper.supervisor.router import compact, route
+from tests.conftest import tune
 from tests.factories import approve, make_account, make_campaign, make_clip, make_source
 
 
@@ -454,7 +455,7 @@ def test_the_grace_period_is_a_setting(core_t: Core) -> None:
     camp, src = _setup(core)
     clip_id = _clip(core, camp, src, status="ready")
     files = _files(core, clip_id)
-    object.__setattr__(core.settings.retention, "scrapped_clip_days", 0)
+    tune(core, "retention", scrapped_clip_days=0)
     core.library.scrap([clip_id])
     assert core.library.purge(expired_only=True)["clips"] == [clip_id]
     assert not files[0].exists()

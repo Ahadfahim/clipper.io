@@ -31,6 +31,7 @@ from clipper.events.types import AgentSessionChanged, NudgeSent, TriggerFired, W
 from clipper.leases import LeaseManager, campaign_resource
 from clipper.rules.caps import local_day_bounds
 from clipper.services.control import configured_slots, kv_get, kv_set_tx, read_control
+from clipper.supervisor.auto import run_auto_checks
 from clipper.supervisor.messages import build_prompt
 from clipper.supervisor.pool import PoolLimits, QueuedView, RunningView, explain_wait, pick
 from clipper.supervisor.router import RequestSpec, SessionInfo, route
@@ -156,6 +157,7 @@ class Supervisor:
         self.core.wakeups.fire_due()
         self.release_dead_leases()
         self.watchdog()
+        await run_auto_checks(self.core, self)
         self.core.notify.expire()
         self.core.library.purge_expired_daily()  # once per day: delete the files of clips scrapped long ago
         # footage you put in sources/campaign_<id>/ yourself; off the loop: probing and hashing a

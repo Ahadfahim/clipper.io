@@ -106,3 +106,10 @@ async def call(
 
     ensure_loaded()
     return await call_tool(tool_ctx(core, role, **kw), REGISTRY[server][name], dict(args))
+
+
+def tune(core: Core, section: str, **updates: object) -> None:
+    """Change settings for one test. The section is replaced by a changed copy: assigning to the object in
+    place would also change the shared default every other test starts from."""
+    current = getattr(core.settings, section)
+    object.__setattr__(core.settings, section, current.model_copy(update=updates))

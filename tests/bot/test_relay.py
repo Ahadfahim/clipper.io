@@ -187,7 +187,8 @@ async def test_campaign_card_question_alert_publish_and_director(core_env: CoreE
     q = next(q for q in await core_env.client._req("GET", "/api/questions") if q["status"] == "open")
     await relay.handle(ev("question.asked", question_id=q["id"], text=q["text"], options=q["options"]))
     qmsg = gw.sent[-1]
-    assert qmsg.channel == cfg.channels.control and len(qmsg.view.children) == len(q["options"])  # type: ignore[union-attr]
+    assert qmsg.channel == cfg.channels.control and len(qmsg.view.children) == len(q["options"]) + 1  # type: ignore[union-attr]  # the options and Other...
+    assert [getattr(c, "label", None) for c in qmsg.view.children][-1] == "Other…"  # type: ignore[union-attr]
 
     await relay.handle(ev("alert", level="info", text="fyi", source="x"))
     await relay.handle(ev("alert", level="error", text="TikTok upload failed", source="publish"))
@@ -260,3 +261,54 @@ async def test_catch_up_after_restart_posts_waiting_work_once(core_env: CoreEnv,
     await relay.catch_up()
     assert (len(gw.posts), len(gw.sent)) == before
     assert await core_env.client.latest_event_id() > 0
+
+
+async def test_a_stuck_thing_alert_comes_with_its_buttons(core_env: CoreEnv, cfg: BotConfig) -> None:
+    gw = FakeGateway()
+    relay = Relay(core_env.client, gw, cfg)
+    await relay.handle(
+        ev(
+            "alert",
+            level="warning",
+            text="Analysis of source 3 hasn't moved for 38 min. It needs you.",
+            source="stalls",
+            stall_key="job_stalled:2",
+        )
+    )
+    sent = gw.sent[-1]
+    assert sent.channel == cfg.channels.alerts and sent.view is not None
+    assert [getattr(c, "custom_id", None) for c in sent.view.children] == [
+        "clipper:stall:cancel_retry:2:job_stalled"
+    ]
+    assert [getattr(c, "label", None) for c in sent.view.children] == ["Cancel and retry"]
+    # the request that can't start offers run now and release lease
+    await relay.handle(
+        ev("alert", level="warning", text="A request waits.", source="stalls", stall_key="request_blocked:3")
+    )
+    assert [getattr(c, "custom_id", None) for c in gw.sent[-1].view.children] == [  # type: ignore[union-attr]
+        "clipper:stall:run_now:3:request_blocked",
+        "clipper:stall:release_lease:3:request_blocked",
+    ]
+    # an alert whose stall is gone, or has no action the core can do, has no buttons
+    await relay.handle(
+        ev("alert", level="warning", text="Gone.", source="stalls", stall_key="job_stalled:99")
+    )
+    assert gw.sent[-1].view is None
+    await relay.handle(ev("alert", level="warning", text="Plain.", source="publish"))
+    assert gw.sent[-1].view is None
+
+
+async def test_an_answered_question_message_is_redrawn_with_its_buttons_off(
+    core_env: CoreEnv, cfg: BotConfig
+) -> None:
+    gw = FakeGateway()
+    relay = Relay(core_env.client, gw, cfg)
+    q = next(q for q in await core_env.client.questions() if q["status"] == "open")
+    await relay.handle(ev("question.asked", question_id=q["id"], text=q["text"], options=q["options"]))
+    posted = gw.sent[-1]
+    await core_env.client.answer(q["id"], "Use the trailer, but only the first minute", by="you", custom=True)
+    await relay.handle(ev("question.answered", question_id=q["id"]))
+    channel, message, embed, view, _ = gw.edits[-1]
+    assert (channel, message) == (posted.channel, posted.id)
+    assert embed is not None and "Use the trailer, but only the first minute" in (embed.footer.text or "")
+    assert view is not None and all(getattr(c, "disabled", False) for c in view.children)
